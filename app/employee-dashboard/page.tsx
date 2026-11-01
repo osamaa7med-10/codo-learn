@@ -406,10 +406,10 @@ export default function EmployeeDashboard() {
             previous.map((client) =>
                 client.id === editingClientId && client.canEdit
                     ? {
-                        ...client,
-                        notes: clientNotes.trim(),
-                        phone: clientPhone.trim(),
-                    }
+                          ...client,
+                          notes: clientNotes.trim(),
+                          phone: clientPhone.trim(),
+                      }
                     : client
             )
         );
@@ -430,11 +430,11 @@ export default function EmployeeDashboard() {
                 const phases = project.phases.map((phase) =>
                     phase.id === phaseId
                         ? {
-                            ...phase,
-                            requirements: phase.requirements.map((r) =>
-                                r.id === requirementId ? { ...r, done: !r.done } : r
-                            ),
-                        }
+                              ...phase,
+                              requirements: phase.requirements.map((r) =>
+                                  r.id === requirementId ? { ...r, done: !r.done } : r
+                              ),
+                          }
                         : phase
                 );
 
@@ -583,8 +583,9 @@ export default function EmployeeDashboard() {
 
             {/* Sidebar */}
             <aside
-                className={`fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col border-r border-[#ECECF5] bg-white transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
-                    }`}
+                className={`fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col border-r border-[#ECECF5] bg-white transition-transform duration-300 lg:translate-x-0 ${
+                    sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                }`}
             >
                 <div className="flex h-20 items-center justify-between border-b border-[#ECECF5] px-5">
                     <Link href="/" aria-label="Codo Learn home">
@@ -617,10 +618,11 @@ export default function EmployeeDashboard() {
                         <button
                             key={item.id}
                             onClick={() => openSection(item.id)}
-                            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition ${activeSection === item.id
+                            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition ${
+                                activeSection === item.id
                                     ? "bg-[#869CFF]/15 text-[#586FD6]"
                                     : "text-gray-500 hover:bg-[#F8F8FC] hover:text-[#586FD6]"
-                                }`}
+                            }`}
                         >
                             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-lg">
                                 {item.icon}
@@ -973,8 +975,9 @@ export default function EmployeeDashboard() {
                                                     </span>
                                                     <span
                                                         aria-hidden="true"
-                                                        className={`transition ${expanded ? "rotate-180" : ""
-                                                            }`}
+                                                        className={`transition ${
+                                                            expanded ? "rotate-180" : ""
+                                                        }`}
                                                     >
                                                         ⌄
                                                     </span>
@@ -1053,12 +1056,13 @@ export default function EmployeeDashboard() {
                                                         <Badge label={task.priority} />
                                                     </td>
                                                     <td
-                                                        className={`px-5 py-4 ${task.status !== "Done" &&
-                                                                today !== "" &&
-                                                                task.deadline < today
+                                                        className={`px-5 py-4 ${
+                                                            task.status !== "Done" &&
+                                                            today !== "" &&
+                                                            task.deadline < today
                                                                 ? "font-semibold text-rose-600"
                                                                 : "text-gray-500"
-                                                            }`}
+                                                        }`}
                                                     >
                                                         {task.deadline}
                                                     </td>
@@ -1110,10 +1114,11 @@ export default function EmployeeDashboard() {
                                     {notifications.map((n) => (
                                         <li
                                             key={n.id}
-                                            className={`flex items-start justify-between gap-4 rounded-2xl border p-5 ${n.read
+                                            className={`flex items-start justify-between gap-4 rounded-2xl border p-5 ${
+                                                n.read
                                                     ? "border-[#ECECF5] bg-white"
                                                     : "border-[#869CFF]/40 bg-[#869CFF]/5"
-                                                }`}
+                                            }`}
                                         >
                                             <div>
                                                 <div className="flex items-center gap-2">
@@ -1386,8 +1391,9 @@ function Badge({ label }: { label: string }) {
 
     return (
         <span
-            className={`inline-flex shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${styles[label] ?? "bg-gray-100 text-gray-600"
-                }`}
+            className={`inline-flex shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                styles[label] ?? "bg-gray-100 text-gray-600"
+            }`}
         >
             {label}
         </span>
@@ -1479,10 +1485,11 @@ function NoteBanner({ note }: { note: FormNote | null }) {
     return (
         <p
             role={note.type === "error" ? "alert" : "status"}
-            className={`mt-4 rounded-xl p-3 text-sm ${note.type === "error"
+            className={`mt-4 rounded-xl p-3 text-sm ${
+                note.type === "error"
                     ? "bg-rose-50 text-rose-700"
                     : "bg-emerald-50 text-emerald-700"
-                }`}
+            }`}
         >
             {note.text}
         </p>
@@ -1513,10 +1520,11 @@ function PhaseChecklist({
                                 {index + 1}. {phase.title}
                             </p>
                             <span
-                                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${complete
+                                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                    complete
                                         ? "bg-emerald-50 text-emerald-700"
                                         : "bg-gray-100 text-gray-500"
-                                    }`}
+                                }`}
                             >
                                 {complete ? "✓ " : ""}
                                 {done}/{total}

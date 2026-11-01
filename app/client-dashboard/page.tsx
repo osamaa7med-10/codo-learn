@@ -503,8 +503,9 @@ export default function ClientDashboard() {
 
             {/* Sidebar */}
             <aside
-                className={`fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col border-r border-[#ECECF5] bg-white transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
-                    }`}
+                className={`fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col border-r border-[#ECECF5] bg-white transition-transform duration-300 lg:translate-x-0 ${
+                    sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                }`}
             >
                 <div className="flex h-20 items-center justify-between border-b border-[#ECECF5] px-5">
                     <Link href="/" aria-label="Codo Learn home">
@@ -537,10 +538,11 @@ export default function ClientDashboard() {
                         <button
                             key={item.id}
                             onClick={() => openSection(item.id)}
-                            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition ${activeSection === item.id
+                            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition ${
+                                activeSection === item.id
                                     ? "bg-[#869CFF]/15 text-[#586FD6]"
                                     : "text-gray-500 hover:bg-[#F8F8FC] hover:text-[#586FD6]"
-                                }`}
+                            }`}
                         >
                             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-lg">
                                 {item.icon}
@@ -878,8 +880,9 @@ export default function ClientDashboard() {
                                                         </span>
                                                         <span
                                                             aria-hidden="true"
-                                                            className={`transition ${expanded ? "rotate-180" : ""
-                                                                }`}
+                                                            className={`transition ${
+                                                                expanded ? "rotate-180" : ""
+                                                            }`}
                                                         >
                                                             ⌄
                                                         </span>
@@ -1243,8 +1246,9 @@ function Badge({ label }: { label: string }) {
 
     return (
         <span
-            className={`inline-flex shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${styles[label] ?? "bg-gray-100 text-gray-600"
-                }`}
+            className={`inline-flex shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                styles[label] ?? "bg-gray-100 text-gray-600"
+            }`}
         >
             {label}
         </span>
@@ -1336,10 +1340,11 @@ function NoteBanner({ note }: { note: FormNote | null }) {
     return (
         <p
             role={note.type === "error" ? "alert" : "status"}
-            className={`mt-4 rounded-xl p-3 text-sm ${note.type === "error"
+            className={`mt-4 rounded-xl p-3 text-sm ${
+                note.type === "error"
                     ? "bg-rose-50 text-rose-700"
                     : "bg-emerald-50 text-emerald-700"
-                }`}
+            }`}
         >
             {note.text}
         </p>
@@ -1357,10 +1362,11 @@ function CheckCircle({
 
     return (
         <span
-            className={`flex shrink-0 items-center justify-center rounded-full border-2 font-bold ${size} ${checked
+            className={`flex shrink-0 items-center justify-center rounded-full border-2 font-bold ${size} ${
+                checked
                     ? "border-emerald-500 bg-emerald-500 text-white"
                     : "border-gray-300 bg-white text-transparent"
-                }`}
+            }`}
         >
             <span aria-hidden="true">✓</span>
             <span className="sr-only">{checked ? "Completed" : "Not completed"}</span>
@@ -1389,8 +1395,9 @@ function PhaseList({ phases }: { phases: Phase[] }) {
                                 </p>
                             </div>
                             <span
-                                className={`text-xs font-semibold ${complete ? "text-emerald-600" : "text-gray-400"
-                                    }`}
+                                className={`text-xs font-semibold ${
+                                    complete ? "text-emerald-600" : "text-gray-400"
+                                }`}
                             >
                                 {done}/{total}
                             </span>

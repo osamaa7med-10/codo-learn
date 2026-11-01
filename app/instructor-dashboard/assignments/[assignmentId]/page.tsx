@@ -30,221 +30,6 @@ const EMPTY_CONTENT: AssignmentContent = {
 
 const STORAGE_KEY = "codo-instructor-assignment-content-";
 
-
-type RichTextDescriptionEditorProps = {
-    value: string;
-    onChange: (value: string) => void;
-};
-
-const allowedEditorTags = new Set([
-    "P", "BR", "DIV", "SPAN", "STRONG", "B", "EM", "I", "U",
-    "UL", "OL", "LI", "H1", "H2", "H3", "BLOCKQUOTE",
-]);
-
-function sanitizeEditorHtml(html: string): string {
-    if (typeof window === "undefined") return "";
-
-    const documentParser = new DOMParser();
-    const parsedDocument = documentParser.parseFromString(html, "text/html");
-
-    const cleanNode = (node: Node): void => {
-        Array.from(node.childNodes).forEach((child) => {
-            if (child.nodeType === Node.ELEMENT_NODE) {
-                const element = child as HTMLElement;
-
-                if (!allowedEditorTags.has(element.tagName)) {
-                    if (["SCRIPT", "STYLE", "IFRAME", "OBJECT", "SVG"].includes(element.tagName)) {
-                        element.remove();
-                        return;
-                    }
-
-                    cleanNode(element);
-                    element.replaceWith(...Array.from(element.childNodes));
-                    return;
-                }
-
-                const style = element.getAttribute("style");
-                Array.from(element.attributes).forEach((attribute) => {
-                    if (attribute.name !== "style") {
-                        element.removeAttribute(attribute.name);
-                    }
-                });
-
-                if (style) {
-                    const safeStyles: string[] = [];
-                    style.split(";").forEach((declaration) => {
-                        const separator = declaration.indexOf(":");
-                        if (separator < 0) return;
-
-                        const property = declaration.slice(0, separator).trim().toLowerCase();
-                        const value = declaration.slice(separator + 1).trim();
-
-                        if (
-                            ["color", "background-color", "font-size", "font-family", "text-align"].includes(property) &&
-                            !/url\s*\(|expression\s*\(|javascript:/i.test(value)
-                        ) {
-                            safeStyles.push(`${property}: ${value}`);
-                        }
-                    });
-
-                    if (safeStyles.length) {
-                        element.setAttribute("style", safeStyles.join("; "));
-                    } else {
-                        element.removeAttribute("style");
-                    }
-                }
-
-                cleanNode(element);
-            } else if (child.nodeType !== Node.TEXT_NODE) {
-                child.remove();
-            }
-        });
-    };
-
-    cleanNode(parsedDocument.body);
-    return parsedDocument.body.innerHTML;
-}
-
-function RichTextDescriptionEditor({
-    value,
-    onChange,
-}: RichTextDescriptionEditorProps) {
-    const editorRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const editor = editorRef.current;
-        if (!editor || editor === document.activeElement) return;
-
-        // Keep older plain-text descriptions readable while supporting saved HTML.
-        const isHtml = /<\/?(p|div|span|strong|b|em|i|u|ul|ol|li|h[1-3]|blockquote|br)\b/i.test(value);
-        if (isHtml) {
-            editor.innerHTML = sanitizeEditorHtml(value);
-        } else {
-            editor.textContent = value;
-        }
-    }, [value]);
-
-    function runCommand(command: string, commandValue?: string) {
-        const editor = editorRef.current;
-        if (!editor) return;
-
-        editor.focus();
-        document.execCommand("styleWithCSS", false, "true");
-        document.execCommand(command, false, commandValue);
-        onChange(sanitizeEditorHtml(editor.innerHTML));
-    }
-
-    function handleInput() {
-        const editor = editorRef.current;
-        if (!editor) return;
-
-        const cleanHtml = sanitizeEditorHtml(editor.innerHTML);
-        onChange(cleanHtml);
-    }
-
-    const toolbarButtonClass =
-        "rounded-lg border border-[#E0E3E7] bg-white px-3 py-2 text-sm font-medium text-[#3C4043] transition hover:border-[#C7CEFF] hover:bg-[#F0F2FF]";
-
-    return (
-        <div className="overflow-hidden rounded-xl border border-[#DADCE0] bg-white focus-within:border-[#869CFF] focus-within:ring-2 focus-within:ring-[#869CFF]/20">
-            <div className="flex flex-wrap gap-2 border-b border-[#E0E3E7] bg-[#F8F9FC] p-3">
-                <label className="flex items-center gap-2 rounded-lg border border-[#E0E3E7] bg-white px-2">
-                    <span className="text-xs text-[#5F6368]">Font</span>
-                    <select
-                        aria-label="Font family"
-                        defaultValue="Arial"
-                        onChange={(event) => runCommand("fontName", event.target.value)}
-                        className="max-w-[125px] bg-transparent py-2 text-sm text-[#202124] outline-none"
-                    >
-                        <option value="Arial">Arial</option>
-                        <option value="Georgia">Georgia</option>
-                        <option value="Verdana">Verdana</option>
-                        <option value="Tahoma">Tahoma</option>
-                        <option value="Times New Roman">Times New Roman</option>
-                        <option value="Courier New">Courier New</option>
-                    </select>
-                </label>
-
-                <label className="flex items-center gap-2 rounded-lg border border-[#E0E3E7] bg-white px-2">
-                    <span className="text-xs text-[#5F6368]">Size</span>
-                    <select
-                        aria-label="Font size"
-                        defaultValue="3"
-                        onChange={(event) => runCommand("fontSize", event.target.value)}
-                        className="bg-transparent py-2 text-sm text-[#202124] outline-none"
-                    >
-                        <option value="2">12 px</option>
-                        <option value="3">14 px</option>
-                        <option value="4">18 px</option>
-                        <option value="5">24 px</option>
-                        <option value="6">32 px</option>
-                        <option value="7">48 px</option>
-                    </select>
-                </label>
-
-                <button type="button" title="Bold" aria-label="Bold" className={toolbarButtonClass} onMouseDown={(event) => event.preventDefault()} onClick={() => runCommand("bold")}>
-                    <strong>B</strong>
-                </button>
-                <button type="button" title="Italic" aria-label="Italic" className={toolbarButtonClass} onMouseDown={(event) => event.preventDefault()} onClick={() => runCommand("italic")}>
-                    <em>I</em>
-                </button>
-                <button type="button" title="Underline" aria-label="Underline" className={toolbarButtonClass} onMouseDown={(event) => event.preventDefault()} onClick={() => runCommand("underline")}>
-                    <span className="underline">U</span>
-                </button>
-
-                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#E0E3E7] bg-white px-3 py-2 text-sm text-[#3C4043]">
-                    <span>Text color</span>
-                    <input
-                        aria-label="Text color"
-                        type="color"
-                        defaultValue="#202124"
-                        onChange={(event) => runCommand("foreColor", event.target.value)}
-                        className="h-5 w-6 cursor-pointer border-0 bg-transparent p-0"
-                    />
-                </label>
-
-                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#E0E3E7] bg-white px-3 py-2 text-sm text-[#3C4043]">
-                    <span>Highlight</span>
-                    <input
-                        aria-label="Highlight color"
-                        type="color"
-                        defaultValue="#FFF176"
-                        onChange={(event) => runCommand("hiliteColor", event.target.value)}
-                        className="h-5 w-6 cursor-pointer border-0 bg-transparent p-0"
-                    />
-                </label>
-
-                <button type="button" title="Align left" className={toolbarButtonClass} onMouseDown={(event) => event.preventDefault()} onClick={() => runCommand("justifyLeft")}>Left</button>
-                <button type="button" title="Align center" className={toolbarButtonClass} onMouseDown={(event) => event.preventDefault()} onClick={() => runCommand("justifyCenter")}>Center</button>
-                <button type="button" title="Align right" className={toolbarButtonClass} onMouseDown={(event) => event.preventDefault()} onClick={() => runCommand("justifyRight")}>Right</button>
-                <button type="button" title="Bullet list" className={toolbarButtonClass} onMouseDown={(event) => event.preventDefault()} onClick={() => runCommand("insertUnorderedList")}>• List</button>
-                <button type="button" title="Numbered list" className={toolbarButtonClass} onMouseDown={(event) => event.preventDefault()} onClick={() => runCommand("insertOrderedList")}>1. List</button>
-                <button type="button" title="Remove formatting" className={toolbarButtonClass} onMouseDown={(event) => event.preventDefault()} onClick={() => runCommand("removeFormat")}>Clear format</button>
-            </div>
-
-            <div
-                ref={editorRef}
-                contentEditable
-                suppressContentEditableWarning
-                role="textbox"
-                aria-label="Assignment description"
-                aria-multiline="true"
-                data-placeholder="Write the assignment instructions here..."
-                onInput={handleInput}
-                className="min-h-[240px] whitespace-pre-wrap px-4 py-4 text-sm leading-7 text-[#202124] outline-none [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:border-l-4 [&_blockquote]:border-[#C7CEFF] [&_blockquote]:pl-4"
-            />
-            <style jsx>{`
-                [contenteditable="true"]:empty::before {
-                    content: attr(data-placeholder);
-                    color: #80868b;
-                    pointer-events: none;
-                }
-            `}</style>
-        </div>
-    );
-}
-
-
 export default function AssignmentDetailsPage() {
     const params = useParams<{ assignmentId: string }>();
     const assignmentId = params.assignmentId;
@@ -283,14 +68,7 @@ export default function AssignmentDetailsPage() {
                     typeof parsed.referenceLink === "string" &&
                     Array.isArray(parsed.attachments)
                 ) {
-                    const saved = parsed as Partial<AssignmentContent>;
-                    setContent({
-                        title: typeof saved.title === "string" ? saved.title : queryTitle || `Assignment ${assignmentId}`,
-                        description: typeof saved.description === "string" ? saved.description : "",
-                        referenceLink: typeof saved.referenceLink === "string" ? saved.referenceLink : "",
-                        videoUrl: typeof saved.videoUrl === "string" ? saved.videoUrl : "",
-                        attachments: Array.isArray(saved.attachments) ? saved.attachments : [],
-                    });
+                    setContent(parsed as AssignmentContent);
                 } else {
                     setContent({
                         ...EMPTY_CONTENT,
@@ -692,11 +470,18 @@ export default function AssignmentDetailsPage() {
                                     Description and instructions
                                 </label>
 
-                                <RichTextDescriptionEditor
+                                <textarea
+                                    id="assignment-description"
                                     value={content.description}
-                                    onChange={(value) =>
-                                        updateField("description", value)
+                                    onChange={(event) =>
+                                        updateField(
+                                            "description",
+                                            event.target.value
+                                        )
                                     }
+                                    placeholder="Write the assignment instructions here..."
+                                    rows={9}
+                                    className={`${inputClass} resize-y leading-7`}
                                 />
 
                                 <p className="mt-3 text-xs text-[#80868B]">

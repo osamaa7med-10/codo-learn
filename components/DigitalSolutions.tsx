@@ -1,4 +1,3 @@
-
 "use client";
 
 import { motion } from "motion/react";
@@ -56,7 +55,10 @@ const solutions = [
 
 export default function DigitalSolutions() {
     return (
-        <section id="solutions" className="bg-white px-6 py-24">
+        <section
+            id="solutions"
+            className="bg-white px-6 py-24"
+        >
             <div className="mx-auto max-w-7xl">
 
                 {/* Section Header */}
@@ -65,29 +67,29 @@ export default function DigitalSolutions() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.3 }}
                     transition={{ duration: 0.7 }}
-                    className="grid gap-8 md:grid-cols-[1.3fr_0.7fr] md:items-end"
+                    className="flex flex-col justify-between gap-8 md:flex-row md:items-end"
                 >
+
                     <div className="max-w-3xl">
+
                         <p className="mb-4 text-sm font-bold uppercase tracking-[0.25em] text-[#869CFF]">
                             Digital Solutions
                         </p>
 
-                        <h2 className="text-4xl font-black leading-[1.15] tracking-tight text-[#20243A] sm:text-5xl lg:text-6xl">
+                        <h2 className="text-4xl font-black leading-tight tracking-tight text-[#20243A] md:text-6xl">
                             We Build Digital Solutions
-                            <span className="mt-2 block bg-gradient-to-r from-[#869CFF] to-[#E2A3FF] bg-clip-text text-transparent">
+                            <span className="block bg-gradient-to-r from-[#869CFF] to-[#E2A3FF] bg-clip-text text-transparent">
                                 That Move Your Business Forward.
                             </span>
                         </h2>
+
                     </div>
 
-                    <div className="md:pb-2">
-                        <div className="mb-4 h-1 w-14 rounded-full bg-gradient-to-r from-[#869CFF] to-[#E2A3FF]" />
+                    <p className="max-w-md leading-7 text-[#7B829D]">
+                        From ideas to digital products, we create technology solutions
+                        that help businesses grow, connect with customers, and work smarter.
+                    </p>
 
-                        <p className="max-w-md text-base leading-8 text-[#7B829D] sm:text-lg">
-                            From ideas to digital products, we create technology solutions
-                            that help businesses grow, connect with customers, and work smarter.
-                        </p>
-                    </div>
                 </motion.div>
 
                 {/* Solutions Grid */}
@@ -105,6 +107,7 @@ export default function DigitalSolutions() {
                     }}
                     className="mt-16 grid gap-5 md:grid-cols-2 lg:grid-cols-3"
                 >
+
                     {solutions.map((solution) => (
                         <motion.div
                             key={solution.number}
@@ -118,38 +121,53 @@ export default function DigitalSolutions() {
                                     y: 0,
                                 },
                             }}
-                            transition={{ duration: 0.6 }}
-                            whileHover={{ y: -8 }}
+                            transition={{
+                                duration: 0.6,
+                            }}
+                            whileHover={{
+                                y: -8,
+                            }}
                             className="group relative overflow-hidden rounded-[30px] border border-[#E8EAF3] bg-[#FAFAFD] p-7 transition-shadow duration-300 hover:shadow-2xl"
                         >
+
                             {/* Background Glow */}
                             <motion.div
                                 className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#E2A3FF]/10 blur-2xl"
-                                whileHover={{ scale: 1.5 }}
-                                transition={{ duration: 0.5 }}
+                                whileHover={{
+                                    scale: 1.5,
+                                }}
+                                transition={{
+                                    duration: 0.5,
+                                }}
                             />
 
                             {/* Top */}
                             <div className="relative flex items-center justify-between">
+
                                 <span className="text-sm font-black text-[#E2A3FF]">
                                     {solution.number}
                                 </span>
 
                                 <motion.div
-                                    whileHover={{ rotate: 12, scale: 1.1 }}
+                                    whileHover={{
+                                        rotate: 12,
+                                        scale: 1.1,
+                                    }}
                                     className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#869CFF] to-[#E2A3FF] text-lg font-black text-white shadow-lg shadow-[#869CFF]/10"
                                 >
                                     {solution.icon}
                                 </motion.div>
+
                             </div>
 
                             {/* Content */}
                             <div className="relative">
+
                                 <h3 className="mt-10 text-2xl font-black text-[#20243A]">
                                     {solution.title}
                                 </h3>
 
-                                <p className="mt-4 min-h-[72px] text-sm leading-7 text-[#7B829D]">
+                                <p className="mt-4 min-h-[72px] text-sm leading-6 text-[#7B829D]">
                                     {solution.description}
                                 </p>
 
@@ -158,7 +176,9 @@ export default function DigitalSolutions() {
                                     {solution.tags.map((tag) => (
                                         <motion.span
                                             key={tag}
-                                            whileHover={{ scale: 1.05 }}
+                                            whileHover={{
+                                                scale: 1.05,
+                                            }}
                                             className="rounded-full bg-white px-3 py-2 text-xs font-semibold text-[#5F6785] shadow-sm"
                                         >
                                             {tag}
@@ -168,21 +188,29 @@ export default function DigitalSolutions() {
 
                                 {/* Bottom */}
                                 <div className="mt-8 flex items-center justify-between border-t border-[#E8EAF3] pt-5">
+
                                     <span className="text-sm font-semibold text-[#869CFF]">
                                         Learn More
                                     </span>
 
                                     <motion.span
-                                        whileHover={{ x: 6 }}
+                                        whileHover={{
+                                            x: 6,
+                                        }}
                                         className="text-xl text-[#869CFF]"
                                     >
                                         →
                                     </motion.span>
+
                                 </div>
+
                             </div>
+
                         </motion.div>
                     ))}
+
                 </motion.div>
+
             </div>
         </section>
     );

@@ -128,12 +128,14 @@ export default function Tracks() {
                             </p>
 
                             {/* Skills */}
-                            <div className="mt-7 flex flex-nowrap items-center gap-1 overflow-x-auto pb-2">
+                            <div className="mt-7 flex flex-wrap gap-2">
                                 {track.skills.map((skill) => (
                                     <motion.span
                                         key={skill}
-                                        whileHover={{ scale: 1.05 }}
-                                        className="shrink-0 rounded-full bg-[#F3F3F9] px-3 py-2 text-xs font-semibold text-[#5F6785]"
+                                        whileHover={{
+                                            scale: 1.05,
+                                        }}
+                                        className="rounded-full bg-[#F3F3F9] px-3 py-2 text-xs font-semibold text-[#5F6785]"
                                     >
                                         {skill}
                                     </motion.span>
