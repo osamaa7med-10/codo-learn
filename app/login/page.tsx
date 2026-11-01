@@ -5,9 +5,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 
-type AccountRole = "student" | "instructor" | "employee" | "admin";
 export default function LoginPage() {
-    const [role, setRole] = useState<AccountRole>("student");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -40,12 +38,13 @@ export default function LoginPage() {
 
         // Frontend only: no authentication request is sent yet.
         setMessage(
-            `Your form is valid for the ${role} account. Backend authentication is not connected yet.`
+            "Your form is valid. Backend authentication is not connected yet."
         );
     }
 
     return (
         <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F8F8FC] px-4 py-12 sm:px-6">
+
             {/* Animated background */}
             <motion.div
                 aria-hidden="true"
@@ -78,8 +77,10 @@ export default function LoginPage() {
             />
 
             <div className="relative z-10 grid w-full max-w-6xl overflow-hidden rounded-[32px] border border-white/80 bg-white/80 shadow-2xl shadow-[#869CFF]/10 backdrop-blur-xl lg:grid-cols-2">
+
                 {/* Left branding panel */}
                 <section className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-[#869CFF] to-[#E2A3FF] p-10 text-white lg:flex xl:p-14">
+
                     <motion.div
                         animate={{ rotate: 360 }}
                         transition={{
@@ -167,42 +168,8 @@ export default function LoginPage() {
                             </p>
                         </div>
 
-                        {/* Account type */}
-                        <div className="mb-6">
-                            <label className="mb-3 block text-sm font-semibold text-[#343B58]">
-                                Account type
-                            </label>
-
-                            <div className="grid grid-cols-3 gap-2 rounded-2xl bg-[#F1F2FA] p-1.5">
-                                {(
-                                    [
-                                        { value: "student", label: "Student" },
-                                        { value: "instructor", label: "Instructor" },
-
-                                        { value: "employee", label: "Employee" },
-                                    ] as const
-                                ).map((item) => (
-                                    <button
-                                        key={item.value}
-                                        type="button"
-                                        onClick={() => {
-                                            setRole(item.value);
-                                            setError("");
-                                            setMessage("");
-                                        }}
-                                        aria-pressed={role === item.value}
-                                        className={`rounded-xl px-2 py-3 text-sm font-semibold transition-all duration-200 ${role === item.value
-                                            ? "bg-white text-[#7587E8] shadow-sm ring-1 ring-[#869CFF]/20"
-                                            : "text-[#7B829D] hover:text-[#E2A3FF]"
-                                            }`}
-                                    >
-                                        {item.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
                         <form onSubmit={handleSubmit} noValidate>
+
                             {/* Email */}
                             <div className="mb-5">
                                 <label
@@ -350,23 +317,18 @@ export default function LoginPage() {
                             </Link>
                         </p>
 
-                        <div className="flex flex-col items-center gap-4 w-full">
-
-
-                            {/* الرابط الجديد الخاص بالأدمن */}
-                            <div className="pt-3 text-xs text-gray-500 border-t border-gray-100 w-full text-center">
-                                Are you an administrator?{' '}
+                        {/* Separate Admin Login */}
+                        <div className="flex w-full flex-col items-center gap-4">
+                            <div className="w-full border-t border-gray-100 pt-3 text-center text-xs text-gray-500">
+                                Are you an administrator?{" "}
                                 <Link
                                     href="/admin/login"
-                                    className="font-medium text-[#7587E8] hover:text-[#596CCB] transition-colors underline offset-2"
+                                    className="font-medium text-[#7587E8] underline offset-2 transition-colors hover:text-[#596CCB]"
                                 >
                                     Admin Login
                                 </Link>
                             </div>
-
                         </div>
-                        ;
-
 
                         <p className="mt-8 text-center text-xs leading-5 text-[#9A9FB3]">
                             By continuing, you agree to the Codo Learn terms and privacy
@@ -375,6 +337,6 @@ export default function LoginPage() {
                     </motion.div>
                 </section>
             </div>
-        </main >
+        </main>
     );
 }

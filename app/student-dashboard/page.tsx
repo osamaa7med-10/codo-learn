@@ -10,6 +10,7 @@ type Section =
     | "overview"
     | "courses"
     | "learning"
+    | "assignments"
     | "enrollments"
     | "payments"
     | "notifications"
@@ -76,6 +77,7 @@ const navItems: { id: Section; label: string; icon: string }[] = [
     { id: "overview", label: "Student Overview", icon: "⌂" },
     { id: "courses", label: "My Courses", icon: "▤" },
     { id: "learning", label: "Course Learning", icon: "▷" },
+    { id: "assignments", label: "My Assignments", icon: "▣" },
     { id: "enrollments", label: "My Enrollments", icon: "✓" },
     { id: "payments", label: "My Payments", icon: "$" },
     { id: "notifications", label: "Notifications", icon: "♧" },
@@ -106,12 +108,47 @@ const payments = [
     },
 ];
 
+
+type StudentAssignment = {
+    id: string;
+    title: string;
+    description: string;
+    referenceLink?: string;
+    videoUrl?: string;
+    attachments: {
+        name?: string;
+        type?: string;
+        size?: number;
+        dataUrl?: string;
+        url?: string;
+    }[];
+    status: "Pending" | "Submitted" | "Graded";
+};
+
+function sanitizeDescription(html: string) {
+    // Keep rich-text formatting while removing executable or embedded content.
+    if (typeof window === "undefined") return html.replace(/<[^>]*>/g, "");
+    const document = new DOMParser().parseFromString(html, "text/html");
+    document.querySelectorAll("script, style, iframe, object, embed, form").forEach((node) => node.remove());
+    document.body.querySelectorAll("*").forEach((element) => {
+        [...element.attributes].forEach((attribute) => {
+            const name = attribute.name.toLowerCase();
+            const value = attribute.value.trim().toLowerCase();
+            if (name.startsWith("on") || ((name === "href" || name === "src") && value.startsWith("javascript:"))) {
+                element.removeAttribute(attribute.name);
+            }
+        });
+    });
+    return document.body.innerHTML;
+}
+
 export default function StudentDashboard() {
     const [activeSection, setActiveSection] =
         useState<Section>("overview");
 
     const [selectedCourseId, setSelectedCourseId] = useState(1);
     const [courses, setCourses] = useState(initialCourses);
+    const [assignments, setAssignments] = useState<StudentAssignment[]>([]);
     const [notifications, setNotifications] =
         useState(initialNotifications);
     const [profilePhoto, setProfilePhoto] = useState("");
@@ -124,6 +161,65 @@ export default function StudentDashboard() {
     const [newPassword, setNewPassword] = useState("");
     const [passwordMessage, setPasswordMessage] = useState("");
     const [profileLoaded, setProfileLoaded] = useState(false);
+
+
+    useEffect(() => {
+        function loadAssignments() {
+            try {
+                const found: StudentAssignment[] = [];
+                const prefix = "codo-instructor-assignment-content-";
+
+                for (let index = 0; index < localStorage.length; index++) {
+                    const key = localStorage.key(index);
+                    if (!key || !key.startsWith(prefix)) continue;
+
+                    const id = key.slice(prefix.length);
+                    try {
+                        const saved = JSON.parse(localStorage.getItem(key) ?? "{}");
+                        const rawAttachments = Array.isArray(saved.attachments) ? saved.attachments : [];
+                        const statusValue = localStorage.getItem(`codo-student-assignment-status-${id}`);
+                        const status: StudentAssignment["status"] =
+                            statusValue === "Submitted" || statusValue === "Graded" ? statusValue : "Pending";
+
+                        found.push({
+                            id,
+                            title: typeof saved.title === "string" && saved.title.trim()
+                                ? saved.title
+                                : `Assignment ${id}`,
+                            description: typeof saved.description === "string"
+                                ? sanitizeDescription(saved.description)
+                                : "",
+                            referenceLink: typeof saved.referenceLink === "string" ? saved.referenceLink : "",
+                            videoUrl: typeof saved.videoUrl === "string" ? saved.videoUrl : "",
+                            attachments: rawAttachments.map((file: any) => ({
+                                name: typeof file?.name === "string" ? file.name : "Attachment",
+                                type: typeof file?.type === "string" ? file.type : "",
+                                size: typeof file?.size === "number" ? file.size : undefined,
+                                dataUrl: typeof file?.dataUrl === "string" ? file.dataUrl : undefined,
+                                url: typeof file?.url === "string" ? file.url : undefined,
+                            })),
+                            status,
+                        });
+                    } catch {
+                        // Ignore malformed assignment content and continue loading other assignments.
+                    }
+                }
+
+                found.sort((a, b) => a.title.localeCompare(b.title));
+                setAssignments(found);
+            } catch {
+                setAssignments([]);
+            }
+        }
+
+        loadAssignments();
+        window.addEventListener("storage", loadAssignments);
+        window.addEventListener("focus", loadAssignments);
+        return () => {
+            window.removeEventListener("storage", loadAssignments);
+            window.removeEventListener("focus", loadAssignments);
+        };
+    }, []);
 
     useEffect(() => {
         try {
@@ -238,6 +334,7 @@ export default function StudentDashboard() {
         overview: "Student Overview",
         courses: "My Courses",
         learning: "Course Learning",
+        assignments: "My Assignments",
         enrollments: "My Enrollments",
         payments: "My Payments",
         notifications: "Notifications",
@@ -753,6 +850,100 @@ export default function StudentDashboard() {
                                     </div>
                                 </div>
                             </div>
+                        </SectionPanel>
+                    )}
+
+
+                    {/* MY ASSIGNMENTS */}
+                    {activeSection === "assignments" && (
+                        <SectionPanel
+                            title="My Assignments"
+                            description="View the assignments shared by your instructors, including instructions, reference links, videos, and attachments."
+                        >
+                            {assignments.length === 0 ? (
+                                <div className="rounded-2xl border border-dashed border-[#DCDDF0] bg-white px-6 py-14 text-center">
+                                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#869CFF]/15 text-2xl text-[#586FD6]">▣</div>
+                                    <h3 className="mt-4 text-lg font-bold">No assignments available yet</h3>
+                                    <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500">
+                                        When your instructor creates assignment content, it will appear here.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="space-y-5">
+                                    {assignments.map((assignment) => (
+                                        <article key={assignment.id} className="overflow-hidden rounded-2xl border border-[#ECECF5] bg-white">
+                                            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#ECECF5] p-5 sm:p-6">
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#586FD6]">Assignment</p>
+                                                    <h3 className="mt-2 break-words text-lg font-bold">{assignment.title}</h3>
+                                                    <p className="mt-1 text-xs text-gray-400">Assignment ID: {assignment.id}</p>
+                                                </div>
+                                                <StatusBadge status={assignment.status} />
+                                            </div>
+
+                                            <div className="space-y-5 p-5 sm:p-6">
+                                                <div>
+                                                    <h4 className="text-sm font-bold">Instructions</h4>
+                                                    {assignment.description ? (
+                                                        <div
+                                                            className="prose prose-sm mt-3 max-w-none break-words text-gray-600 prose-headings:text-[#20243A] prose-a:text-[#586FD6] prose-strong:text-[#20243A]"
+                                                            dangerouslySetInnerHTML={{ __html: assignment.description }}
+                                                        />
+                                                    ) : (
+                                                        <p className="mt-2 text-sm text-gray-400">No instructions have been added.</p>
+                                                    )}
+                                                </div>
+
+                                                {(assignment.referenceLink || assignment.videoUrl) && (
+                                                    <div className="flex flex-wrap gap-3">
+                                                        {assignment.referenceLink && (
+                                                            <a href={assignment.referenceLink} target="_blank" rel="noreferrer"
+                                                                className="inline-flex items-center gap-2 rounded-xl border border-[#869CFF]/40 px-4 py-2.5 text-sm font-semibold text-[#586FD6] hover:bg-[#869CFF]/10">
+                                                                ↗ Open reference
+                                                            </a>
+                                                        )}
+                                                        {assignment.videoUrl && (
+                                                            <a href={assignment.videoUrl} target="_blank" rel="noreferrer"
+                                                                className="inline-flex items-center gap-2 rounded-xl bg-[#586FD6] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#455BC1]">
+                                                                ▶ Open assignment video
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {assignment.attachments.length > 0 && (
+                                                    <div>
+                                                        <h4 className="mb-3 text-sm font-bold">Attachments</h4>
+                                                        <div className="grid gap-3 sm:grid-cols-2">
+                                                            {assignment.attachments.map((file, index) => {
+                                                                const fileUrl = file.dataUrl || file.url;
+                                                                return (
+                                                                    <div key={`${file.name}-${index}`} className="flex min-w-0 items-center gap-3 rounded-xl bg-[#F8F8FC] p-3">
+                                                                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E2A3FF]/30">▧</span>
+                                                                        <div className="min-w-0 flex-1">
+                                                                            <p className="truncate text-sm font-semibold">{file.name || `Attachment ${index + 1}`}</p>
+                                                                            <p className="mt-1 text-xs text-gray-400">{file.type || "File attachment"}</p>
+                                                                        </div>
+                                                                        {fileUrl ? (
+                                                                            <a href={fileUrl} target="_blank" rel="noreferrer" download={file.name || undefined}
+                                                                                className="shrink-0 text-sm font-bold text-[#586FD6] hover:underline">Open</a>
+                                                                        ) : (
+                                                                            <span className="shrink-0 text-xs text-gray-400">Unavailable</span>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </article>
+                                    ))}
+                                </div>
+                            )}
+                            <p className="mt-4 text-xs leading-5 text-gray-400">
+                                Demo note: assignments are read from this browser's localStorage. For students and instructors on different devices or accounts, connect this section to the backend/API.
+                            </p>
                         </SectionPanel>
                     )}
 
