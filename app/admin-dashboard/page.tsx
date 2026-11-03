@@ -21,6 +21,12 @@ type RecordItem = {
     educationLevel?: string;
     major?: string;
     learningTrack?: string;
+    experienceYears?: string;
+    jobTitle?: string;
+    education?: string;
+    certifications?: string;
+    bio?: string;
+    portfolio?: string;
     status?: string;
     role?: string;
     category?: string;
@@ -182,10 +188,20 @@ export default function AdminDashboard() {
     const [newStudentTrack, setNewStudentTrack] = useState("Web Development");
     const [newStudentStatus, setNewStudentStatus] = useState("Active");
 
+    // Advanced instructor profile form state
     const [instructorName, setInstructorName] = useState("");
     const [instructorEmail, setInstructorEmail] = useState("");
     const [instructorPhone, setInstructorPhone] = useState("");
+    const [instructorCountry, setInstructorCountry] = useState("Egypt");
+    const [instructorCity, setInstructorCity] = useState("");
+    const [instructorLinkedIn, setInstructorLinkedIn] = useState("");
     const [instructorSpecialty, setInstructorSpecialty] = useState("Frontend");
+    const [instructorJobTitle, setInstructorJobTitle] = useState("");
+    const [instructorExperience, setInstructorExperience] = useState("1-3 years");
+    const [instructorEducation, setInstructorEducation] = useState("Bachelor's Degree");
+    const [instructorCertifications, setInstructorCertifications] = useState("");
+    const [instructorPortfolio, setInstructorPortfolio] = useState("");
+    const [instructorBio, setInstructorBio] = useState("");
     const [instructorImage, setInstructorImage] = useState("");
     const [instructorStatus, setInstructorStatus] = useState("Active");
 
@@ -319,20 +335,64 @@ export default function AdminDashboard() {
         event.preventDefault();
         const name = instructorName.trim();
         const normalizedEmail = instructorEmail.trim().toLowerCase();
-        if (!name || !normalizedEmail) {
-            setNotice("Please enter the instructor's name and email.");
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const urlPattern = /^https?:\/\//i;
+
+        if (!name || !normalizedEmail || !instructorPhone.trim() || !instructorCity.trim() || !instructorJobTitle.trim()) {
+            setNotice("Please complete all required instructor information.");
+            return;
+        }
+        if (!emailPattern.test(normalizedEmail)) {
+            setNotice("Please enter a valid instructor email address.");
+            return;
+        }
+        if (instructorLinkedIn.trim() && !urlPattern.test(instructorLinkedIn.trim())) {
+            setNotice("Please enter a valid LinkedIn URL starting with http:// or https://.");
+            return;
+        }
+        if (instructorPortfolio.trim() && !urlPattern.test(instructorPortfolio.trim())) {
+            setNotice("Please enter a valid portfolio or website URL starting with http:// or https://.");
             return;
         }
         if (data.instructors.some(item => item.email?.trim().toLowerCase() === normalizedEmail)) {
             setNotice("An instructor with this email already exists.");
             return;
         }
+
         addRecord("instructors", {
-            name, email: normalizedEmail, phone: instructorPhone.trim(),
-            category: instructorSpecialty, status: instructorStatus, role: "Instructor", image: instructorImage,
+            name,
+            email: normalizedEmail,
+            phone: instructorPhone.trim(),
+            country: instructorCountry,
+            city: instructorCity.trim(),
+            linkedIn: instructorLinkedIn.trim(),
+            category: instructorSpecialty,
+            jobTitle: instructorJobTitle.trim(),
+            experienceYears: instructorExperience,
+            education: instructorEducation,
+            certifications: instructorCertifications.trim(),
+            portfolio: instructorPortfolio.trim(),
+            bio: instructorBio.trim(),
+            status: instructorStatus,
+            role: "Instructor",
+            image: instructorImage,
         });
-        setInstructorName(""); setInstructorEmail(""); setInstructorPhone("");
-        setInstructorSpecialty("Frontend"); setInstructorImage(""); setInstructorStatus("Active");
+
+        setInstructorName("");
+        setInstructorEmail("");
+        setInstructorPhone("");
+        setInstructorCountry("Egypt");
+        setInstructorCity("");
+        setInstructorLinkedIn("");
+        setInstructorSpecialty("Frontend");
+        setInstructorJobTitle("");
+        setInstructorExperience("1-3 years");
+        setInstructorEducation("Bachelor's Degree");
+        setInstructorCertifications("");
+        setInstructorPortfolio("");
+        setInstructorBio("");
+        setInstructorImage("");
+        setInstructorStatus("Active");
         setNotice("Instructor added successfully!");
     };
 
@@ -507,7 +567,7 @@ export default function AdminDashboard() {
                                 {/* Student form header */}
                                 <div className="relative overflow-hidden border-b border-[#ECECF5] bg-gradient-to-r from-[#869CFF]/10 to-[#E2A3FF]/10 p-6 sm:p-8">
                                     <div className="relative z-10">
-                                        <p className="text-xs font-bold tracking-[0.2em] text-[#7587E8]">STUDENT MANAGEMENT</p>
+
                                         <h3 className="mt-2 text-2xl font-extrabold text-[#20243A] sm:text-3xl">Add New Student</h3>
                                         <p className="mt-2 max-w-xl text-sm leading-6 text-gray-500">
                                             Create a complete academic profile and register a new student in the Codo Learn learning platform.
@@ -651,20 +711,76 @@ export default function AdminDashboard() {
                             </Panel>
                         )}
 
-                        {activeSection === "instructors" && <Panel>
-                            <div className="mb-6 flex flex-wrap items-center justify-between gap-4"><div><p className="text-sm font-semibold text-[#869CFF]">TEAM MANAGEMENT</p><h2 className="mt-1 text-2xl font-bold text-gray-900">Add New Instructor</h2><p className="mt-2 text-sm text-gray-500">Add an instructor to your Codo Learn team.</p></div><div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E2A3FF]/20 text-2xl text-[#869CFF]">+</div></div>
-                            <form onSubmit={handleAddInstructor} className="space-y-5"><div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                                <div><label className="mb-2 block text-sm font-medium text-gray-700">Full Name *</label><input required value={instructorName} onChange={e => setInstructorName(e.target.value)} placeholder="Enter instructor name" className={inputClass} /></div>
-                                <div><label className="mb-2 block text-sm font-medium text-gray-700">Email Address *</label><input required type="email" value={instructorEmail} onChange={e => setInstructorEmail(e.target.value)} placeholder="instructor@example.com" className={inputClass} /></div>
-                                <div><label className="mb-2 block text-sm font-medium text-gray-700">Phone Number</label><input type="tel" value={instructorPhone} onChange={e => setInstructorPhone(e.target.value)} placeholder="Enter phone number" className={inputClass} /></div>
-                                <div><label className="mb-2 block text-sm font-medium text-gray-700">Specialization *</label><select required value={instructorSpecialty} onChange={e => setInstructorSpecialty(e.target.value)} className={inputClass}><option value="Frontend">Frontend Development</option><option value="Backend">Backend Development</option><option value="Full Stack">Full Stack Development</option><option value="UI/UX">UI/UX Design</option><option value="Mobile">Mobile Development</option><option value="AI">Artificial Intelligence</option><option value="Data Science">Data Science</option><option value="Cybersecurity">Cybersecurity</option></select></div>
-                                <div><label className="mb-2 block text-sm font-medium text-gray-700">Account Status</label><select value={instructorStatus} onChange={e => setInstructorStatus(e.target.value)} className={inputClass}><option value="Active">Active</option><option value="Pending">Pending</option></select></div>
-                                <div><label className="mb-2 block text-sm font-medium text-gray-700">Profile Image</label><input type="file" accept="image/*" onChange={e => { const file = e.target.files?.[0]; if (!file) return; if (file.size > 5 * 1024 * 1024) { setNotice("Image must be smaller than 5 MB."); e.target.value = ""; return; } const reader = new FileReader(); reader.onload = () => { if (typeof reader.result === "string") setInstructorImage(reader.result); }; reader.readAsDataURL(file); }} className="w-full rounded-xl border border-gray-200 bg-[#F8F8FC] px-3 py-2.5 text-sm" /></div>
-                            </div>
-                                {instructorImage && <div className="flex items-center gap-4"><img src={instructorImage} alt="Instructor preview" className="h-16 w-16 rounded-2xl border border-gray-200 object-cover" /><button type="button" onClick={() => setInstructorImage("")} className="text-sm font-medium text-red-500 hover:text-red-600">Remove image</button></div>}
-                                <div className="flex flex-wrap gap-3 border-t border-gray-100 pt-5"><button type="submit" className="rounded-xl bg-gradient-to-r from-[#869CFF] to-[#E2A3FF] px-6 py-3 font-semibold text-white shadow-sm transition hover:opacity-90">+ Add Instructor</button><button type="button" onClick={() => { setInstructorName(""); setInstructorEmail(""); setInstructorPhone(""); setInstructorSpecialty("Frontend"); setInstructorImage(""); setInstructorStatus("Active"); }} className="rounded-xl border border-gray-200 px-6 py-3 font-semibold text-gray-600 transition hover:bg-gray-50">Clear Form</button></div>
-                            </form>
-                        </Panel>}
+                        {activeSection === "instructors" && (
+                            <Panel className="!p-0 overflow-hidden">
+                                <div className="relative overflow-hidden border-b border-[#ECECF5] bg-gradient-to-r from-[#869CFF]/10 to-[#E2A3FF]/10 p-6 sm:p-8">
+                                    <div className="relative z-10">
+                                        <p className="text-xs font-bold tracking-[0.2em] text-[#7587E8]">INSTRUCTOR MANAGEMENT</p>
+                                        <h3 className="mt-2 text-2xl font-extrabold text-[#20243A] sm:text-3xl">Add New Instructor</h3>
+                                        <p className="mt-2 max-w-xl text-sm leading-6 text-gray-500">
+                                            Create a complete professional profile and add a new instructor to the Codo Learn teaching team.
+                                        </p>
+                                    </div>
+                                    <div className="absolute -right-10 -top-16 h-48 w-48 rounded-full bg-[#E2A3FF]/15 blur-2xl" />
+                                </div>
+
+                                <form onSubmit={handleAddInstructor} className="space-y-8 p-5 sm:p-8">
+                                    <p className="text-xs text-gray-400">Fields marked with <span className="text-rose-500">*</span> are required.</p>
+
+                                    <section>
+                                        <div className="mb-5 flex items-center gap-3">
+                                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#869CFF]/15 font-bold text-[#586FD6]">01</span>
+                                            <div><h4 className="font-bold text-[#20243A]">Personal Information</h4><p className="text-xs text-gray-400">Instructor's basic contact and location details.</p></div>
+                                        </div>
+                                        <div className="grid gap-5 md:grid-cols-2">
+                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">Full Name *</label><input required value={instructorName} onChange={e => setInstructorName(e.target.value)} placeholder="Enter instructor's full name" className={inputClass} /></div>
+                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">Email Address *</label><input required type="email" autoComplete="off" value={instructorEmail} onChange={e => setInstructorEmail(e.target.value)} placeholder="instructor@example.com" className={inputClass} /></div>
+                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">Phone Number *</label><input required type="tel" value={instructorPhone} onChange={e => setInstructorPhone(e.target.value)} placeholder="+20 100 000 0000" className={inputClass} /></div>
+                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">Country *</label><select value={instructorCountry} onChange={e => setInstructorCountry(e.target.value)} className={inputClass}><option value="Egypt">Egypt</option><option value="Saudi Arabia">Saudi Arabia</option><option value="UAE">United Arab Emirates</option><option value="Kuwait">Kuwait</option><option value="Jordan">Jordan</option><option value="Other">Other</option></select></div>
+                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">City *</label><input required value={instructorCity} onChange={e => setInstructorCity(e.target.value)} placeholder="Enter city" className={inputClass} /></div>
+                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">LinkedIn Profile</label><input type="url" value={instructorLinkedIn} onChange={e => setInstructorLinkedIn(e.target.value)} placeholder="https://linkedin.com/in/username" className={inputClass} /></div>
+                                        </div>
+                                    </section>
+
+                                    <div className="border-t border-gray-100" />
+
+                                    <section>
+                                        <div className="mb-5 flex items-center gap-3">
+                                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E2A3FF]/20 font-bold text-[#9864C5]">02</span>
+                                            <div><h4 className="font-bold text-[#20243A]">Professional Information</h4><p className="text-xs text-gray-400">Teaching specialization, experience and professional background.</p></div>
+                                        </div>
+                                        <div className="grid gap-5 md:grid-cols-2">
+                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">Specialization *</label><select required value={instructorSpecialty} onChange={e => setInstructorSpecialty(e.target.value)} className={inputClass}><option value="Frontend">Frontend Development</option><option value="Backend">Backend Development</option><option value="Full Stack">Full Stack Development</option><option value="UI/UX">UI/UX Design</option><option value="Mobile">Mobile Development</option><option value="AI">Artificial Intelligence</option><option value="Data Science">Data Science</option><option value="Cybersecurity">Cybersecurity</option><option value="Cloud Computing">Cloud Computing</option><option value="Other">Other</option></select></div>
+                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">Current Job Title *</label><input required value={instructorJobTitle} onChange={e => setInstructorJobTitle(e.target.value)} placeholder="e.g. Senior Frontend Developer" className={inputClass} /></div>
+                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">Years of Experience</label><select value={instructorExperience} onChange={e => setInstructorExperience(e.target.value)} className={inputClass}><option value="Less than 1 year">Less than 1 year</option><option value="1-3 years">1–3 years</option><option value="4-6 years">4–6 years</option><option value="7-10 years">7–10 years</option><option value="More than 10 years">More than 10 years</option></select></div>
+                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">Education Level</label><select value={instructorEducation} onChange={e => setInstructorEducation(e.target.value)} className={inputClass}><option value="Bachelor's Degree">Bachelor's Degree</option><option value="Master's Degree">Master's Degree</option><option value="PhD">PhD</option><option value="Diploma">Diploma</option><option value="Professional Certification">Professional Certification</option><option value="Other">Other</option></select></div>
+                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">Certifications</label><input value={instructorCertifications} onChange={e => setInstructorCertifications(e.target.value)} placeholder="e.g. AWS, Meta, Google certificates" className={inputClass} /></div>
+                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">Portfolio / Website</label><input type="url" value={instructorPortfolio} onChange={e => setInstructorPortfolio(e.target.value)} placeholder="https://yourportfolio.com" className={inputClass} /></div>
+                                            <div className="md:col-span-2"><label className="mb-2 block text-sm font-semibold text-gray-700">Professional Bio</label><textarea rows={4} value={instructorBio} onChange={e => setInstructorBio(e.target.value)} placeholder="Write a short introduction about the instructor's experience and teaching background..." className={`${inputClass} resize-y`} /></div>
+                                        </div>
+                                    </section>
+
+                                    <div className="border-t border-gray-100" />
+
+                                    <section>
+                                        <div className="mb-5 flex items-center gap-3">
+                                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#869CFF]/15 font-bold text-[#586FD6]">03</span>
+                                            <div><h4 className="font-bold text-[#20243A]">Profile & Account Settings</h4><p className="text-xs text-gray-400">Set the instructor's profile image and account status.</p></div>
+                                        </div>
+                                        <div className="grid gap-5 md:grid-cols-2">
+                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">Profile Image</label><input type="file" accept="image/*" onChange={e => { const file = e.target.files?.[0]; if (!file) return; if (file.size > 5 * 1024 * 1024) { setNotice("Image must be smaller than 5 MB."); e.target.value = ""; return; } const reader = new FileReader(); reader.onload = () => { if (typeof reader.result === "string") setInstructorImage(reader.result); }; reader.readAsDataURL(file); }} className="w-full rounded-xl border border-gray-200 bg-[#F8F8FC] px-3 py-3 text-sm" /><p className="mt-2 text-xs text-gray-400">Supported image files up to 5 MB.</p></div>
+                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">Account Status</label><select value={instructorStatus} onChange={e => setInstructorStatus(e.target.value)} className={inputClass}><option value="Active">Active</option><option value="Pending">Pending</option><option value="Inactive">Inactive</option></select></div>
+                                        </div>
+                                        {instructorImage && <div className="mt-5 flex items-center gap-4 rounded-xl border border-gray-100 bg-[#F8F8FC] p-3"><img src={instructorImage} alt="Instructor profile preview" className="h-16 w-16 rounded-xl border border-gray-200 object-cover" /><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-[#20243A]">Profile image preview</p><p className="text-xs text-gray-400">This image will be included in the instructor record.</p></div><button type="button" onClick={() => setInstructorImage("")} className="text-sm font-semibold text-red-500 hover:text-red-600">Remove</button></div>}
+                                    </section>
+
+                                    <div className="flex flex-wrap gap-3 border-t border-gray-100 pt-5">
+                                        <button type="submit" className="rounded-xl bg-gradient-to-r from-[#869CFF] to-[#E2A3FF] px-7 py-3.5 font-semibold text-white shadow-sm transition hover:opacity-90">+ Add Instructor</button>
+                                        <button type="button" onClick={() => { setInstructorName(""); setInstructorEmail(""); setInstructorPhone(""); setInstructorCountry("Egypt"); setInstructorCity(""); setInstructorLinkedIn(""); setInstructorSpecialty("Frontend"); setInstructorJobTitle(""); setInstructorExperience("1-3 years"); setInstructorEducation("Bachelor's Degree"); setInstructorCertifications(""); setInstructorPortfolio(""); setInstructorBio(""); setInstructorImage(""); setInstructorStatus("Active"); setNotice(""); }} className="rounded-xl border border-gray-200 px-7 py-3.5 font-semibold text-gray-600 transition hover:bg-gray-50">Clear Form</button>
+                                    </div>
+                                </form>
+                            </Panel>
+                        )}
 
                         {/* EMPLOYEE FORM */}
                         {activeSection === "employees" && <Panel>
