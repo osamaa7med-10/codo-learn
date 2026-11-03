@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
+import { useLanguage } from "../../context/LanguageContext";
 
 type Section =
     | "overview"
@@ -108,7 +109,6 @@ const payments = [
     },
 ];
 
-
 type StudentAssignment = {
     id: string;
     title: string;
@@ -126,23 +126,40 @@ type StudentAssignment = {
 };
 
 function sanitizeDescription(html: string) {
-    // Keep rich-text formatting while removing executable or embedded content.
-    if (typeof window === "undefined") return html.replace(/<[^>]*>/g, "");
+    if (typeof window === "undefined") {
+        return html.replace(/<[^>]*>/g, "");
+    }
+
     const document = new DOMParser().parseFromString(html, "text/html");
-    document.querySelectorAll("script, style, iframe, object, embed, form").forEach((node) => node.remove());
+
+    document
+        .querySelectorAll("script, style, iframe, object, embed, form")
+        .forEach((node) => node.remove());
+
     document.body.querySelectorAll("*").forEach((element) => {
         [...element.attributes].forEach((attribute) => {
             const name = attribute.name.toLowerCase();
             const value = attribute.value.trim().toLowerCase();
-            if (name.startsWith("on") || ((name === "href" || name === "src") && value.startsWith("javascript:"))) {
+
+            if (
+                name.startsWith("on") ||
+                ((name === "href" || name === "src") &&
+                    value.startsWith("javascript:"))
+            ) {
                 element.removeAttribute(attribute.name);
             }
         });
     });
+
     return document.body.innerHTML;
 }
 
 export default function StudentDashboard() {
+    const { language, direction, setLanguage } = useLanguage();
+    const isArabic = language === "ar";
+
+    const t = (en: string, ar: string) => (isArabic ? ar : en);
+
     const [activeSection, setActiveSection] =
         useState<Section>("overview");
 
@@ -151,6 +168,7 @@ export default function StudentDashboard() {
     const [assignments, setAssignments] = useState<StudentAssignment[]>([]);
     const [notifications, setNotifications] =
         useState(initialNotifications);
+
     const [profilePhoto, setProfilePhoto] = useState("");
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [studentName, setStudentName] = useState("Student Name");
@@ -162,6 +180,61 @@ export default function StudentDashboard() {
     const [passwordMessage, setPasswordMessage] = useState("");
     const [profileLoaded, setProfileLoaded] = useState(false);
 
+    const translateCourseCategory = (category: string) => {
+        const categories: Record<string, string> = {
+            "Web Development": "تطوير الويب",
+            Design: "التصميم",
+            Programming: "البرمجة",
+        };
+
+        return isArabic ? categories[category] || category : category;
+    };
+
+    const translateStatus = (status: string) => {
+        const statuses: Record<string, string> = {
+            Paid: "مدفوع",
+            Approved: "تمت الموافقة",
+            Pending: "قيد الانتظار",
+            Rejected: "مرفوض",
+            Submitted: "تم التسليم",
+            Graded: "تم التقييم",
+            NEW: "جديد",
+        };
+
+        return isArabic ? statuses[status] || status : status;
+    };
+
+    const translateNotification = (value: string) => {
+        if (!isArabic) return value;
+
+        const translations: Record<string, string> = {
+            "Enrollment confirmed": "تم تأكيد التسجيل",
+            "Your Frontend Development enrollment is confirmed.":
+                "تم تأكيد تسجيلك في دورة تطوير الواجهات الأمامية.",
+            "New course material": "محتوى جديد للدورة",
+            "New materials are available in UI/UX Design.":
+                "تتوفر مواد تعليمية جديدة في دورة UI/UX Design.",
+            "Payment successful": "تم الدفع بنجاح",
+            "Your payment for JavaScript Fundamentals was received.":
+                "تم استلام دفعتك الخاصة بدورة JavaScript Fundamentals.",
+            "2 hours ago": "منذ ساعتين",
+            Yesterday: "أمس",
+            "2 days ago": "منذ يومين",
+        };
+
+        return translations[value] || value;
+    };
+
+    const pageTitles: Record<Section, string> = {
+        overview: t("Student Overview", "نظرة عامة"),
+        courses: t("My Courses", "كورساتي"),
+        learning: t("Course Learning", "التعلم"),
+        assignments: t("My Assignments", "واجباتي"),
+        enrollments: t("My Enrollments", "تسجيلاتي"),
+        payments: t("My Payments", "مدفوعاتي"),
+        notifications: t("Notifications", "الإشعارات"),
+        profile: t("My Profile", "ملفي الشخصي"),
+    };
 
     useEffect(() => {
         function loadAssignments() {
@@ -171,37 +244,75 @@ export default function StudentDashboard() {
 
                 for (let index = 0; index < localStorage.length; index++) {
                     const key = localStorage.key(index);
+
                     if (!key || !key.startsWith(prefix)) continue;
 
                     const id = key.slice(prefix.length);
+
                     try {
-                        const saved = JSON.parse(localStorage.getItem(key) ?? "{}");
-                        const rawAttachments = Array.isArray(saved.attachments) ? saved.attachments : [];
-                        const statusValue = localStorage.getItem(`codo-student-assignment-status-${id}`);
+                        const saved = JSON.parse(
+                            localStorage.getItem(key) ?? "{}"
+                        );
+
+                        const rawAttachments = Array.isArray(saved.attachments)
+                            ? saved.attachments
+                            : [];
+
+                        const statusValue = localStorage.getItem(
+                            `codo-student-assignment-status-${id}`
+                        );
+
                         const status: StudentAssignment["status"] =
-                            statusValue === "Submitted" || statusValue === "Graded" ? statusValue : "Pending";
+                            statusValue === "Submitted" ||
+                                statusValue === "Graded"
+                                ? statusValue
+                                : "Pending";
 
                         found.push({
                             id,
-                            title: typeof saved.title === "string" && saved.title.trim()
-                                ? saved.title
-                                : `Assignment ${id}`,
-                            description: typeof saved.description === "string"
-                                ? sanitizeDescription(saved.description)
-                                : "",
-                            referenceLink: typeof saved.referenceLink === "string" ? saved.referenceLink : "",
-                            videoUrl: typeof saved.videoUrl === "string" ? saved.videoUrl : "",
+                            title:
+                                typeof saved.title === "string" &&
+                                    saved.title.trim()
+                                    ? saved.title
+                                    : `Assignment ${id}`,
+                            description:
+                                typeof saved.description === "string"
+                                    ? sanitizeDescription(saved.description)
+                                    : "",
+                            referenceLink:
+                                typeof saved.referenceLink === "string"
+                                    ? saved.referenceLink
+                                    : "",
+                            videoUrl:
+                                typeof saved.videoUrl === "string"
+                                    ? saved.videoUrl
+                                    : "",
                             attachments: rawAttachments.map((file: any) => ({
-                                name: typeof file?.name === "string" ? file.name : "Attachment",
-                                type: typeof file?.type === "string" ? file.type : "",
-                                size: typeof file?.size === "number" ? file.size : undefined,
-                                dataUrl: typeof file?.dataUrl === "string" ? file.dataUrl : undefined,
-                                url: typeof file?.url === "string" ? file.url : undefined,
+                                name:
+                                    typeof file?.name === "string"
+                                        ? file.name
+                                        : "Attachment",
+                                type:
+                                    typeof file?.type === "string"
+                                        ? file.type
+                                        : "",
+                                size:
+                                    typeof file?.size === "number"
+                                        ? file.size
+                                        : undefined,
+                                dataUrl:
+                                    typeof file?.dataUrl === "string"
+                                        ? file.dataUrl
+                                        : undefined,
+                                url:
+                                    typeof file?.url === "string"
+                                        ? file.url
+                                        : undefined,
                             })),
                             status,
                         });
                     } catch {
-                        // Ignore malformed assignment content and continue loading other assignments.
+                        // Ignore malformed assignment content.
                     }
                 }
 
@@ -213,8 +324,10 @@ export default function StudentDashboard() {
         }
 
         loadAssignments();
+
         window.addEventListener("storage", loadAssignments);
         window.addEventListener("focus", loadAssignments);
+
         return () => {
             window.removeEventListener("storage", loadAssignments);
             window.removeEventListener("focus", loadAssignments);
@@ -266,7 +379,10 @@ export default function StudentDashboard() {
             );
         } catch {
             setSaveMessage(
-                "Could not save your profile. Try using a smaller photo."
+                t(
+                    "Could not save your profile. Try using a smaller photo.",
+                    "تعذر حفظ الملف الشخصي. حاول استخدام صورة أصغر."
+                )
             );
         }
     }, [studentName, email, phone, profilePhoto, profileLoaded]);
@@ -313,40 +429,48 @@ export default function StudentDashboard() {
 
     function saveProfile(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        setSaveMessage("Your profile changes have been saved successfully.");
+
+        setSaveMessage(
+            t(
+                "Your profile changes have been saved successfully.",
+                "تم حفظ تغييرات ملفك الشخصي بنجاح."
+            )
+        );
     }
+
     function changePassword(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
         if (newPassword.length < 8) {
-            setPasswordMessage("Password must be at least 8 characters.");
+            setPasswordMessage(
+                t(
+                    "Password must be at least 8 characters.",
+                    "يجب ألا تقل كلمة المرور عن 8 أحرف."
+                )
+            );
             return;
         }
 
         setPasswordMessage(
-            "Demo only: connect the backend to update your real password."
+            t(
+                "Demo only: connect the backend to update your real password.",
+                "هذه نسخة تجريبية فقط: اربط النظام بالـ Backend لتغيير كلمة المرور الحقيقية."
+            )
         );
+
         setCurrentPassword("");
         setNewPassword("");
     }
 
-    const pageTitles: Record<Section, string> = {
-        overview: "Student Overview",
-        courses: "My Courses",
-        learning: "Course Learning",
-        assignments: "My Assignments",
-        enrollments: "My Enrollments",
-        payments: "My Payments",
-        notifications: "Notifications",
-        profile: "My Profile",
-    };
-
     return (
-        <div className="min-h-screen bg-[#F8F8FC] text-[#20243A]">
+        <div
+            dir={direction}
+            className="min-h-screen bg-[#F8F8FC] text-[#20243A]"
+        >
             {/* Mobile overlay */}
             {sidebarOpen && (
                 <button
-                    aria-label="Close navigation"
+                    aria-label={t("Close navigation", "إغلاق القائمة")}
                     onClick={() => setSidebarOpen(false)}
                     className="fixed inset-0 z-40 bg-[#20243A]/30 lg:hidden"
                 />
@@ -354,7 +478,11 @@ export default function StudentDashboard() {
 
             {/* Sidebar */}
             <aside
-                className={`fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col border-r border-[#ECECF5] bg-white transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                className={`fixed inset-y-0 start-0 z-50 flex w-[270px] flex-col border-e border-[#ECECF5] bg-white transition-transform duration-300 lg:translate-x-0 ${sidebarOpen
+                        ? "translate-x-0"
+                        : isArabic
+                            ? "translate-x-full"
+                            : "-translate-x-full"
                     }`}
             >
                 <div className="flex h-20 items-center justify-between border-b border-[#ECECF5] px-6">
@@ -372,7 +500,7 @@ export default function StudentDashboard() {
                     <button
                         onClick={() => setSidebarOpen(false)}
                         className="rounded-lg p-2 text-xl lg:hidden"
-                        aria-label="Close menu"
+                        aria-label={t("Close menu", "إغلاق القائمة")}
                     >
                         ×
                     </button>
@@ -380,7 +508,7 @@ export default function StudentDashboard() {
 
                 <div className="px-5 pb-3 pt-7">
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-400">
-                        Student Portal
+                        {t("Student Portal", "بوابة الطالب")}
                     </p>
                 </div>
 
@@ -389,70 +517,107 @@ export default function StudentDashboard() {
                         <button
                             key={item.id}
                             onClick={() => openSection(item.id)}
-                            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition ${activeSection === item.id
-                                ? "bg-[#869CFF]/15 text-[#586FD6]"
-                                : "text-gray-500 hover:bg-[#F8F8FC] hover:text-[#586FD6]"
+                            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-start text-sm font-medium transition ${activeSection === item.id
+                                    ? "bg-[#869CFF]/15 text-[#586FD6]"
+                                    : "text-gray-500 hover:bg-[#F8F8FC] hover:text-[#586FD6]"
                                 }`}
                         >
                             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-lg">
                                 {item.icon}
                             </span>
 
-                            <span className="flex-1">{item.label}</span>
+                            <span className="flex-1">
+                                {t(
+                                    item.label,
+                                    {
+                                        "Student Overview": "نظرة عامة",
+                                        "My Courses": "كورساتي",
+                                        "Course Learning": "التعلم",
+                                        "My Assignments": "واجباتي",
+                                        "My Enrollments": "تسجيلاتي",
+                                        "My Payments": "مدفوعاتي",
+                                        Notifications: "الإشعارات",
+                                        "My Profile": "ملفي الشخصي",
+                                    }[item.label] || item.label
+                                )}
+                            </span>
 
-                            {item.id === "notifications" && unreadCount > 0 && (
-                                <span className="rounded-full bg-[#E2A3FF] px-2 py-0.5 text-xs text-[#20243A]">
-                                    {unreadCount}
-                                </span>
-                            )}
+                            {item.id === "notifications" &&
+                                unreadCount > 0 && (
+                                    <span className="rounded-full bg-[#E2A3FF] px-2 py-0.5 text-xs text-[#20243A]">
+                                        {unreadCount}
+                                    </span>
+                                )}
                         </button>
                     ))}
                 </nav>
 
                 <div className="m-4 rounded-2xl bg-gradient-to-br from-[#869CFF]/20 to-[#E2A3FF]/30 p-4">
-                    <p className="font-bold">Keep learning!</p>
-                    <p className="mt-1 text-xs leading-5 text-gray-600">
-                        Every lesson takes you one step closer to your goals.
+                    <p className="font-bold">
+                        {t("Keep learning!", "استمر في التعلم!")}
                     </p>
+
+                    <p className="mt-1 text-xs leading-5 text-gray-600">
+                        {t(
+                            "Every lesson takes you one step closer to your goals.",
+                            "كل درس تتعلمه يقربك خطوة من تحقيق أهدافك."
+                        )}
+                    </p>
+
                     <button
                         onClick={() => openSection("courses")}
                         className="mt-3 rounded-lg bg-white px-3 py-2 text-xs font-bold text-[#586FD6]"
                     >
-                        Explore my courses
+                        {t("Explore my courses", "استكشف كورساتي")}
                     </button>
                 </div>
             </aside>
 
             {/* Main area */}
-            <main className="min-h-screen lg:ml-[270px]">
+            <main className="min-h-screen lg:ms-[270px]">
                 {/* Topbar */}
                 <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-[#ECECF5] bg-white/90 px-4 backdrop-blur-md sm:px-8">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setSidebarOpen(true)}
                             className="rounded-xl border border-gray-200 px-3 py-2 lg:hidden"
-                            aria-label="Open navigation"
+                            aria-label={t("Open navigation", "فتح القائمة")}
                         >
                             ☰
                         </button>
 
                         <div>
-                            <p className="text-xs text-gray-400">Student Portal</p>
+                            <p className="text-xs text-gray-400">
+                                {t("Student Portal", "بوابة الطالب")}
+                            </p>
+
                             <h1 className="text-lg font-bold sm:text-xl">
                                 {pageTitles[activeSection]}
                             </h1>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                        {/* Language Switcher */}
+                        <button
+                            onClick={() =>
+                                setLanguage(isArabic ? "en" : "ar")
+                            }
+                            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-[#586FD6] transition hover:bg-[#869CFF]/10"
+                            title={t("Switch to Arabic", "التغيير إلى الإنجليزية")}
+                        >
+                            <span>🌐</span>
+                            {isArabic ? "English" : "العربية"}
+                        </button>
+
                         <button
                             onClick={() => openSection("notifications")}
                             className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-lg hover:bg-gray-50"
-                            aria-label="Notifications"
+                            aria-label={t("Notifications", "الإشعارات")}
                         >
                             ♧
                             {unreadCount > 0 && (
-                                <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-[#E2A3FF]" />
+                                <span className="absolute end-1 top-1 h-2.5 w-2.5 rounded-full bg-[#E2A3FF]" />
                             )}
                         </button>
 
@@ -471,17 +636,21 @@ export default function StudentDashboard() {
                                     studentName.charAt(0).toUpperCase()
                                 )}
                             </div>
-                            <div className="hidden text-left sm:block">
+
+                            <div className="hidden text-start sm:block">
                                 <p className="max-w-32 truncate text-sm font-semibold">
                                     {studentName}
                                 </p>
-                                <p className="text-xs text-gray-400">Student</p>
+                                <p className="text-xs text-gray-400">
+                                    {t("Student", "طالب")}
+                                </p>
                             </div>
                         </button>
                     </div>
                 </header>
 
                 <div className="mx-auto max-w-[1500px] p-4 sm:p-8">
+
                     {/* OVERVIEW */}
                     {activeSection === "overview" && (
                         <motion.div
@@ -492,20 +661,32 @@ export default function StudentDashboard() {
                             <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#869CFF]/25 via-[#E2A3FF]/25 to-white p-6 sm:p-9">
                                 <div className="relative z-10 max-w-2xl">
                                     <p className="text-sm font-semibold text-[#586FD6]">
-                                        YOUR LEARNING JOURNEY
+                                        {t(
+                                            "YOUR LEARNING JOURNEY",
+                                            "رحلتك التعليمية"
+                                        )}
                                     </p>
+
                                     <h2 className="mt-3 text-3xl font-extrabold leading-tight sm:text-4xl">
-                                        Welcome back, {studentName}!
+                                        {t("Welcome back, ", "مرحباً بعودتك، ")}
+                                        {studentName}!
                                     </h2>
+
                                     <p className="mt-3 max-w-xl text-sm leading-6 text-gray-600 sm:text-base">
-                                        Keep building your skills. Continue your courses,
-                                        track your progress, and reach your next goal.
+                                        {t(
+                                            "Keep building your skills. Continue your courses, track your progress, and reach your next goal.",
+                                            "استمر في تطوير مهاراتك. تابع كورساتك، وراقب تقدمك، وحقق هدفك القادم."
+                                        )}
                                     </p>
+
                                     <button
                                         onClick={() => openSection("courses")}
                                         className="mt-6 rounded-xl bg-[#586FD6] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#455BC1]"
                                     >
-                                        Continue Learning →
+                                        {t(
+                                            "Continue Learning →",
+                                            "تابع التعلم ←"
+                                        )}
                                     </button>
                                 </div>
 
@@ -516,16 +697,17 @@ export default function StudentDashboard() {
                             <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                                 {[
                                     {
-                                        label: "Enrolled Courses",
+                                        label: t("Enrolled Courses", "الكورسات المسجل بها"),
                                         value: String(courses.length),
                                         icon: "▤",
                                         color: "#869CFF",
                                     },
                                     {
-                                        label: "Lessons Completed",
+                                        label: t("Lessons Completed", "الدروس المكتملة"),
                                         value: String(
                                             courses.reduce(
-                                                (total, course) => total + course.completedLessons,
+                                                (total, course) =>
+                                                    total + course.completedLessons,
                                                 0
                                             )
                                         ),
@@ -533,11 +715,12 @@ export default function StudentDashboard() {
                                         color: "#E2A3FF",
                                     },
                                     {
-                                        label: "Average Progress",
+                                        label: t("Average Progress", "متوسط التقدم"),
                                         value:
                                             Math.round(
                                                 courses.reduce(
-                                                    (total, course) => total + course.progress,
+                                                    (total, course) =>
+                                                        total + course.progress,
                                                     0
                                                 ) / Math.max(courses.length, 1)
                                             ) + "%",
@@ -545,7 +728,7 @@ export default function StudentDashboard() {
                                         color: "#A8B5FF",
                                     },
                                     {
-                                        label: "Unread Notifications",
+                                        label: t("Unread Notifications", "الإشعارات غير المقروءة"),
                                         value: String(unreadCount),
                                         icon: "♧",
                                         color: "#F2C3E8",
@@ -556,14 +739,20 @@ export default function StudentDashboard() {
                                         className="rounded-2xl border border-[#ECECF5] bg-white p-5"
                                     >
                                         <div className="flex items-center justify-between">
-                                            <p className="text-sm text-gray-500">{stat.label}</p>
+                                            <p className="text-sm text-gray-500">
+                                                {stat.label}
+                                            </p>
+
                                             <span
                                                 className="flex h-10 w-10 items-center justify-center rounded-xl text-lg"
-                                                style={{ backgroundColor: `${stat.color}35` }}
+                                                style={{
+                                                    backgroundColor: `${stat.color}35`,
+                                                }}
                                             >
                                                 {stat.icon}
                                             </span>
                                         </div>
+
                                         <p className="mt-4 text-3xl font-extrabold">
                                             {stat.value}
                                         </p>
@@ -574,16 +763,23 @@ export default function StudentDashboard() {
                             <section>
                                 <div className="mb-4 flex items-center justify-between gap-3">
                                     <div>
-                                        <h3 className="text-xl font-bold">Continue Learning</h3>
+                                        <h3 className="text-xl font-bold">
+                                            {t("Continue Learning", "تابع التعلم")}
+                                        </h3>
+
                                         <p className="mt-1 text-sm text-gray-500">
-                                            Pick up where you left off.
+                                            {t(
+                                                "Pick up where you left off.",
+                                                "استكمل من حيث توقفت."
+                                            )}
                                         </p>
                                     </div>
+
                                     <button
                                         onClick={() => openSection("courses")}
                                         className="text-sm font-bold text-[#586FD6]"
                                     >
-                                        View all →
+                                        {t("View all →", "عرض الكل ←")}
                                     </button>
                                 </div>
 
@@ -592,6 +788,7 @@ export default function StudentDashboard() {
                                         <CourseCard
                                             key={course.id}
                                             course={course}
+                                            isArabic={isArabic}
                                             onClick={() => {
                                                 setSelectedCourseId(course.id);
                                                 openSection("learning");
@@ -604,9 +801,15 @@ export default function StudentDashboard() {
                             <section className="grid gap-5 xl:grid-cols-2">
                                 <div className="rounded-2xl border border-[#ECECF5] bg-white p-6">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="font-bold">Upcoming Activities</h3>
-                                        <span className="text-xs text-gray-400">Coming up</span>
+                                        <h3 className="font-bold">
+                                            {t("Upcoming Activities", "الأنشطة القادمة")}
+                                        </h3>
+
+                                        <span className="text-xs text-gray-400">
+                                            {t("Coming up", "قريباً")}
+                                        </span>
                                     </div>
+
                                     <div className="mt-5 space-y-4">
                                         {[
                                             {
@@ -634,16 +837,21 @@ export default function StudentDashboard() {
                                             >
                                                 <div className="w-14 shrink-0 rounded-xl bg-[#869CFF]/15 p-2 text-center">
                                                     <p className="text-xs font-bold text-[#586FD6]">
-                                                        {activity.month}
+                                                        {isArabic
+                                                            ? "أكتوبر"
+                                                            : activity.month}
                                                     </p>
+
                                                     <p className="text-xl font-extrabold">
                                                         {activity.date}
                                                     </p>
                                                 </div>
+
                                                 <div>
                                                     <p className="text-sm font-semibold">
                                                         {activity.title}
                                                     </p>
+
                                                     <p className="mt-1 text-xs text-gray-500">
                                                         {activity.time}
                                                     </p>
@@ -655,14 +863,18 @@ export default function StudentDashboard() {
 
                                 <div className="rounded-2xl border border-[#ECECF5] bg-white p-6">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="font-bold">Recent Notifications</h3>
+                                        <h3 className="font-bold">
+                                            {t("Recent Notifications", "آخر الإشعارات")}
+                                        </h3>
+
                                         <button
                                             onClick={() => openSection("notifications")}
                                             className="text-sm font-bold text-[#586FD6]"
                                         >
-                                            View all →
+                                            {t("View all →", "عرض الكل ←")}
                                         </button>
                                     </div>
+
                                     <div className="mt-5 space-y-4">
                                         {notifications.slice(0, 3).map((notification) => (
                                             <div
@@ -672,15 +884,18 @@ export default function StudentDashboard() {
                                                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#E2A3FF]/30">
                                                     ♧
                                                 </span>
+
                                                 <div className="min-w-0">
                                                     <p className="text-sm font-semibold">
-                                                        {notification.title}
+                                                        {translateNotification(notification.title)}
                                                     </p>
+
                                                     <p className="mt-1 text-xs leading-5 text-gray-500">
-                                                        {notification.message}
+                                                        {translateNotification(notification.message)}
                                                     </p>
+
                                                     <p className="mt-1 text-xs text-gray-400">
-                                                        {notification.time}
+                                                        {translateNotification(notification.time)}
                                                     </p>
                                                 </div>
                                             </div>
@@ -694,14 +909,18 @@ export default function StudentDashboard() {
                     {/* MY COURSES */}
                     {activeSection === "courses" && (
                         <SectionPanel
-                            title="My Courses"
-                            description="All the courses you're currently enrolled in."
+                            title={t("My Courses", "كورساتي")}
+                            description={t(
+                                "All the courses you're currently enrolled in.",
+                                "جميع الكورسات التي قمت بالتسجيل فيها حالياً."
+                            )}
                         >
                             <div className="grid gap-5 xl:grid-cols-2">
                                 {courses.map((course) => (
                                     <CourseCard
                                         key={course.id}
                                         course={course}
+                                        isArabic={isArabic}
                                         onClick={() => {
                                             setSelectedCourseId(course.id);
                                             openSection("learning");
@@ -715,24 +934,32 @@ export default function StudentDashboard() {
                     {/* COURSE LEARNING */}
                     {activeSection === "learning" && (
                         <SectionPanel
-                            title="Course Learning"
-                            description="Access lessons, course materials, and your progress."
+                            title={t("Course Learning", "التعلم")}
+                            description={t(
+                                "Access lessons, course materials, and your progress.",
+                                "تابع الدروس والمواد التعليمية وتقدمك في الكورس."
+                            )}
                         >
                             <div className="grid gap-6 xl:grid-cols-[280px_1fr]">
                                 <div className="h-fit rounded-2xl border border-[#ECECF5] bg-white p-4">
-                                    <h3 className="mb-3 font-bold">Choose a course</h3>
+                                    <h3 className="mb-3 font-bold">
+                                        {t("Choose a course", "اختر كورساً")}
+                                    </h3>
+
                                     {courses.map((course) => (
                                         <button
                                             key={course.id}
                                             onClick={() => setSelectedCourseId(course.id)}
-                                            className={`mb-2 w-full rounded-xl p-3 text-left text-sm font-medium ${selectedCourseId === course.id
-                                                ? "bg-[#869CFF]/15 text-[#586FD6]"
-                                                : "hover:bg-gray-50"
+                                            className={`mb-2 w-full rounded-xl p-3 text-start text-sm font-medium ${selectedCourseId === course.id
+                                                    ? "bg-[#869CFF]/15 text-[#586FD6]"
+                                                    : "hover:bg-gray-50"
                                                 }`}
                                         >
                                             {course.title}
+
                                             <p className="mt-1 text-xs text-gray-400">
-                                                {course.progress}% complete
+                                                {course.progress}%
+                                                {t(" complete", " مكتمل")}
                                             </p>
                                         </button>
                                     ))}
@@ -741,40 +968,71 @@ export default function StudentDashboard() {
                                 <div className="space-y-5">
                                     <div className="rounded-2xl border border-[#ECECF5] bg-white p-6">
                                         <p className="text-sm text-gray-500">
-                                            {selectedCourse.category}
+                                            {translateCourseCategory(selectedCourse.category)}
                                         </p>
+
                                         <h3 className="mt-2 text-2xl font-extrabold">
                                             {selectedCourse.title}
                                         </h3>
+
                                         <p className="mt-2 text-sm text-gray-500">
-                                            Instructor: {selectedCourse.instructor}
+                                            {t("Instructor: ", "المدرب: ")}
+                                            {selectedCourse.instructor}
                                         </p>
 
                                         <div className="mt-6 flex items-center justify-between text-sm">
-                                            <span>Course progress</span>
+                                            <span>
+                                                {t("Course progress", "تقدم الكورس")}
+                                            </span>
+
                                             <strong>{selectedCourse.progress}%</strong>
                                         </div>
+
                                         <ProgressBar value={selectedCourse.progress} />
 
                                         <p className="mt-2 text-xs text-gray-400">
-                                            {selectedCourse.completedLessons} of{" "}
-                                            {selectedCourse.totalLessons} lessons completed
+                                            {selectedCourse.completedLessons}
+                                            {t(" of ", " من ")}
+                                            {selectedCourse.totalLessons}
+                                            {t(" lessons completed", " درس مكتمل")}
                                         </p>
                                     </div>
 
                                     <div className="rounded-2xl border border-[#ECECF5] bg-white p-6">
-                                        <h3 className="text-lg font-bold">Course Lessons</h3>
+                                        <h3 className="text-lg font-bold">
+                                            {t("Course Lessons", "دروس الكورس")}
+                                        </h3>
+
                                         <p className="mt-1 text-sm text-gray-500">
-                                            Demo lesson list — replace with lessons from your API.
+                                            {t(
+                                                "Demo lesson list — replace with lessons from your API.",
+                                                "قائمة تجريبية للدروس — استبدلها بالدروس القادمة من الـ API."
+                                            )}
                                         </p>
 
                                         <div className="mt-5 space-y-3">
                                             {Array.from(
-                                                { length: Math.min(selectedCourse.totalLessons, 6) },
+                                                {
+                                                    length: Math.min(
+                                                        selectedCourse.totalLessons,
+                                                        6
+                                                    ),
+                                                },
                                                 (_, index) => {
                                                     const lessonNumber = index + 1;
+
                                                     const completed =
-                                                        lessonNumber <= selectedCourse.completedLessons;
+                                                        lessonNumber <=
+                                                        selectedCourse.completedLessons;
+
+                                                    const lessonNames = [
+                                                        ["Introduction", "مقدمة"],
+                                                        ["Getting Started", "البدء"],
+                                                        ["Core Concepts", "المفاهيم الأساسية"],
+                                                        ["Practical Examples", "أمثلة عملية"],
+                                                        ["Build a Project", "إنشاء مشروع"],
+                                                        ["Review and Practice", "المراجعة والتدريب"],
+                                                    ];
 
                                                     return (
                                                         <div
@@ -783,26 +1041,24 @@ export default function StudentDashboard() {
                                                         >
                                                             <span
                                                                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${completed
-                                                                    ? "bg-[#869CFF]/20 text-[#586FD6]"
-                                                                    : "bg-gray-100 text-gray-500"
+                                                                        ? "bg-[#869CFF]/20 text-[#586FD6]"
+                                                                        : "bg-gray-100 text-gray-500"
                                                                     }`}
                                                             >
                                                                 {completed ? "✓" : "▷"}
                                                             </span>
+
                                                             <div className="flex-1">
                                                                 <p className="text-sm font-semibold">
-                                                                    Lesson {lessonNumber}:{" "}
-                                                                    {[
-                                                                        "Introduction",
-                                                                        "Getting Started",
-                                                                        "Core Concepts",
-                                                                        "Practical Examples",
-                                                                        "Build a Project",
-                                                                        "Review and Practice",
-                                                                    ][index]}
+                                                                    {t("Lesson ", "الدرس ")}
+                                                                    {lessonNumber}:{" "}
+                                                                    {lessonNames[index][isArabic ? 1 : 0]}
                                                                 </p>
+
                                                                 <p className="mt-1 text-xs text-gray-400">
-                                                                    {completed ? "Completed" : "Not completed"}
+                                                                    {completed
+                                                                        ? t("Completed", "مكتمل")
+                                                                        : t("Not completed", "غير مكتمل")}
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -819,30 +1075,46 @@ export default function StudentDashboard() {
                                             }
                                             className="mt-5 rounded-xl bg-[#586FD6] px-5 py-3 text-sm font-bold text-white hover:bg-[#455BC1] disabled:cursor-not-allowed disabled:opacity-50"
                                         >
-                                            Mark next lesson complete
+                                            {t(
+                                                "Mark next lesson complete",
+                                                "تحديد الدرس التالي كمكتمل"
+                                            )}
                                         </button>
                                     </div>
 
                                     <div className="rounded-2xl border border-[#ECECF5] bg-white p-6">
-                                        <h3 className="text-lg font-bold">Course Materials</h3>
+                                        <h3 className="text-lg font-bold">
+                                            {t("Course Materials", "المواد التعليمية")}
+                                        </h3>
+
                                         <p className="mt-1 text-sm text-gray-500">
-                                            Add real files and links when the course API is ready.
+                                            {t(
+                                                "Add real files and links when the course API is ready.",
+                                                "ستتم إضافة الملفات والروابط الفعلية عند تجهيز Course API."
+                                            )}
                                         </p>
+
                                         <div className="mt-4 grid gap-3 sm:grid-cols-2">
                                             {[
-                                                ["Course notes.pdf", "PDF document"],
-                                                ["Practice exercises", "Exercise collection"],
-                                                ["Reference links", "External resources"],
-                                                ["Final project brief", "Project instructions"],
-                                            ].map(([title, type]) => (
+                                                ["Course notes.pdf", "PDF document", "ملف PDF"],
+                                                ["Practice exercises", "Exercise collection", "مجموعة تمارين"],
+                                                ["Reference links", "External resources", "مصادر خارجية"],
+                                                ["Final project brief", "Project instructions", "تعليمات المشروع"],
+                                            ].map(([title, type, arabicType]) => (
                                                 <div
                                                     key={title}
                                                     className="flex items-center gap-3 rounded-xl bg-[#F8F8FC] p-4"
                                                 >
                                                     <span className="text-xl">▧</span>
+
                                                     <div>
-                                                        <p className="text-sm font-semibold">{title}</p>
-                                                        <p className="mt-1 text-xs text-gray-400">{type}</p>
+                                                        <p className="text-sm font-semibold">
+                                                            {title}
+                                                        </p>
+
+                                                        <p className="mt-1 text-xs text-gray-400">
+                                                            {isArabic ? arabicType : type}
+                                                        </p>
                                                     </div>
                                                 </div>
                                             ))}
@@ -853,82 +1125,160 @@ export default function StudentDashboard() {
                         </SectionPanel>
                     )}
 
-
                     {/* MY ASSIGNMENTS */}
                     {activeSection === "assignments" && (
                         <SectionPanel
-                            title="My Assignments"
-                            description="View the assignments shared by your instructors, including instructions, reference links, videos, and attachments."
+                            title={t("My Assignments", "واجباتي")}
+                            description={t(
+                                "View the assignments shared by your instructors, including instructions, reference links, videos, and attachments.",
+                                "اعرض الواجبات التي يشاركها المدربون معك، بما في ذلك التعليمات والروابط والفيديوهات والمرفقات."
+                            )}
                         >
                             {assignments.length === 0 ? (
                                 <div className="rounded-2xl border border-dashed border-[#DCDDF0] bg-white px-6 py-14 text-center">
-                                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#869CFF]/15 text-2xl text-[#586FD6]">▣</div>
-                                    <h3 className="mt-4 text-lg font-bold">No assignments available yet</h3>
+                                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#869CFF]/15 text-2xl text-[#586FD6]">
+                                        ▣
+                                    </div>
+
+                                    <h3 className="mt-4 text-lg font-bold">
+                                        {t(
+                                            "No assignments available yet",
+                                            "لا توجد واجبات متاحة حالياً"
+                                        )}
+                                    </h3>
+
                                     <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500">
-                                        When your instructor creates assignment content, it will appear here.
+                                        {t(
+                                            "When your instructor creates assignment content, it will appear here.",
+                                            "عندما يقوم المدرب بإنشاء واجب جديد، سيظهر هنا."
+                                        )}
                                     </p>
                                 </div>
                             ) : (
                                 <div className="space-y-5">
                                     {assignments.map((assignment) => (
-                                        <article key={assignment.id} className="overflow-hidden rounded-2xl border border-[#ECECF5] bg-white">
+                                        <article
+                                            key={assignment.id}
+                                            className="overflow-hidden rounded-2xl border border-[#ECECF5] bg-white"
+                                        >
                                             <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#ECECF5] p-5 sm:p-6">
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#586FD6]">Assignment</p>
-                                                    <h3 className="mt-2 break-words text-lg font-bold">{assignment.title}</h3>
-                                                    <p className="mt-1 text-xs text-gray-400">Assignment ID: {assignment.id}</p>
+                                                    <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#586FD6]">
+                                                        {t("Assignment", "واجب")}
+                                                    </p>
+
+                                                    <h3 className="mt-2 break-words text-lg font-bold">
+                                                        {assignment.title}
+                                                    </h3>
+
+                                                    <p className="mt-1 text-xs text-gray-400">
+                                                        {t("Assignment ID: ", "رقم الواجب: ")}
+                                                        {assignment.id}
+                                                    </p>
                                                 </div>
-                                                <StatusBadge status={assignment.status} />
+
+                                                <StatusBadge
+                                                    status={assignment.status}
+                                                    isArabic={isArabic}
+                                                />
                                             </div>
 
                                             <div className="space-y-5 p-5 sm:p-6">
                                                 <div>
-                                                    <h4 className="text-sm font-bold">Instructions</h4>
+                                                    <h4 className="text-sm font-bold">
+                                                        {t("Instructions", "التعليمات")}
+                                                    </h4>
+
                                                     {assignment.description ? (
                                                         <div
                                                             className="prose prose-sm mt-3 max-w-none break-words text-gray-600 prose-headings:text-[#20243A] prose-a:text-[#586FD6] prose-strong:text-[#20243A]"
-                                                            dangerouslySetInnerHTML={{ __html: assignment.description }}
+                                                            dangerouslySetInnerHTML={{
+                                                                __html: assignment.description,
+                                                            }}
                                                         />
                                                     ) : (
-                                                        <p className="mt-2 text-sm text-gray-400">No instructions have been added.</p>
+                                                        <p className="mt-2 text-sm text-gray-400">
+                                                            {t(
+                                                                "No instructions have been added.",
+                                                                "لم تتم إضافة أي تعليمات."
+                                                            )}
+                                                        </p>
                                                     )}
                                                 </div>
 
-                                                {(assignment.referenceLink || assignment.videoUrl) && (
-                                                    <div className="flex flex-wrap gap-3">
-                                                        {assignment.referenceLink && (
-                                                            <a href={assignment.referenceLink} target="_blank" rel="noreferrer"
-                                                                className="inline-flex items-center gap-2 rounded-xl border border-[#869CFF]/40 px-4 py-2.5 text-sm font-semibold text-[#586FD6] hover:bg-[#869CFF]/10">
-                                                                ↗ Open reference
-                                                            </a>
-                                                        )}
-                                                        {assignment.videoUrl && (
-                                                            <a href={assignment.videoUrl} target="_blank" rel="noreferrer"
-                                                                className="inline-flex items-center gap-2 rounded-xl bg-[#586FD6] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#455BC1]">
-                                                                ▶ Open assignment video
-                                                            </a>
-                                                        )}
-                                                    </div>
-                                                )}
+                                                {(assignment.referenceLink ||
+                                                    assignment.videoUrl) && (
+                                                        <div className="flex flex-wrap gap-3">
+                                                            {assignment.referenceLink && (
+                                                                <a
+                                                                    href={assignment.referenceLink}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="inline-flex items-center gap-2 rounded-xl border border-[#869CFF]/40 px-4 py-2.5 text-sm font-semibold text-[#586FD6] hover:bg-[#869CFF]/10"
+                                                                >
+                                                                    ↗ {t("Open reference", "فتح المرجع")}
+                                                                </a>
+                                                            )}
+
+                                                            {assignment.videoUrl && (
+                                                                <a
+                                                                    href={assignment.videoUrl}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="inline-flex items-center gap-2 rounded-xl bg-[#586FD6] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#455BC1]"
+                                                                >
+                                                                    ▶ {t("Open assignment video", "فتح فيديو الواجب")}
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    )}
 
                                                 {assignment.attachments.length > 0 && (
                                                     <div>
-                                                        <h4 className="mb-3 text-sm font-bold">Attachments</h4>
+                                                        <h4 className="mb-3 text-sm font-bold">
+                                                            {t("Attachments", "المرفقات")}
+                                                        </h4>
+
                                                         <div className="grid gap-3 sm:grid-cols-2">
                                                             {assignment.attachments.map((file, index) => {
-                                                                const fileUrl = file.dataUrl || file.url;
+                                                                const fileUrl =
+                                                                    file.dataUrl || file.url;
+
                                                                 return (
-                                                                    <div key={`${file.name}-${index}`} className="flex min-w-0 items-center gap-3 rounded-xl bg-[#F8F8FC] p-3">
-                                                                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E2A3FF]/30">▧</span>
+                                                                    <div
+                                                                        key={`${file.name}-${index}`}
+                                                                        className="flex min-w-0 items-center gap-3 rounded-xl bg-[#F8F8FC] p-3"
+                                                                    >
+                                                                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E2A3FF]/30">
+                                                                            ▧
+                                                                        </span>
+
                                                                         <div className="min-w-0 flex-1">
-                                                                            <p className="truncate text-sm font-semibold">{file.name || `Attachment ${index + 1}`}</p>
-                                                                            <p className="mt-1 text-xs text-gray-400">{file.type || "File attachment"}</p>
+                                                                            <p className="truncate text-sm font-semibold">
+                                                                                {file.name ||
+                                                                                    `Attachment ${index + 1}`}
+                                                                            </p>
+
+                                                                            <p className="mt-1 text-xs text-gray-400">
+                                                                                {file.type ||
+                                                                                    t("File attachment", "ملف مرفق")}
+                                                                            </p>
                                                                         </div>
+
                                                                         {fileUrl ? (
-                                                                            <a href={fileUrl} target="_blank" rel="noreferrer" download={file.name || undefined}
-                                                                                className="shrink-0 text-sm font-bold text-[#586FD6] hover:underline">Open</a>
+                                                                            <a
+                                                                                href={fileUrl}
+                                                                                target="_blank"
+                                                                                rel="noreferrer"
+                                                                                download={file.name || undefined}
+                                                                                className="shrink-0 text-sm font-bold text-[#586FD6] hover:underline"
+                                                                            >
+                                                                                {t("Open", "فتح")}
+                                                                            </a>
                                                                         ) : (
-                                                                            <span className="shrink-0 text-xs text-gray-400">Unavailable</span>
+                                                                            <span className="shrink-0 text-xs text-gray-400">
+                                                                                {t("Unavailable", "غير متاح")}
+                                                                            </span>
                                                                         )}
                                                                     </div>
                                                                 );
@@ -941,8 +1291,12 @@ export default function StudentDashboard() {
                                     ))}
                                 </div>
                             )}
+
                             <p className="mt-4 text-xs leading-5 text-gray-400">
-                                Demo note: assignments are read from this browser's localStorage. For students and instructors on different devices or accounts, connect this section to the backend/API.
+                                {t(
+                                    "Demo note: assignments are read from this browser's localStorage. For students and instructors on different devices or accounts, connect this section to the backend/API.",
+                                    "ملاحظة: يتم قراءة الواجبات من localStorage في هذا المتصفح. لكي تظهر الواجبات للطلاب والمدربين على أجهزة أو حسابات مختلفة، يجب ربط هذا القسم بالـ Backend/API."
+                                )}
                             </p>
                         </SectionPanel>
                     )}
@@ -950,36 +1304,59 @@ export default function StudentDashboard() {
                     {/* ENROLLMENTS */}
                     {activeSection === "enrollments" && (
                         <SectionPanel
-                            title="My Enrollments"
-                            description="Review your registration status for each course."
+                            title={t("My Enrollments", "تسجيلاتي")}
+                            description={t(
+                                "Review your registration status for each course.",
+                                "راجع حالة تسجيلك في كل كورس."
+                            )}
                         >
                             <div className="overflow-x-auto rounded-2xl border border-[#ECECF5] bg-white">
-                                <table className="w-full min-w-[650px] text-left text-sm">
+                                <table className="w-full min-w-[650px] text-start text-sm">
                                     <thead className="bg-[#F8F8FC] text-gray-500">
                                         <tr>
-                                            <th className="p-4 font-medium">Course</th>
-                                            <th className="p-4 font-medium">Enrollment ID</th>
-                                            <th className="p-4 font-medium">Date</th>
-                                            <th className="p-4 font-medium">Status</th>
-                                            <th className="p-4 font-medium">Action</th>
+                                            <th className="p-4 font-medium">
+                                                {t("Course", "الكورس")}
+                                            </th>
+                                            <th className="p-4 font-medium">
+                                                {t("Enrollment ID", "رقم التسجيل")}
+                                            </th>
+                                            <th className="p-4 font-medium">
+                                                {t("Date", "التاريخ")}
+                                            </th>
+                                            <th className="p-4 font-medium">
+                                                {t("Status", "الحالة")}
+                                            </th>
+                                            <th className="p-4 font-medium">
+                                                {t("Action", "الإجراء")}
+                                            </th>
                                         </tr>
                                     </thead>
+
                                     <tbody>
                                         {courses.map((course, index) => (
                                             <tr
                                                 key={course.id}
                                                 className="border-t border-gray-100"
                                             >
-                                                <td className="p-4 font-semibold">{course.title}</td>
+                                                <td className="p-4 font-semibold">
+                                                    {course.title}
+                                                </td>
+
                                                 <td className="p-4 text-gray-500">
                                                     ENR-10{course.id}
                                                 </td>
+
                                                 <td className="p-4 text-gray-500">
                                                     Oct {10 + index * 2}, 2026
                                                 </td>
+
                                                 <td className="p-4">
-                                                    <StatusBadge status="Approved" />
+                                                    <StatusBadge
+                                                        status="Approved"
+                                                        isArabic={isArabic}
+                                                    />
                                                 </td>
+
                                                 <td className="p-4">
                                                     <button
                                                         onClick={() => {
@@ -988,7 +1365,7 @@ export default function StudentDashboard() {
                                                         }}
                                                         className="font-semibold text-[#586FD6]"
                                                     >
-                                                        Open course →
+                                                        {t("Open course →", "فتح الكورس ←")}
                                                     </button>
                                                 </td>
                                             </tr>
@@ -996,8 +1373,12 @@ export default function StudentDashboard() {
                                     </tbody>
                                 </table>
                             </div>
+
                             <p className="mt-4 text-xs text-gray-400">
-                                Enrollment records and statuses are sample data.
+                                {t(
+                                    "Enrollment records and statuses are sample data.",
+                                    "بيانات التسجيل والحالات المعروضة هي بيانات تجريبية."
+                                )}
                             </p>
                         </SectionPanel>
                     )}
@@ -1005,50 +1386,90 @@ export default function StudentDashboard() {
                     {/* PAYMENTS */}
                     {activeSection === "payments" && (
                         <SectionPanel
-                            title="My Payments"
-                            description="Check your payment history and transaction statuses."
+                            title={t("My Payments", "مدفوعاتي")}
+                            description={t(
+                                "Check your payment history and transaction statuses.",
+                                "راجع سجل مدفوعاتك وحالات المعاملات."
+                            )}
                         >
                             <div className="mb-5 grid gap-4 sm:grid-cols-3">
                                 <SummaryCard
-                                    label="Total Paid"
+                                    label={t("Total Paid", "إجمالي المدفوع")}
                                     value="$200"
-                                    description="Sample completed payments"
+                                    description={t(
+                                        "Sample completed payments",
+                                        "مدفوعات مكتملة تجريبية"
+                                    )}
                                 />
+
                                 <SummaryCard
-                                    label="Pending"
+                                    label={t("Pending", "قيد الانتظار")}
                                     value="$95"
-                                    description="Awaiting confirmation"
+                                    description={t(
+                                        "Awaiting confirmation",
+                                        "في انتظار التأكيد"
+                                    )}
                                 />
+
                                 <SummaryCard
-                                    label="Transactions"
+                                    label={t("Transactions", "المعاملات")}
                                     value={String(payments.length)}
-                                    description="Payment records"
+                                    description={t(
+                                        "Payment records",
+                                        "سجلات الدفع"
+                                    )}
                                 />
                             </div>
 
                             <div className="overflow-x-auto rounded-2xl border border-[#ECECF5] bg-white">
-                                <table className="w-full min-w-[650px] text-left text-sm">
+                                <table className="w-full min-w-[650px] text-start text-sm">
                                     <thead className="bg-[#F8F8FC] text-gray-500">
                                         <tr>
-                                            <th className="p-4 font-medium">Transaction ID</th>
-                                            <th className="p-4 font-medium">Course</th>
-                                            <th className="p-4 font-medium">Date</th>
-                                            <th className="p-4 font-medium">Amount</th>
-                                            <th className="p-4 font-medium">Status</th>
+                                            <th className="p-4 font-medium">
+                                                {t("Transaction ID", "رقم المعاملة")}
+                                            </th>
+                                            <th className="p-4 font-medium">
+                                                {t("Course", "الكورس")}
+                                            </th>
+                                            <th className="p-4 font-medium">
+                                                {t("Date", "التاريخ")}
+                                            </th>
+                                            <th className="p-4 font-medium">
+                                                {t("Amount", "المبلغ")}
+                                            </th>
+                                            <th className="p-4 font-medium">
+                                                {t("Status", "الحالة")}
+                                            </th>
                                         </tr>
                                     </thead>
+
                                     <tbody>
                                         {payments.map((payment) => (
                                             <tr
                                                 key={payment.id}
                                                 className="border-t border-gray-100"
                                             >
-                                                <td className="p-4 font-semibold">{payment.id}</td>
-                                                <td className="p-4">{payment.course}</td>
-                                                <td className="p-4 text-gray-500">{payment.date}</td>
-                                                <td className="p-4 font-semibold">{payment.amount}</td>
+                                                <td className="p-4 font-semibold">
+                                                    {payment.id}
+                                                </td>
+
                                                 <td className="p-4">
-                                                    <StatusBadge status={payment.status} />
+                                                    {payment.course}
+                                                </td>
+
+                                                <td className="p-4 text-gray-500">
+                                                    {payment.date}
+                                                </td>
+
+                                                <td className="p-4 font-semibold">
+                                                    {payment.amount}
+                                                </td>
+
+                                                <td className="p-4">
+                                                    <StatusBadge
+                                                        status={payment.status}
+                                                        isArabic={isArabic}
+                                                    />
                                                 </td>
                                             </tr>
                                         ))}
@@ -1061,18 +1482,26 @@ export default function StudentDashboard() {
                     {/* NOTIFICATIONS */}
                     {activeSection === "notifications" && (
                         <SectionPanel
-                            title="Notifications"
-                            description="Stay updated about enrollments, courses, and payments."
+                            title={t("Notifications", "الإشعارات")}
+                            description={t(
+                                "Stay updated about enrollments, courses, and payments.",
+                                "تابع آخر التحديثات المتعلقة بالتسجيلات والكورسات والمدفوعات."
+                            )}
                         >
                             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
                                 <p className="text-sm text-gray-500">
-                                    {unreadCount} unread notification(s)
+                                    {unreadCount}{" "}
+                                    {t(
+                                        "unread notification(s)",
+                                        "إشعار غير مقروء"
+                                    )}
                                 </p>
+
                                 <button
                                     onClick={markAllRead}
                                     className="rounded-xl border border-[#869CFF]/40 px-4 py-2 text-sm font-semibold text-[#586FD6] hover:bg-[#869CFF]/10"
                                 >
-                                    Mark all as read
+                                    {t("Mark all as read", "تحديد الكل كمقروء")}
                                 </button>
                             </div>
 
@@ -1081,29 +1510,36 @@ export default function StudentDashboard() {
                                     <div
                                         key={notification.id}
                                         className={`flex items-start gap-4 rounded-2xl border p-5 ${notification.read
-                                            ? "border-[#ECECF5] bg-white"
-                                            : "border-[#869CFF]/30 bg-[#869CFF]/[0.06]"
+                                                ? "border-[#ECECF5] bg-white"
+                                                : "border-[#869CFF]/30 bg-[#869CFF]/[0.06]"
                                             }`}
                                     >
                                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#869CFF]/30 to-[#E2A3FF]/40 text-xl">
                                             ♧
                                         </div>
+
                                         <div className="flex-1">
                                             <div className="flex flex-wrap items-center gap-2">
-                                                <h3 className="font-bold">{notification.title}</h3>
+                                                <h3 className="font-bold">
+                                                    {translateNotification(notification.title)}
+                                                </h3>
+
                                                 {!notification.read && (
                                                     <span className="rounded-full bg-[#869CFF]/20 px-2 py-1 text-[10px] font-bold text-[#586FD6]">
-                                                        NEW
+                                                        {t("NEW", "جديد")}
                                                     </span>
                                                 )}
                                             </div>
+
                                             <p className="mt-1 text-sm leading-6 text-gray-500">
-                                                {notification.message}
+                                                {translateNotification(notification.message)}
                                             </p>
+
                                             <p className="mt-2 text-xs text-gray-400">
-                                                {notification.time}
+                                                {translateNotification(notification.time)}
                                             </p>
                                         </div>
+
                                         {!notification.read && (
                                             <button
                                                 onClick={() =>
@@ -1117,7 +1553,7 @@ export default function StudentDashboard() {
                                                 }
                                                 className="shrink-0 text-xs font-semibold text-[#586FD6]"
                                             >
-                                                Mark read
+                                                {t("Mark read", "تحديد كمقروء")}
                                             </button>
                                         )}
                                     </div>
@@ -1126,12 +1562,14 @@ export default function StudentDashboard() {
                         </SectionPanel>
                     )}
 
-
                     {/* PROFILE */}
                     {activeSection === "profile" && (
                         <SectionPanel
-                            title="My Profile"
-                            description="Manage your personal information and password."
+                            title={t("My Profile", "ملفي الشخصي")}
+                            description={t(
+                                "Manage your personal information and password.",
+                                "إدارة معلوماتك الشخصية وكلمة المرور."
+                            )}
                         >
                             <div className="grid items-start gap-6 xl:grid-cols-[1fr_1fr]">
                                 {/* Personal Information */}
@@ -1155,8 +1593,11 @@ export default function StudentDashboard() {
 
                                             <label
                                                 htmlFor="student-photo"
-                                                title="Upload profile photo"
-                                                className="absolute -bottom-2 -right-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-[#586FD6] text-white shadow-md transition hover:bg-[#455BC1]"
+                                                title={t(
+                                                    "Upload profile photo",
+                                                    "رفع صورة الملف الشخصي"
+                                                )}
+                                                className="absolute -bottom-2 -end-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-[#586FD6] text-white shadow-md transition hover:bg-[#455BC1]"
                                             >
                                                 <svg
                                                     xmlns="http://www.w3.org/2000/svg"
@@ -1185,13 +1626,23 @@ export default function StudentDashboard() {
                                                     if (!file) return;
 
                                                     if (!file.type.startsWith("image/")) {
-                                                        alert("Please select an image file.");
+                                                        alert(
+                                                            t(
+                                                                "Please select an image file.",
+                                                                "من فضلك اختر ملف صورة."
+                                                            )
+                                                        );
                                                         e.target.value = "";
                                                         return;
                                                     }
 
                                                     if (file.size > 5 * 1024 * 1024) {
-                                                        alert("Image size must be 5 MB or less.");
+                                                        alert(
+                                                            t(
+                                                                "Image size must be 5 MB or less.",
+                                                                "يجب ألا يتجاوز حجم الصورة 5 ميجابايت."
+                                                            )
+                                                        );
                                                         e.target.value = "";
                                                         return;
                                                     }
@@ -1211,17 +1662,21 @@ export default function StudentDashboard() {
 
                                         <div>
                                             <h3 className="text-lg font-bold">
-                                                Personal Information
+                                                {t("Personal Information", "المعلومات الشخصية")}
                                             </h3>
+
                                             <p className="text-sm text-gray-500">
-                                                Update your profile details and photo.
+                                                {t(
+                                                    "Update your profile details and photo.",
+                                                    "قم بتحديث بياناتك الشخصية وصورتك."
+                                                )}
                                             </p>
 
                                             <label
                                                 htmlFor="student-photo"
                                                 className="mt-2 inline-block cursor-pointer text-sm font-semibold text-[#586FD6] hover:underline"
                                             >
-                                                Upload Photo
+                                                {t("Upload Photo", "رفع صورة")}
                                             </label>
 
                                             {profilePhoto && (
@@ -1229,52 +1684,65 @@ export default function StudentDashboard() {
                                                     type="button"
                                                     onClick={() => {
                                                         setProfilePhoto("");
-                                                        const input = document.getElementById(
-                                                            "student-photo"
-                                                        ) as HTMLInputElement | null;
+
+                                                        const input =
+                                                            document.getElementById(
+                                                                "student-photo"
+                                                            ) as HTMLInputElement | null;
 
                                                         if (input) input.value = "";
                                                     }}
-                                                    className="ml-3 text-sm font-semibold text-red-500 hover:underline"
+                                                    className="ms-3 text-sm font-semibold text-red-500 hover:underline"
                                                 >
-                                                    Remove
+                                                    {t("Remove", "إزالة")}
                                                 </button>
                                             )}
                                         </div>
                                     </div>
 
                                     <label className="mb-2 block text-sm font-semibold">
-                                        Full Name
+                                        {t("Full Name", "الاسم بالكامل")}
                                     </label>
+
                                     <input
                                         value={studentName}
                                         onChange={(e) => setStudentName(e.target.value)}
                                         required
                                         className="mb-4 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#869CFF]"
-                                        placeholder="Enter your full name"
+                                        placeholder={t(
+                                            "Enter your full name",
+                                            "أدخل اسمك بالكامل"
+                                        )}
                                     />
 
                                     <label className="mb-2 block text-sm font-semibold">
-                                        Email Address
+                                        {t("Email Address", "البريد الإلكتروني")}
                                     </label>
+
                                     <input
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
-                                        className="mb-4 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#869CFF]"
+                                        dir="ltr"
+                                        className="mb-4 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-start outline-none focus:border-[#869CFF]"
                                         placeholder="Enter your email"
                                     />
 
                                     <label className="mb-2 block text-sm font-semibold">
-                                        Phone Number
+                                        {t("Phone Number", "رقم الهاتف")}
                                     </label>
+
                                     <input
                                         type="tel"
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
-                                        className="mb-4 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#869CFF]"
-                                        placeholder="Enter your phone number"
+                                        dir="ltr"
+                                        className="mb-4 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-start outline-none focus:border-[#869CFF]"
+                                        placeholder={t(
+                                            "Enter your phone number",
+                                            "أدخل رقم هاتفك"
+                                        )}
                                     />
 
                                     {saveMessage && (
@@ -1287,7 +1755,7 @@ export default function StudentDashboard() {
                                         type="submit"
                                         className="rounded-xl bg-[#586FD6] px-5 py-3 text-sm font-bold text-white hover:bg-[#455BC1]"
                                     >
-                                        Save Changes
+                                        {t("Save Changes", "حفظ التغييرات")}
                                     </button>
                                 </form>
 
@@ -1296,34 +1764,52 @@ export default function StudentDashboard() {
                                     onSubmit={changePassword}
                                     className="rounded-2xl border border-[#ECECF5] bg-white p-6"
                                 >
-                                    <h3 className="text-lg font-bold">Change Password</h3>
+                                    <h3 className="text-lg font-bold">
+                                        {t("Change Password", "تغيير كلمة المرور")}
+                                    </h3>
+
                                     <p className="mb-6 mt-1 text-sm text-gray-500">
-                                        Choose a strong password for your account.
+                                        {t(
+                                            "Choose a strong password for your account.",
+                                            "اختر كلمة مرور قوية لحسابك."
+                                        )}
                                     </p>
 
                                     <label className="mb-2 block text-sm font-semibold">
-                                        Current Password
+                                        {t("Current Password", "كلمة المرور الحالية")}
                                     </label>
+
                                     <input
                                         type="password"
                                         value={currentPassword}
-                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                        onChange={(e) =>
+                                            setCurrentPassword(e.target.value)
+                                        }
                                         required
                                         className="mb-4 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#869CFF]"
-                                        placeholder="Enter current password"
+                                        placeholder={t(
+                                            "Enter current password",
+                                            "أدخل كلمة المرور الحالية"
+                                        )}
                                     />
 
                                     <label className="mb-2 block text-sm font-semibold">
-                                        New Password
+                                        {t("New Password", "كلمة المرور الجديدة")}
                                     </label>
+
                                     <input
                                         type="password"
                                         value={newPassword}
-                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        onChange={(e) =>
+                                            setNewPassword(e.target.value)
+                                        }
                                         required
                                         minLength={8}
                                         className="mb-4 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#869CFF]"
-                                        placeholder="At least 8 characters"
+                                        placeholder={t(
+                                            "At least 8 characters",
+                                            "8 أحرف على الأقل"
+                                        )}
                                     />
 
                                     {passwordMessage && (
@@ -1336,12 +1822,14 @@ export default function StudentDashboard() {
                                         type="submit"
                                         className="rounded-xl border border-[#869CFF]/50 px-5 py-3 text-sm font-bold text-[#586FD6] hover:bg-[#869CFF]/10"
                                     >
-                                        Update Password
+                                        {t("Update Password", "تحديث كلمة المرور")}
                                     </button>
 
                                     <p className="mt-4 text-xs leading-5 text-gray-400">
-                                        Password changes require backend authentication before
-                                        they can update a real account.
+                                        {t(
+                                            "Password changes require backend authentication before they can update a real account.",
+                                            "تغيير كلمة المرور يحتاج إلى ربط نظام المصادقة بالـ Backend حتى يتم تحديث الحساب الحقيقي."
+                                        )}
                                     </p>
                                 </form>
                             </div>
@@ -1349,7 +1837,11 @@ export default function StudentDashboard() {
                     )}
 
                     <footer className="mt-10 border-t border-[#ECECF5] py-6 text-center text-xs text-gray-400">
-                        {new Date().getFullYear()} Codo Learn. Keep learning, keep growing.
+                        {new Date().getFullYear()} Codo Learn.{" "}
+                        {t(
+                            "Keep learning, keep growing.",
+                            "استمر في التعلم والتطور."
+                        )}
                     </footer>
                 </div>
             </main>
@@ -1362,10 +1854,20 @@ type Course = (typeof initialCourses)[number];
 function CourseCard({
     course,
     onClick,
+    isArabic,
 }: {
     course: Course;
     onClick: () => void;
+    isArabic: boolean;
 }) {
+    const t = (en: string, ar: string) => (isArabic ? ar : en);
+
+    const categoryTranslations: Record<string, string> = {
+        "Web Development": "تطوير الويب",
+        Design: "التصميم",
+        Programming: "البرمجة",
+    };
+
     return (
         <div className="overflow-hidden rounded-2xl border border-[#ECECF5] bg-white transition hover:-translate-y-1 hover:shadow-lg hover:shadow-[#869CFF]/10">
             <div
@@ -1374,32 +1876,45 @@ function CourseCard({
                     background: `linear-gradient(to right, ${course.color}, #E2A3FF)`,
                 }}
             />
+
             <div className="p-5">
                 <div className="flex items-start justify-between gap-3">
                     <span className="rounded-lg bg-[#869CFF]/10 px-3 py-1.5 text-xs font-semibold text-[#586FD6]">
-                        {course.category}
+                        {isArabic
+                            ? categoryTranslations[course.category] || course.category
+                            : course.category}
                     </span>
+
                     <span className="text-xs text-gray-400">
-                        {course.completedLessons}/{course.totalLessons} lessons
+                        {course.completedLessons}/{course.totalLessons}{" "}
+                        {t("lessons", "درس")}
                     </span>
                 </div>
 
-                <h3 className="mt-5 text-lg font-bold">{course.title}</h3>
+                <h3 className="mt-5 text-lg font-bold">
+                    {course.title}
+                </h3>
+
                 <p className="mt-2 text-sm text-gray-500">
-                    Instructor: {course.instructor}
+                    {t("Instructor: ", "المدرب: ")}
+                    {course.instructor}
                 </p>
 
                 <div className="mt-5 flex items-center justify-between text-sm">
-                    <span className="text-gray-500">Your progress</span>
+                    <span className="text-gray-500">
+                        {t("Your progress", "تقدمك")}
+                    </span>
+
                     <strong>{course.progress}%</strong>
                 </div>
+
                 <ProgressBar value={course.progress} />
 
                 <button
                     onClick={onClick}
                     className="mt-5 w-full rounded-xl bg-[#869CFF]/15 px-4 py-3 text-sm font-bold text-[#586FD6] transition hover:bg-[#869CFF]/25"
                 >
-                    Continue Course →
+                    {t("Continue Course →", "متابعة الكورس ←")}
                 </button>
             </div>
         </div>
@@ -1443,19 +1958,39 @@ function SectionPanel({
         >
             <div>
                 <h2 className="text-2xl font-extrabold">{title}</h2>
-                <p className="mt-2 text-sm text-gray-500">{description}</p>
+                <p className="mt-2 text-sm text-gray-500">
+                    {description}
+                </p>
             </div>
+
             {children}
         </motion.section>
     );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({
+    status,
+    isArabic,
+}: {
+    status: string;
+    isArabic: boolean;
+}) {
     const styles: Record<string, string> = {
         Paid: "bg-emerald-50 text-emerald-700",
         Approved: "bg-emerald-50 text-emerald-700",
         Pending: "bg-amber-50 text-amber-700",
         Rejected: "bg-red-50 text-red-700",
+        Submitted: "bg-blue-50 text-blue-700",
+        Graded: "bg-purple-50 text-purple-700",
+    };
+
+    const translations: Record<string, string> = {
+        Paid: "مدفوع",
+        Approved: "تمت الموافقة",
+        Pending: "قيد الانتظار",
+        Rejected: "مرفوض",
+        Submitted: "تم التسليم",
+        Graded: "تم التقييم",
     };
 
     return (
@@ -1463,7 +1998,7 @@ function StatusBadge({ status }: { status: string }) {
             className={`inline-flex rounded-full px-3 py-1.5 text-xs font-semibold ${styles[status] ?? "bg-gray-100 text-gray-600"
                 }`}
         >
-            {status}
+            {isArabic ? translations[status] || status : status}
         </span>
     );
 }

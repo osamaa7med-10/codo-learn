@@ -1,10 +1,28 @@
+
 "use client";
 
 import { motion } from "motion/react";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function CTA() {
+    const { language, direction } = useLanguage();
+    const isArabic = language === "ar";
+
+    const content = {
+        label: isArabic ? "ابدأ رحلتك" : "Start Your Journey",
+        title: isArabic ? "مستقبلك" : "Your Future",
+        titleHighlight: isArabic ? "يبدأ من هنا." : "Starts Here.",
+        description: isArabic
+            ? "ابدأ التعلم اليوم وابنِ المهارات التي تساعدك على تشكيل مستقبلك في مجال التكنولوجيا."
+            : "Start learning today and build the skills that can shape your future in technology.",
+        button: isArabic ? "استكشف الكورسات" : "Explore Courses",
+    };
+
     return (
-        <section className="px-6 py-24">
+        <section
+            dir={direction}
+            className="px-6 py-24"
+        >
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
@@ -43,19 +61,18 @@ export default function CTA() {
                 <div className="relative">
 
                     <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#E2A3FF]">
-                        Start Your Journey
+                        {content.label}
                     </p>
 
                     <h2 className="mx-auto mt-5 max-w-3xl text-4xl font-black leading-tight text-white md:text-6xl">
-                        Your Future
+                        {content.title}
                         <span className="block text-[#E2A3FF]">
-                            Starts Here.
+                            {content.titleHighlight}
                         </span>
                     </h2>
 
                     <p className="mx-auto mt-6 max-w-2xl leading-7 text-white/60">
-                        Start learning today and build the skills that can shape
-                        your future in technology.
+                        {content.description}
                     </p>
 
                     <motion.a
@@ -67,9 +84,10 @@ export default function CTA() {
                             scale: 0.97,
                         }}
                         href="#courses"
-                        className="mt-9 inline-flex rounded-full bg-[#869CFF] px-8 py-4 font-bold text-white shadow-xl shadow-[#869CFF]/20"
+                        className="mt-9 inline-flex items-center gap-2 rounded-full bg-[#869CFF] px-8 py-4 font-bold text-white shadow-xl shadow-[#869CFF]/20"
                     >
-                        Explore Courses →
+                        {content.button}
+                        <span>{isArabic ? "←" : "→"}</span>
                     </motion.a>
 
                 </div>

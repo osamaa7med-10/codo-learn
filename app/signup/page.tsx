@@ -4,6 +4,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
+import { useLanguage } from "../../context/LanguageContext";
 
 type AccountRole = "student" | "instructor" | "employee" | "client";
 
@@ -12,7 +13,184 @@ const inputClass =
 
 const labelClass = "mb-2 block text-sm font-semibold text-[#343B58]";
 
+const translations: Record<string, string> = {
+    "Learn. Build. Grow.": "اتعلم. ابنِ. اتطور.",
+    "Your next chapter starts here.": "رحلتك الجديدة تبدأ من هنا.",
+    "Build your profile, tell us what you want to achieve, and find the learning or professional path that fits your goals.":
+        "أنشئ ملفك الشخصي، وأخبرنا بأهدافك، واكتشف المسار التعليمي أو المهني المناسب لك.",
+    "A profile tailored to your account type": "ملف شخصي مناسب لنوع حسابك",
+    "Learning and career preferences in one place": "اهتماماتك التعليمية والمهنية في مكان واحد",
+    "One community for skills, projects, and growth": "مجتمع واحد للمهارات والمشروعات والتطور",
+    "Codo Learn · Training & Digital Solutions": "Codo Learn · التدريب والحلول الرقمية",
+    "Back to home": "العودة للرئيسية",
+    "Join Codo Learn": "انضم إلى Codo Learn",
+    "Create your account": "أنشئ حسابك",
+    "Add a few details so we can tailor your Codo Learn experience. Fields marked with":
+        "أضف بعض البيانات لنخصص تجربتك في Codo Learn. الحقول التي تحمل علامة",
+    "are required.": "مطلوبة.",
+    "Account type": "نوع الحساب",
+    "Choose the profile that fits you.": "اختر نوع الحساب المناسب لك.",
+    Student: "طالب",
+    Instructor: "مدرب",
+    Employee: "موظف",
+    Client: "عميل",
+    "Learn skills": "تعلم مهارات جديدة",
+    "Teach courses": "تقديم الدورات",
+    "Team member": "عضو بالفريق",
+    "Request services": "طلب خدمات",
+    "Personal information": "البيانات الشخصية",
+    "How we can identify and contact you.": "بيانات تساعدنا على التعرف عليك والتواصل معك.",
+    "Full name": "الاسم بالكامل",
+    "e.g. Alex Morgan": "مثال: أحمد محمد",
+    "Email address": "البريد الإلكتروني",
+    "Phone number": "رقم الهاتف",
+    Country: "الدولة",
+    "Select country": "اختر الدولة",
+    Egypt: "مصر",
+    "Saudi Arabia": "المملكة العربية السعودية",
+    "United Arab Emirates": "الإمارات العربية المتحدة",
+    Jordan: "الأردن",
+    Morocco: "المغرب",
+    Other: "أخرى",
+    City: "المدينة",
+    "Your city": "مدينتك",
+    "LinkedIn profile": "حساب LinkedIn",
+    optional: "اختياري",
+    "Education & learning goals": "التعليم والأهداف التعليمية",
+    "Help us recommend the right learning path.": "ساعدنا في ترشيح المسار التعليمي المناسب لك.",
+    "University / Institution": "الجامعة / المؤسسة التعليمية",
+    "University or school name": "اسم الجامعة أو المدرسة",
+    "Education level": "المستوى التعليمي",
+    "Select level": "اختر المستوى التعليمي",
+    "High school": "المرحلة الثانوية",
+    "University student": "طالب جامعي",
+    Graduate: "خريج",
+    Postgraduate: "دراسات عليا",
+    "Self-taught": "تعلم ذاتي",
+    "Major / Field of study": "التخصص / مجال الدراسة",
+    "e.g. Computer Science": "مثال: علوم الحاسب",
+    "Interested track": "المسار المهتم به",
+    "Choose a track": "اختر المسار",
+    "Frontend Development": "تطوير الواجهات الأمامية",
+    "Backend Development": "تطوير الواجهات الخلفية",
+    "Full-Stack Development": "تطوير الويب المتكامل",
+    "Mobile App Development": "تطوير تطبيقات الهاتف",
+    "UI/UX Design": "تصميم واجهات وتجربة المستخدم",
+    "Data Science & AI": "علوم البيانات والذكاء الاصطناعي",
+    Cybersecurity: "الأمن السيبراني",
+    "Digital Marketing": "التسويق الرقمي",
+    "Not sure yet": "لم أحدد بعد",
+    "Instructor profile": "الملف الشخصي للمدرب",
+    "Share your expertise and teaching background.": "شاركنا خبراتك ومعلوماتك في مجال التدريب.",
+    Specialization: "التخصص",
+    "e.g. React, UI/UX, Data Science": "مثال: React أو UI/UX أو علوم البيانات",
+    "Teaching / work experience": "الخبرة في التدريس / العمل",
+    "Select experience": "اختر سنوات الخبرة",
+    "Less than 1 year": "أقل من سنة",
+    "1–2 years": "من سنة إلى سنتين",
+    "3–5 years": "من 3 إلى 5 سنوات",
+    "6–10 years": "من 6 إلى 10 سنوات",
+    "10+ years": "أكثر من 10 سنوات",
+    "Portfolio / personal website": "معرض الأعمال / الموقع الشخصي",
+    "Work information": "بيانات العمل",
+    "Details to help identify your team profile.": "بيانات تساعدنا في تحديد ملفك داخل فريق العمل.",
+    "Job title": "المسمى الوظيفي",
+    "e.g. Training Coordinator": "مثال: منسق تدريب",
+    Department: "القسم",
+    "e.g. Operations": "مثال: العمليات",
+    "Work email": "البريد الإلكتروني للعمل",
+    "Company & Project Information": "بيانات الشركة والمشروع",
+    "Tell us about your company and the digital services you need.":
+        "أخبرنا عن شركتك والخدمات الرقمية التي تحتاج إليها.",
+    "Company / Organization Name": "اسم الشركة / المؤسسة",
+    "e.g. Tech Solutions": "مثال: Tech Solutions",
+    "Company Website": "موقع الشركة",
+    Industry: "مجال العمل",
+    "Select industry": "اختر مجال العمل",
+    "Technology & IT": "التكنولوجيا وتقنية المعلومات",
+    Education: "التعليم",
+    Healthcare: "الرعاية الصحية",
+    "E-Commerce & Retail": "التجارة الإلكترونية والتجزئة",
+    "Finance & Banking": "التمويل والبنوك",
+    "Real Estate": "العقارات",
+    "Marketing & Advertising": "التسويق والإعلان",
+    Manufacturing: "التصنيع",
+    "Company Size": "حجم الشركة",
+    "Select company size": "اختر حجم الشركة",
+    "Just me": "فرد واحد",
+    "2–10 employees": "من 2 إلى 10 موظفين",
+    "11–50 employees": "من 11 إلى 50 موظفًا",
+    "51–200 employees": "من 51 إلى 200 موظف",
+    "201–500 employees": "من 201 إلى 500 موظف",
+    "500+ employees": "أكثر من 500 موظف",
+    "Service Required": "الخدمة المطلوبة",
+    "Choose a service": "اختر الخدمة",
+    "Web Development": "تطوير المواقع",
+    "Mobile Applications": "تطبيقات الهاتف",
+    "E-Commerce Solutions": "حلول التجارة الإلكترونية",
+    "Software Solutions": "الحلول البرمجية",
+    "Digital Transformation": "التحول الرقمي",
+    "Multiple Services": "أكثر من خدمة",
+    "Not Sure Yet": "لم أحدد بعد",
+    "Project Description": "وصف المشروع",
+    "Tell us about your project, goals, requirements, and what you want to achieve...":
+        "أخبرنا عن مشروعك وأهدافك ومتطلباتك والنتائج التي ترغب في تحقيقها...",
+    "Secure your account": "تأمين حسابك",
+    "Create a strong password for your account.": "أنشئ كلمة مرور قوية لحسابك.",
+    Password: "كلمة المرور",
+    "Create a strong password": "أنشئ كلمة مرور قوية",
+    Hide: "إخفاء",
+    Show: "إظهار",
+    "At least 8 characters, uppercase, lowercase, and a number.":
+        "8 أحرف على الأقل، مع حرف كبير وحرف صغير ورقم.",
+    "Confirm password": "تأكيد كلمة المرور",
+    "Enter password again": "أدخل كلمة المرور مرة أخرى",
+    "I agree to the": "أوافق على",
+    "Terms of Service": "شروط الخدمة",
+    and: "و",
+    "Privacy Policy": "سياسة الخصوصية",
+    "You must accept both policies to create an account.":
+        "يجب الموافقة على كلتا السياستين لإنشاء الحساب.",
+    "Create Account": "إنشاء الحساب",
+    "Already have an account?": "لديك حساب بالفعل؟",
+    "Log in": "تسجيل الدخول",
+    "Your details help personalize your experience. Account creation is currently a frontend demo.":
+        "تساعدنا بياناتك في تخصيص تجربتك. إنشاء الحساب حاليًا مجرد نموذج تجريبي للواجهة الأمامية.",
+    "Please complete all required personal and account details.":
+        "يرجى إكمال جميع البيانات الشخصية وبيانات الحساب المطلوبة.",
+    "Please enter a valid email address.": "يرجى إدخال بريد إلكتروني صحيح.",
+    "Please enter a valid phone number.": "يرجى إدخال رقم هاتف صحيح.",
+    "Use at least 8 characters, including uppercase and lowercase letters and a number.":
+        "استخدم 8 أحرف على الأقل، تشمل حرفًا كبيرًا وحرفًا صغيرًا ورقمًا.",
+    "Passwords do not match. Please try again.":
+        "كلمتا المرور غير متطابقتين. حاول مرة أخرى.",
+    "Please enter a valid LinkedIn URL starting with https://.":
+        "يرجى إدخال رابط LinkedIn صحيح يبدأ بـ https://.",
+    "Please complete the required student education and learning details.":
+        "يرجى إكمال بيانات التعليم والمسار التعليمي المطلوبة للطالب.",
+    "Please complete your instructor specialization and experience.":
+        "يرجى إكمال بيانات تخصص المدرب وخبرته.",
+    "Please enter a valid portfolio URL starting with https://.":
+        "يرجى إدخال رابط معرض أعمال صحيح يبدأ بـ https://.",
+    "Please complete your employee job details.":
+        "يرجى إكمال بيانات الوظيفة الخاصة بالموظف.",
+    "Please enter a valid work email address.":
+        "يرجى إدخال بريد إلكتروني صحيح خاص بالعمل.",
+    "Please complete all required company and project information.":
+        "يرجى إكمال جميع بيانات الشركة والمشروع المطلوبة.",
+    "Please enter a valid company website URL starting with https://.":
+        "يرجى إدخال رابط موقع الشركة بشكل صحيح ويبدأ بـ https://.",
+    "Please agree to the Terms of Service and Privacy Policy.":
+        "يرجى الموافقة على شروط الخدمة وسياسة الخصوصية.",
+};
+
 export default function SignupPage() {
+    const { language, setLanguage, direction } = useLanguage();
+    const isArabic = language === "ar";
+
+    const t = (value: string) =>
+        isArabic ? translations[value] ?? value : value;
+
     const [role, setRole] = useState<AccountRole>("student");
 
     // Personal information
@@ -29,23 +207,23 @@ export default function SignupPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    // Student-specific details
+    // Student information
     const [university, setUniversity] = useState("");
     const [educationLevel, setEducationLevel] = useState("");
     const [major, setMajor] = useState("");
     const [learningTrack, setLearningTrack] = useState("");
 
-    // Instructor-specific details
+    // Instructor information
     const [specialization, setSpecialization] = useState("");
     const [experience, setExperience] = useState("");
     const [portfolioUrl, setPortfolioUrl] = useState("");
 
-    // Employee-specific details
+    // Employee information
     const [jobTitle, setJobTitle] = useState("");
     const [department, setDepartment] = useState("");
     const [workEmail, setWorkEmail] = useState("");
 
-    // Client-specific details
+    // Client information
     const [companyName, setCompanyName] = useState("");
     const [companyWebsite, setCompanyWebsite] = useState("");
     const [industry, setIndustry] = useState("");
@@ -72,7 +250,6 @@ export default function SignupPage() {
         event.preventDefault();
         clearFeedback();
 
-        // General validation
         if (
             !fullName.trim() ||
             !email.trim() ||
@@ -121,7 +298,6 @@ export default function SignupPage() {
             return;
         }
 
-        // Student validation
         if (
             role === "student" &&
             (!university.trim() ||
@@ -135,7 +311,6 @@ export default function SignupPage() {
             return;
         }
 
-        // Instructor validation
         if (role === "instructor" && (!specialization.trim() || !experience)) {
             setError(
                 "Please complete your instructor specialization and experience."
@@ -152,7 +327,6 @@ export default function SignupPage() {
             return;
         }
 
-        // Employee validation
         if (
             role === "employee" &&
             (!jobTitle.trim() || !department.trim() || !workEmail.trim())
@@ -166,7 +340,6 @@ export default function SignupPage() {
             return;
         }
 
-        // Client validation
         if (
             role === "client" &&
             (!companyName.trim() ||
@@ -192,7 +365,6 @@ export default function SignupPage() {
             return;
         }
 
-        // Terms validation
         if (!acceptTerms) {
             setError("Please agree to the Terms of Service and Privacy Policy.");
             return;
@@ -203,8 +375,117 @@ export default function SignupPage() {
         );
     }
 
+    const renderInput = (
+        id: string,
+        label: string,
+        value: string,
+        setter: (value: string) => void,
+        options?: {
+            placeholder?: string;
+            type?: string;
+            autoComplete?: string;
+            optional?: boolean;
+            dir?: "ltr" | "rtl";
+        }
+    ) => (
+        <div>
+            <label className={labelClass} htmlFor={id}>
+                {t(label)}{" "}
+                {options?.optional ? (
+                    <span className="font-normal text-[#9299B1]">
+                        ({t("optional")})
+                    </span>
+                ) : (
+                    <span className="text-rose-500">*</span>
+                )}
+            </label>
+            <input
+                id={id}
+                name={id}
+                type={options?.type ?? "text"}
+                autoComplete={options?.autoComplete}
+                dir={options?.dir}
+                className={inputClass}
+                placeholder={options?.placeholder ? t(options.placeholder) : ""}
+                value={value}
+                onChange={(event) => {
+                    setter(event.target.value);
+                    clearFeedback();
+                }}
+            />
+        </div>
+    );
+
+    const renderSelect = (
+        id: string,
+        label: string,
+        value: string,
+        setter: (value: string) => void,
+        placeholder: string,
+        options: string[]
+    ) => (
+        <div>
+            <label className={labelClass} htmlFor={id}>
+                {t(label)} <span className="text-rose-500">*</span>
+            </label>
+            <select
+                id={id}
+                name={id}
+                className={inputClass}
+                value={value}
+                onChange={(event) => {
+                    setter(event.target.value);
+                    clearFeedback();
+                }}
+            >
+                <option value="">{t(placeholder)}</option>
+                {options.map((option) => (
+                    <option key={option} value={option}>
+                        {t(option)}
+                    </option>
+                ))}
+            </select>
+        </div>
+    );
+
+    const renderSectionHeading = (
+        number: string,
+        title: string,
+        description: string,
+        purple = false
+    ) => (
+        <div className="mb-4 flex items-center gap-3">
+            <span
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-bold ${purple
+                        ? "bg-[#E2A3FF]/20 text-[#9B65C5]"
+                        : "bg-[#869CFF]/12 text-[#687CE0]"
+                    }`}
+            >
+                {number}
+            </span>
+            <div>
+                <h3 className="font-bold text-[#20243A]">{t(title)}</h3>
+                <p className="text-xs text-[#9299B1]">{t(description)}</p>
+            </div>
+        </div>
+    );
+
+    const roleOptions: {
+        value: AccountRole;
+        label: string;
+        detail: string;
+    }[] = [
+            { value: "student", label: "Student", detail: "Learn skills" },
+            { value: "instructor", label: "Instructor", detail: "Teach courses" },
+            { value: "employee", label: "Employee", detail: "Team member" },
+            { value: "client", label: "Client", detail: "Request services" },
+        ];
+
     return (
-        <main className="relative min-h-screen overflow-hidden bg-[#F8F8FC] px-4 py-10 sm:px-6 lg:py-14">
+        <main
+            dir={direction}
+            className="relative min-h-screen overflow-hidden bg-[#F8F8FC] px-4 py-10 sm:px-6 lg:py-14"
+        >
             {/* Animated Background */}
             <motion.div
                 aria-hidden="true"
@@ -237,7 +518,6 @@ export default function SignupPage() {
             />
 
             <div className="relative z-10 mx-auto grid w-full max-w-6xl overflow-hidden rounded-[30px] border border-white/80 bg-white/85 shadow-2xl shadow-[#869CFF]/10 backdrop-blur-xl lg:grid-cols-[0.8fr_1.2fr]">
-
                 {/* Left Branding Section */}
                 <section className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-[#869CFF] to-[#E2A3FF] p-10 text-white lg:flex xl:p-12">
                     <motion.div
@@ -286,17 +566,17 @@ export default function SignupPage() {
                         </div>
 
                         <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-white/80">
-                            Learn. Build. Grow.
+                            {t("Learn. Build. Grow.")}
                         </p>
 
                         <h1 className="max-w-md text-4xl font-black leading-tight xl:text-5xl">
-                            Your next chapter starts here.
+                            {t("Your next chapter starts here.")}
                         </h1>
 
                         <p className="mt-5 max-w-md text-base leading-8 text-white/90">
-                            Build your profile, tell us what you want to achieve,
-                            and find the learning or professional path that fits
-                            your goals.
+                            {t(
+                                "Build your profile, tell us what you want to achieve, and find the learning or professional path that fits your goals."
+                            )}
                         </p>
 
                         <div className="mt-8 space-y-4 text-sm text-white/90">
@@ -309,14 +589,14 @@ export default function SignupPage() {
                                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20">
                                         ✓
                                     </span>
-                                    {item}
+                                    {t(item)}
                                 </div>
                             ))}
                         </div>
                     </motion.div>
 
                     <p className="relative z-10 text-sm text-white/80">
-                        Codo Learn · Training & Digital Solutions
+                        {t("Codo Learn · Training & Digital Solutions")}
                     </p>
                 </section>
 
@@ -328,26 +608,40 @@ export default function SignupPage() {
                         transition={{ duration: 0.6 }}
                         className="mx-auto w-full max-w-2xl"
                     >
+                        {/* Language Switch */}
+                        <div className={`mb-5 flex ${isArabic ? "justify-start" : "justify-end"}`}>
+                            <button
+                                type="button"
+                                onClick={() => setLanguage(isArabic ? "en" : "ar")}
+                                className="rounded-xl border border-[#E5E7F2] bg-white px-4 py-2 text-sm font-bold text-[#687CE0] transition hover:bg-[#869CFF]/10"
+                            >
+                                {isArabic ? "English" : "العربية"}
+                            </button>
+                        </div>
+
                         <Link
                             href="/"
                             className="inline-flex items-center gap-2 text-sm font-semibold text-[#68708D] transition hover:text-[#7587E8] lg:hidden"
                         >
-                            <span aria-hidden="true">←</span> Back to home
+                            <span aria-hidden="true">{isArabic ? "→" : "←"}</span>
+                            {t("Back to home")}
                         </Link>
 
                         <div className="mb-8 mt-5 lg:mt-0">
                             <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#869CFF]">
-                                Join Codo Learn
+                                {t("Join Codo Learn")}
                             </p>
 
                             <h2 className="mt-3 text-3xl font-black tracking-tight text-[#20243A] sm:text-4xl">
-                                Create your account
+                                {t("Create your account")}
                             </h2>
 
                             <p className="mt-3 text-sm leading-6 text-[#7B829D]">
-                                Add a few details so we can tailor your Codo Learn
-                                experience. Fields marked with{" "}
-                                <span className="text-rose-500">*</span> are required.
+                                {t(
+                                    "Add a few details so we can tailor your Codo Learn experience. Fields marked with"
+                                )}{" "}
+                                <span className="text-rose-500">*</span>{" "}
+                                {t("are required.")}
                             </p>
                         </div>
 
@@ -358,59 +652,29 @@ export default function SignupPage() {
                         >
                             {/* 01 - Account Type */}
                             <section>
-                                <div className="mb-4 flex items-center gap-3">
-                                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#869CFF]/12 font-bold text-[#687CE0]">
-                                        01
-                                    </span>
-
-                                    <div>
-                                        <h3 className="font-bold text-[#20243A]">
-                                            Account type
-                                        </h3>
-                                        <p className="text-xs text-[#9299B1]">
-                                            Choose the profile that fits you.
-                                        </p>
-                                    </div>
-                                </div>
+                                {renderSectionHeading(
+                                    "01",
+                                    "Account type",
+                                    "Choose the profile that fits you."
+                                )}
 
                                 <div className="grid grid-cols-2 gap-2 rounded-2xl bg-[#F1F2FA] p-1.5 sm:grid-cols-4">
-                                    {([
-                                        {
-                                            value: "student",
-                                            label: "Student",
-                                            detail: "Learn skills",
-                                        },
-                                        {
-                                            value: "instructor",
-                                            label: "Instructor",
-                                            detail: "Teach courses",
-                                        },
-                                        {
-                                            value: "employee",
-                                            label: "Employee",
-                                            detail: "Team member",
-                                        },
-                                        {
-                                            value: "client",
-                                            label: "Client",
-                                            detail: "Request services",
-                                        },
-                                    ] as const).map((item) => (
+                                    {roleOptions.map((item) => (
                                         <button
                                             key={item.value}
                                             type="button"
                                             onClick={() => handleRoleChange(item.value)}
                                             aria-pressed={role === item.value}
-                                            className={`rounded-xl px-2 py-3 text-left transition-all ${role === item.value
+                                            className={`rounded-xl px-2 py-3 transition-all ${role === item.value
                                                     ? "bg-white text-[#687CE0] shadow-sm ring-1 ring-[#869CFF]/25"
                                                     : "text-[#7B829D] hover:bg-white/60"
-                                                }`}
+                                                } ${isArabic ? "text-right" : "text-left"}`}
                                         >
                                             <span className="block text-sm font-bold">
-                                                {item.label}
+                                                {t(item.label)}
                                             </span>
                                             <span className="mt-1 block text-[11px]">
-                                                {item.detail}
+                                                {t(item.detail)}
                                             </span>
                                         </button>
                                     ))}
@@ -419,139 +683,101 @@ export default function SignupPage() {
 
                             {/* 02 - Personal Information */}
                             <section>
-                                <div className="mb-4 flex items-center gap-3">
-                                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#869CFF]/12 font-bold text-[#687CE0]">
-                                        02
-                                    </span>
-
-                                    <div>
-                                        <h3 className="font-bold text-[#20243A]">
-                                            Personal information
-                                        </h3>
-                                        <p className="text-xs text-[#9299B1]">
-                                            How we can identify and contact you.
-                                        </p>
-                                    </div>
-                                </div>
+                                {renderSectionHeading(
+                                    "02",
+                                    "Personal information",
+                                    "How we can identify and contact you."
+                                )}
 
                                 <div className="grid gap-5 sm:grid-cols-2">
                                     <div className="sm:col-span-2">
-                                        <label className={labelClass} htmlFor="fullName">
-                                            Full name <span className="text-rose-500">*</span>
-                                        </label>
-                                        <input
-                                            id="fullName"
-                                            name="fullName"
-                                            autoComplete="name"
-                                            className={inputClass}
-                                            placeholder="e.g. Alex Morgan"
-                                            value={fullName}
-                                            onChange={(e) => {
-                                                setFullName(e.target.value);
-                                                clearFeedback();
-                                            }}
-                                        />
+                                        {renderInput(
+                                            "fullName",
+                                            "Full name",
+                                            fullName,
+                                            setFullName,
+                                            {
+                                                placeholder: "e.g. Alex Morgan",
+                                                autoComplete: "name",
+                                            }
+                                        )}
                                     </div>
 
-                                    <div>
-                                        <label className={labelClass} htmlFor="email">
-                                            Email address <span className="text-rose-500">*</span>
-                                        </label>
-                                        <input
-                                            id="email"
-                                            name="email"
-                                            type="email"
-                                            autoComplete="email"
-                                            className={inputClass}
-                                            placeholder="you@example.com"
-                                            value={email}
-                                            onChange={(e) => {
-                                                setEmail(e.target.value);
-                                                clearFeedback();
-                                            }}
-                                        />
-                                    </div>
+                                    {renderInput(
+                                        "email",
+                                        "Email address",
+                                        email,
+                                        setEmail,
+                                        {
+                                            placeholder: "you@example.com",
+                                            type: "email",
+                                            autoComplete: "email",
+                                            dir: "ltr",
+                                        }
+                                    )}
 
-                                    <div>
-                                        <label className={labelClass} htmlFor="phone">
-                                            Phone number <span className="text-rose-500">*</span>
-                                        </label>
-                                        <input
-                                            id="phone"
-                                            name="phone"
-                                            type="tel"
-                                            autoComplete="tel"
-                                            className={inputClass}
-                                            placeholder="+20 1XX XXX XXXX"
-                                            value={phone}
-                                            onChange={(e) => {
-                                                setPhone(e.target.value);
-                                                clearFeedback();
-                                            }}
-                                        />
-                                    </div>
+                                    {renderInput(
+                                        "phone",
+                                        "Phone number",
+                                        phone,
+                                        setPhone,
+                                        {
+                                            placeholder: "+20 1XX XXX XXXX",
+                                            type: "tel",
+                                            autoComplete: "tel",
+                                            dir: "ltr",
+                                        }
+                                    )}
 
                                     <div>
                                         <label className={labelClass} htmlFor="country">
-                                            Country <span className="text-rose-500">*</span>
+                                            {t("Country")}{" "}
+                                            <span className="text-rose-500">*</span>
                                         </label>
                                         <select
                                             id="country"
                                             name="country"
                                             className={inputClass}
                                             value={country}
-                                            onChange={(e) => {
-                                                setCountry(e.target.value);
+                                            onChange={(event) => {
+                                                setCountry(event.target.value);
                                                 clearFeedback();
                                             }}
                                         >
-                                            <option value="">Select country</option>
-                                            <option>Egypt</option>
-                                            <option>Saudi Arabia</option>
-                                            <option>United Arab Emirates</option>
-                                            <option>Jordan</option>
-                                            <option>Morocco</option>
-                                            <option>Other</option>
+                                            <option value="">{t("Select country")}</option>
+                                            {[
+                                                "Egypt",
+                                                "Saudi Arabia",
+                                                "United Arab Emirates",
+                                                "Jordan",
+                                                "Morocco",
+                                                "Other",
+                                            ].map((item) => (
+                                                <option key={item} value={item}>
+                                                    {t(item)}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
 
-                                    <div>
-                                        <label className={labelClass} htmlFor="city">
-                                            City <span className="text-rose-500">*</span>
-                                        </label>
-                                        <input
-                                            id="city"
-                                            name="city"
-                                            autoComplete="address-level2"
-                                            className={inputClass}
-                                            placeholder="Your city"
-                                            value={city}
-                                            onChange={(e) => {
-                                                setCity(e.target.value);
-                                                clearFeedback();
-                                            }}
-                                        />
-                                    </div>
+                                    {renderInput("city", "City", city, setCity, {
+                                        placeholder: "Your city",
+                                        autoComplete: "address-level2",
+                                    })}
 
                                     <div className="sm:col-span-2">
-                                        <label className={labelClass} htmlFor="linkedinUrl">
-                                            LinkedIn profile{" "}
-                                            <span className="font-normal text-[#9299B1]">
-                                                (optional)
-                                            </span>
-                                        </label>
-                                        <input
-                                            id="linkedinUrl"
-                                            name="linkedinUrl"
-                                            type="url"
-                                            className={inputClass}
-                                            placeholder="https://linkedin.com/in/your-profile"
-                                            value={linkedinUrl}
-                                            onChange={(e) => {
-                                                setLinkedinUrl(e.target.value);
-                                                clearFeedback();
-                                            }}
-                                        />
+                                        {renderInput(
+                                            "linkedinUrl",
+                                            "LinkedIn profile",
+                                            linkedinUrl,
+                                            setLinkedinUrl,
+                                            {
+                                                placeholder: "https://linkedin.com/in/your-profile",
+                                                type: "url",
+                                                optional: true,
+                                                dir: "ltr",
+                                            }
+                                        )}
                                     </div>
                                 </div>
                             </section>
@@ -559,106 +785,68 @@ export default function SignupPage() {
                             {/* 03 - Student Information */}
                             {role === "student" && (
                                 <section>
-                                    <div className="mb-4 flex items-center gap-3">
-                                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E2A3FF]/20 font-bold text-[#9B65C5]">
-                                            03
-                                        </span>
-
-                                        <div>
-                                            <h3 className="font-bold text-[#20243A]">
-                                                Education & learning goals
-                                            </h3>
-                                            <p className="text-xs text-[#9299B1]">
-                                                Help us recommend the right learning path.
-                                            </p>
-                                        </div>
-                                    </div>
+                                    {renderSectionHeading(
+                                        "03",
+                                        "Education & learning goals",
+                                        "Help us recommend the right learning path.",
+                                        true
+                                    )}
 
                                     <div className="grid gap-5 sm:grid-cols-2">
-                                        <div>
-                                            <label className={labelClass} htmlFor="university">
-                                                University / Institution{" "}
-                                                <span className="text-rose-500">*</span>
-                                            </label>
-                                            <input
-                                                id="university"
-                                                className={inputClass}
-                                                placeholder="University or school name"
-                                                value={university}
-                                                onChange={(e) => {
-                                                    setUniversity(e.target.value);
-                                                    clearFeedback();
-                                                }}
-                                            />
-                                        </div>
+                                        {renderInput(
+                                            "university",
+                                            "University / Institution",
+                                            university,
+                                            setUniversity,
+                                            {
+                                                placeholder: "University or school name",
+                                            }
+                                        )}
 
-                                        <div>
-                                            <label className={labelClass} htmlFor="educationLevel">
-                                                Education level{" "}
-                                                <span className="text-rose-500">*</span>
-                                            </label>
-                                            <select
-                                                id="educationLevel"
-                                                className={inputClass}
-                                                value={educationLevel}
-                                                onChange={(e) => {
-                                                    setEducationLevel(e.target.value);
-                                                    clearFeedback();
-                                                }}
-                                            >
-                                                <option value="">Select level</option>
-                                                <option>High school</option>
-                                                <option>University student</option>
-                                                <option>Graduate</option>
-                                                <option>Postgraduate</option>
-                                                <option>Self-taught</option>
-                                                <option>Other</option>
-                                            </select>
-                                        </div>
+                                        {renderSelect(
+                                            "educationLevel",
+                                            "Education level",
+                                            educationLevel,
+                                            setEducationLevel,
+                                            "Select level",
+                                            [
+                                                "High school",
+                                                "University student",
+                                                "Graduate",
+                                                "Postgraduate",
+                                                "Self-taught",
+                                                "Other",
+                                            ]
+                                        )}
 
-                                        <div>
-                                            <label className={labelClass} htmlFor="major">
-                                                Major / Field of study{" "}
-                                                <span className="text-rose-500">*</span>
-                                            </label>
-                                            <input
-                                                id="major"
-                                                className={inputClass}
-                                                placeholder="e.g. Computer Science"
-                                                value={major}
-                                                onChange={(e) => {
-                                                    setMajor(e.target.value);
-                                                    clearFeedback();
-                                                }}
-                                            />
-                                        </div>
+                                        {renderInput(
+                                            "major",
+                                            "Major / Field of study",
+                                            major,
+                                            setMajor,
+                                            {
+                                                placeholder: "e.g. Computer Science",
+                                            }
+                                        )}
 
-                                        <div>
-                                            <label className={labelClass} htmlFor="learningTrack">
-                                                Interested track{" "}
-                                                <span className="text-rose-500">*</span>
-                                            </label>
-                                            <select
-                                                id="learningTrack"
-                                                className={inputClass}
-                                                value={learningTrack}
-                                                onChange={(e) => {
-                                                    setLearningTrack(e.target.value);
-                                                    clearFeedback();
-                                                }}
-                                            >
-                                                <option value="">Choose a track</option>
-                                                <option>Frontend Development</option>
-                                                <option>Backend Development</option>
-                                                <option>Full-Stack Development</option>
-                                                <option>Mobile App Development</option>
-                                                <option>UI/UX Design</option>
-                                                <option>Data Science & AI</option>
-                                                <option>Cybersecurity</option>
-                                                <option>Digital Marketing</option>
-                                                <option>Not sure yet</option>
-                                            </select>
-                                        </div>
+                                        {renderSelect(
+                                            "learningTrack",
+                                            "Interested track",
+                                            learningTrack,
+                                            setLearningTrack,
+                                            "Choose a track",
+                                            [
+                                                "Frontend Development",
+                                                "Backend Development",
+                                                "Full-Stack Development",
+                                                "Mobile App Development",
+                                                "UI/UX Design",
+                                                "Data Science & AI",
+                                                "Cybersecurity",
+                                                "Digital Marketing",
+                                                "Not sure yet",
+                                            ]
+                                        )}
                                     </div>
                                 </section>
                             )}
@@ -666,80 +854,52 @@ export default function SignupPage() {
                             {/* 03 - Instructor Information */}
                             {role === "instructor" && (
                                 <section>
-                                    <div className="mb-4 flex items-center gap-3">
-                                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E2A3FF]/20 font-bold text-[#9B65C5]">
-                                            03
-                                        </span>
-
-                                        <div>
-                                            <h3 className="font-bold text-[#20243A]">
-                                                Instructor profile
-                                            </h3>
-                                            <p className="text-xs text-[#9299B1]">
-                                                Share your expertise and teaching background.
-                                            </p>
-                                        </div>
-                                    </div>
+                                    {renderSectionHeading(
+                                        "03",
+                                        "Instructor profile",
+                                        "Share your expertise and teaching background.",
+                                        true
+                                    )}
 
                                     <div className="grid gap-5 sm:grid-cols-2">
-                                        <div>
-                                            <label className={labelClass} htmlFor="specialization">
-                                                Specialization{" "}
-                                                <span className="text-rose-500">*</span>
-                                            </label>
-                                            <input
-                                                id="specialization"
-                                                className={inputClass}
-                                                placeholder="e.g. React, UI/UX, Data Science"
-                                                value={specialization}
-                                                onChange={(e) => {
-                                                    setSpecialization(e.target.value);
-                                                    clearFeedback();
-                                                }}
-                                            />
-                                        </div>
+                                        {renderInput(
+                                            "specialization",
+                                            "Specialization",
+                                            specialization,
+                                            setSpecialization,
+                                            {
+                                                placeholder: "e.g. React, UI/UX, Data Science",
+                                            }
+                                        )}
 
-                                        <div>
-                                            <label className={labelClass} htmlFor="experience">
-                                                Teaching / work experience{" "}
-                                                <span className="text-rose-500">*</span>
-                                            </label>
-                                            <select
-                                                id="experience"
-                                                className={inputClass}
-                                                value={experience}
-                                                onChange={(e) => {
-                                                    setExperience(e.target.value);
-                                                    clearFeedback();
-                                                }}
-                                            >
-                                                <option value="">Select experience</option>
-                                                <option>Less than 1 year</option>
-                                                <option>1–2 years</option>
-                                                <option>3–5 years</option>
-                                                <option>6–10 years</option>
-                                                <option>10+ years</option>
-                                            </select>
-                                        </div>
+                                        {renderSelect(
+                                            "experience",
+                                            "Teaching / work experience",
+                                            experience,
+                                            setExperience,
+                                            "Select experience",
+                                            [
+                                                "Less than 1 year",
+                                                "1–2 years",
+                                                "3–5 years",
+                                                "6–10 years",
+                                                "10+ years",
+                                            ]
+                                        )}
 
                                         <div className="sm:col-span-2">
-                                            <label className={labelClass} htmlFor="portfolioUrl">
-                                                Portfolio / personal website{" "}
-                                                <span className="font-normal text-[#9299B1]">
-                                                    (optional)
-                                                </span>
-                                            </label>
-                                            <input
-                                                id="portfolioUrl"
-                                                type="url"
-                                                className={inputClass}
-                                                placeholder="https://your-portfolio.com"
-                                                value={portfolioUrl}
-                                                onChange={(e) => {
-                                                    setPortfolioUrl(e.target.value);
-                                                    clearFeedback();
-                                                }}
-                                            />
+                                            {renderInput(
+                                                "portfolioUrl",
+                                                "Portfolio / personal website",
+                                                portfolioUrl,
+                                                setPortfolioUrl,
+                                                {
+                                                    placeholder: "https://your-portfolio.com",
+                                                    type: "url",
+                                                    optional: true,
+                                                    dir: "ltr",
+                                                }
+                                            )}
                                         </div>
                                     </div>
                                 </section>
@@ -748,70 +908,47 @@ export default function SignupPage() {
                             {/* 03 - Employee Information */}
                             {role === "employee" && (
                                 <section>
-                                    <div className="mb-4 flex items-center gap-3">
-                                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E2A3FF]/20 font-bold text-[#9B65C5]">
-                                            03
-                                        </span>
-
-                                        <div>
-                                            <h3 className="font-bold text-[#20243A]">
-                                                Work information
-                                            </h3>
-                                            <p className="text-xs text-[#9299B1]">
-                                                Details to help identify your team profile.
-                                            </p>
-                                        </div>
-                                    </div>
+                                    {renderSectionHeading(
+                                        "03",
+                                        "Work information",
+                                        "Details to help identify your team profile.",
+                                        true
+                                    )}
 
                                     <div className="grid gap-5 sm:grid-cols-2">
-                                        <div>
-                                            <label className={labelClass} htmlFor="jobTitle">
-                                                Job title <span className="text-rose-500">*</span>
-                                            </label>
-                                            <input
-                                                id="jobTitle"
-                                                className={inputClass}
-                                                placeholder="e.g. Training Coordinator"
-                                                value={jobTitle}
-                                                onChange={(e) => {
-                                                    setJobTitle(e.target.value);
-                                                    clearFeedback();
-                                                }}
-                                            />
-                                        </div>
+                                        {renderInput(
+                                            "jobTitle",
+                                            "Job title",
+                                            jobTitle,
+                                            setJobTitle,
+                                            {
+                                                placeholder: "e.g. Training Coordinator",
+                                            }
+                                        )}
 
-                                        <div>
-                                            <label className={labelClass} htmlFor="department">
-                                                Department <span className="text-rose-500">*</span>
-                                            </label>
-                                            <input
-                                                id="department"
-                                                className={inputClass}
-                                                placeholder="e.g. Operations"
-                                                value={department}
-                                                onChange={(e) => {
-                                                    setDepartment(e.target.value);
-                                                    clearFeedback();
-                                                }}
-                                            />
-                                        </div>
+                                        {renderInput(
+                                            "department",
+                                            "Department",
+                                            department,
+                                            setDepartment,
+                                            {
+                                                placeholder: "e.g. Operations",
+                                            }
+                                        )}
 
                                         <div className="sm:col-span-2">
-                                            <label className={labelClass} htmlFor="workEmail">
-                                                Work email <span className="text-rose-500">*</span>
-                                            </label>
-                                            <input
-                                                id="workEmail"
-                                                type="email"
-                                                autoComplete="work email"
-                                                className={inputClass}
-                                                placeholder="name@company.com"
-                                                value={workEmail}
-                                                onChange={(e) => {
-                                                    setWorkEmail(e.target.value);
-                                                    clearFeedback();
-                                                }}
-                                            />
+                                            {renderInput(
+                                                "workEmail",
+                                                "Work email",
+                                                workEmail,
+                                                setWorkEmail,
+                                                {
+                                                    placeholder: "name@company.com",
+                                                    type: "email",
+                                                    autoComplete: "work email",
+                                                    dir: "ltr",
+                                                }
+                                            )}
                                         </div>
                                     </div>
                                 </section>
@@ -820,133 +957,94 @@ export default function SignupPage() {
                             {/* 03 - Client Information */}
                             {role === "client" && (
                                 <section>
-                                    <div className="mb-4 flex items-center gap-3">
-                                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E2A3FF]/20 font-bold text-[#9B65C5]">
-                                            03
-                                        </span>
-
-                                        <div>
-                                            <h3 className="font-bold text-[#20243A]">
-                                                Company & Project Information
-                                            </h3>
-                                            <p className="text-xs text-[#9299B1]">
-                                                Tell us about your company and the digital services you need.
-                                            </p>
-                                        </div>
-                                    </div>
+                                    {renderSectionHeading(
+                                        "03",
+                                        "Company & Project Information",
+                                        "Tell us about your company and the digital services you need.",
+                                        true
+                                    )}
 
                                     <div className="grid gap-5 sm:grid-cols-2">
                                         <div className="sm:col-span-2">
-                                            <label className={labelClass} htmlFor="companyName">
-                                                Company / Organization Name{" "}
-                                                <span className="text-rose-500">*</span>
-                                            </label>
-                                            <input
-                                                id="companyName"
-                                                className={inputClass}
-                                                placeholder="e.g. Tech Solutions"
-                                                value={companyName}
-                                                onChange={(e) => {
-                                                    setCompanyName(e.target.value);
-                                                    clearFeedback();
-                                                }}
-                                            />
+                                            {renderInput(
+                                                "companyName",
+                                                "Company / Organization Name",
+                                                companyName,
+                                                setCompanyName,
+                                                {
+                                                    placeholder: "e.g. Tech Solutions",
+                                                }
+                                            )}
                                         </div>
 
                                         <div className="sm:col-span-2">
-                                            <label className={labelClass} htmlFor="companyWebsite">
-                                                Company Website{" "}
-                                                <span className="font-normal text-[#9299B1]">
-                                                    (Optional)
-                                                </span>
-                                            </label>
-                                            <input
-                                                id="companyWebsite"
-                                                type="url"
-                                                className={inputClass}
-                                                placeholder="https://www.example.com"
-                                                value={companyWebsite}
-                                                onChange={(e) => {
-                                                    setCompanyWebsite(e.target.value);
-                                                    clearFeedback();
-                                                }}
-                                            />
+                                            {renderInput(
+                                                "companyWebsite",
+                                                "Company Website",
+                                                companyWebsite,
+                                                setCompanyWebsite,
+                                                {
+                                                    placeholder: "https://www.example.com",
+                                                    type: "url",
+                                                    optional: true,
+                                                    dir: "ltr",
+                                                }
+                                            )}
                                         </div>
 
-                                        <div>
-                                            <label className={labelClass} htmlFor="industry">
-                                                Industry <span className="text-rose-500">*</span>
-                                            </label>
-                                            <select
-                                                id="industry"
-                                                className={inputClass}
-                                                value={industry}
-                                                onChange={(e) => {
-                                                    setIndustry(e.target.value);
-                                                    clearFeedback();
-                                                }}
-                                            >
-                                                <option value="">Select industry</option>
-                                                <option>Technology & IT</option>
-                                                <option>Education</option>
-                                                <option>Healthcare</option>
-                                                <option>E-Commerce & Retail</option>
-                                                <option>Finance & Banking</option>
-                                                <option>Real Estate</option>
-                                                <option>Marketing & Advertising</option>
-                                                <option>Manufacturing</option>
-                                                <option>Other</option>
-                                            </select>
-                                        </div>
+                                        {renderSelect(
+                                            "industry",
+                                            "Industry",
+                                            industry,
+                                            setIndustry,
+                                            "Select industry",
+                                            [
+                                                "Technology & IT",
+                                                "Education",
+                                                "Healthcare",
+                                                "E-Commerce & Retail",
+                                                "Finance & Banking",
+                                                "Real Estate",
+                                                "Marketing & Advertising",
+                                                "Manufacturing",
+                                                "Other",
+                                            ]
+                                        )}
 
-                                        <div>
-                                            <label className={labelClass} htmlFor="companySize">
-                                                Company Size{" "}
-                                                <span className="text-rose-500">*</span>
-                                            </label>
-                                            <select
-                                                id="companySize"
-                                                className={inputClass}
-                                                value={companySize}
-                                                onChange={(e) => {
-                                                    setCompanySize(e.target.value);
-                                                    clearFeedback();
-                                                }}
-                                            >
-                                                <option value="">Select company size</option>
-                                                <option>Just me</option>
-                                                <option>2–10 employees</option>
-                                                <option>11–50 employees</option>
-                                                <option>51–200 employees</option>
-                                                <option>201–500 employees</option>
-                                                <option>500+ employees</option>
-                                            </select>
-                                        </div>
+                                        {renderSelect(
+                                            "companySize",
+                                            "Company Size",
+                                            companySize,
+                                            setCompanySize,
+                                            "Select company size",
+                                            [
+                                                "Just me",
+                                                "2–10 employees",
+                                                "11–50 employees",
+                                                "51–200 employees",
+                                                "201–500 employees",
+                                                "500+ employees",
+                                            ]
+                                        )}
 
                                         <div className="sm:col-span-2">
-                                            <label className={labelClass} htmlFor="serviceRequired">
-                                                Service Required{" "}
-                                                <span className="text-rose-500">*</span>
-                                            </label>
-                                            <select
-                                                id="serviceRequired"
-                                                className={inputClass}
-                                                value={serviceRequired}
-                                                onChange={(e) => {
-                                                    setServiceRequired(e.target.value);
-                                                    clearFeedback();
-                                                }}
-                                            >
-                                                <option value="">Choose a service</option>
-                                                <option>Web Development</option>
-                                                <option>Mobile Applications</option>
-                                                <option>UI / UX Design</option>
-                                                <option>E-Commerce Solutions</option>
-                                                <option>Software Solutions</option>
-                                                <option>Digital Transformation</option>
-                                                <option>Multiple Services</option>
-                                                <option>Not Sure Yet</option>
-                                            </select>
+                                            {renderSelect(
+                                                "serviceRequired",
+                                                "Service Required",
+                                                serviceRequired,
+                                                setServiceRequired,
+                                                "Choose a service",
+                                                [
+                                                    "Web Development",
+                                                    "Mobile Applications",
+                                                    "UI/UX Design",
+                                                    "E-Commerce Solutions",
+                                                    "Software Solutions",
+                                                    "Digital Transformation",
+                                                    "Multiple Services",
+                                                    "Not Sure Yet",
+                                                ]
+                                            )}
                                         </div>
 
                                         <div className="sm:col-span-2">
@@ -954,17 +1052,20 @@ export default function SignupPage() {
                                                 className={labelClass}
                                                 htmlFor="projectDescription"
                                             >
-                                                Project Description{" "}
+                                                {t("Project Description")}{" "}
                                                 <span className="text-rose-500">*</span>
                                             </label>
                                             <textarea
                                                 id="projectDescription"
+                                                name="projectDescription"
                                                 rows={5}
                                                 className={`${inputClass} resize-none`}
-                                                placeholder="Tell us about your project, goals, requirements, and what you want to achieve..."
+                                                placeholder={t(
+                                                    "Tell us about your project, goals, requirements, and what you want to achieve..."
+                                                )}
                                                 value={projectDescription}
-                                                onChange={(e) => {
-                                                    setProjectDescription(e.target.value);
+                                                onChange={(event) => {
+                                                    setProjectDescription(event.target.value);
                                                     clearFeedback();
                                                 }}
                                             />
@@ -975,38 +1076,31 @@ export default function SignupPage() {
 
                             {/* 04 - Secure Account */}
                             <section>
-                                <div className="mb-4 flex items-center gap-3">
-                                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#869CFF]/12 font-bold text-[#687CE0]">
-                                        04
-                                    </span>
-
-                                    <div>
-                                        <h3 className="font-bold text-[#20243A]">
-                                            Secure your account
-                                        </h3>
-                                        <p className="text-xs text-[#9299B1]">
-                                            Create a strong password for your account.
-                                        </p>
-                                    </div>
-                                </div>
+                                {renderSectionHeading(
+                                    "04",
+                                    "Secure your account",
+                                    "Create a strong password for your account."
+                                )}
 
                                 <div className="grid gap-5 sm:grid-cols-2">
                                     <div>
                                         <label className={labelClass} htmlFor="password">
-                                            Password <span className="text-rose-500">*</span>
+                                            {t("Password")}{" "}
+                                            <span className="text-rose-500">*</span>
                                         </label>
 
-                                        <div className="flex items-center rounded-xl border border-[#E5E7F2] bg-white pr-3 transition focus-within:border-[#869CFF] focus-within:ring-4 focus-within:ring-[#869CFF]/10">
+                                        <div className="flex items-center rounded-xl border border-[#E5E7F2] bg-white px-3 transition focus-within:border-[#869CFF] focus-within:ring-4 focus-within:ring-[#869CFF]/10">
                                             <input
                                                 id="password"
                                                 name="password"
                                                 type={showPassword ? "text" : "password"}
                                                 autoComplete="new-password"
-                                                className="min-w-0 flex-1 bg-transparent px-4 py-3.5 text-sm text-[#20243A] outline-none placeholder:text-[#A3A8BC]"
-                                                placeholder="Create a strong password"
+                                                dir="ltr"
+                                                className="min-w-0 flex-1 bg-transparent px-1 py-3.5 text-sm text-[#20243A] outline-none placeholder:text-[#A3A8BC]"
+                                                placeholder={t("Create a strong password")}
                                                 value={password}
-                                                onChange={(e) => {
-                                                    setPassword(e.target.value);
+                                                onChange={(event) => {
+                                                    setPassword(event.target.value);
                                                     clearFeedback();
                                                 }}
                                             />
@@ -1016,14 +1110,16 @@ export default function SignupPage() {
                                                 onClick={() =>
                                                     setShowPassword((value) => !value)
                                                 }
-                                                className="text-xs font-bold text-[#7587E8] hover:text-[#596CCB]"
+                                                className="shrink-0 text-xs font-bold text-[#7587E8] hover:text-[#596CCB]"
                                             >
-                                                {showPassword ? "Hide" : "Show"}
+                                                {showPassword ? t("Hide") : t("Show")}
                                             </button>
                                         </div>
 
                                         <p className="mt-2 text-xs leading-5 text-[#9299B1]">
-                                            At least 8 characters, uppercase, lowercase, and a number.
+                                            {t(
+                                                "At least 8 characters, uppercase, lowercase, and a number."
+                                            )}
                                         </p>
                                     </div>
 
@@ -1032,11 +1128,11 @@ export default function SignupPage() {
                                             className={labelClass}
                                             htmlFor="confirmPassword"
                                         >
-                                            Confirm password{" "}
+                                            {t("Confirm password")}{" "}
                                             <span className="text-rose-500">*</span>
                                         </label>
 
-                                        <div className="flex items-center rounded-xl border border-[#E5E7F2] bg-white pr-3 transition focus-within:border-[#869CFF] focus-within:ring-4 focus-within:ring-[#869CFF]/10">
+                                        <div className="flex items-center rounded-xl border border-[#E5E7F2] bg-white px-3 transition focus-within:border-[#869CFF] focus-within:ring-4 focus-within:ring-[#869CFF]/10">
                                             <input
                                                 id="confirmPassword"
                                                 name="confirmPassword"
@@ -1044,11 +1140,12 @@ export default function SignupPage() {
                                                     showConfirmPassword ? "text" : "password"
                                                 }
                                                 autoComplete="new-password"
-                                                className="min-w-0 flex-1 bg-transparent px-4 py-3.5 text-sm text-[#20243A] outline-none placeholder:text-[#A3A8BC]"
-                                                placeholder="Enter password again"
+                                                dir="ltr"
+                                                className="min-w-0 flex-1 bg-transparent px-1 py-3.5 text-sm text-[#20243A] outline-none placeholder:text-[#A3A8BC]"
+                                                placeholder={t("Enter password again")}
                                                 value={confirmPassword}
-                                                onChange={(e) => {
-                                                    setConfirmPassword(e.target.value);
+                                                onChange={(event) => {
+                                                    setConfirmPassword(event.target.value);
                                                     clearFeedback();
                                                 }}
                                             />
@@ -1058,9 +1155,11 @@ export default function SignupPage() {
                                                 onClick={() =>
                                                     setShowConfirmPassword((value) => !value)
                                                 }
-                                                className="text-xs font-bold text-[#7587E8] hover:text-[#596CCB]"
+                                                className="shrink-0 text-xs font-bold text-[#7587E8] hover:text-[#596CCB]"
                                             >
-                                                {showConfirmPassword ? "Hide" : "Show"}
+                                                {showConfirmPassword
+                                                    ? t("Hide")
+                                                    : t("Show")}
                                             </button>
                                         </div>
                                     </div>
@@ -1074,8 +1173,8 @@ export default function SignupPage() {
                                     name="acceptTerms"
                                     type="checkbox"
                                     checked={acceptTerms}
-                                    onChange={(e) => {
-                                        setAcceptTerms(e.target.checked);
+                                    onChange={(event) => {
+                                        setAcceptTerms(event.target.checked);
                                         clearFeedback();
                                     }}
                                     className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-[#869CFF]"
@@ -1090,7 +1189,7 @@ export default function SignupPage() {
                                         htmlFor="acceptTerms"
                                         className="cursor-pointer"
                                     >
-                                        I agree to the{" "}
+                                        {t("I agree to the")}{" "}
                                     </label>
 
                                     <Link
@@ -1099,10 +1198,10 @@ export default function SignupPage() {
                                         rel="noopener noreferrer"
                                         className="font-semibold text-[#687CE0] underline underline-offset-2 hover:text-[#596CCB]"
                                     >
-                                        Terms of Service
+                                        {t("Terms of Service")}
                                     </Link>
 
-                                    {" "}and{" "}
+                                    {" "}{t("and")}{" "}
 
                                     <Link
                                         href="/privacy"
@@ -1110,13 +1209,15 @@ export default function SignupPage() {
                                         rel="noopener noreferrer"
                                         className="font-semibold text-[#687CE0] underline underline-offset-2 hover:text-[#596CCB]"
                                     >
-                                        Privacy Policy
+                                        {t("Privacy Policy")}
                                     </Link>
 
                                     <span>.</span>
 
                                     <p className="mt-1 text-xs text-[#9299B1]">
-                                        You must accept both policies to create an account.
+                                        {t(
+                                            "You must accept both policies to create an account."
+                                        )}
                                     </p>
                                 </div>
                             </div>
@@ -1127,7 +1228,7 @@ export default function SignupPage() {
                                     role="alert"
                                     className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700"
                                 >
-                                    {error}
+                                    {t(error)}
                                 </p>
                             )}
 
@@ -1137,7 +1238,9 @@ export default function SignupPage() {
                                     role="status"
                                     className="rounded-xl border border-[#869CFF]/30 bg-[#869CFF]/10 px-4 py-3 text-sm leading-6 text-[#454F85]"
                                 >
-                                    {message}
+                                    {isArabic
+                                        ? `بيانات تسجيل ${role === "student" ? "الطالب" : role === "instructor" ? "المدرب" : role === "employee" ? "الموظف" : "العميل"} صحيحة. إنشاء الحساب غير متصل بقاعدة بيانات حاليًا.`
+                                        : message}
                                 </p>
                             )}
 
@@ -1148,24 +1251,27 @@ export default function SignupPage() {
                                 type="submit"
                                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#869CFF] to-[#A7A0FF] px-5 py-4 font-bold text-white shadow-lg shadow-[#869CFF]/20 transition hover:shadow-xl hover:shadow-[#869CFF]/30"
                             >
-                                Create Account{" "}
-                                <span aria-hidden="true">→</span>
+                                {t("Create Account")}
+                                <span aria-hidden="true">
+                                    {isArabic ? "←" : "→"}
+                                </span>
                             </motion.button>
                         </form>
 
                         <p className="mt-7 text-center text-sm text-[#7B829D]">
-                            Already have an account?{" "}
+                            {t("Already have an account?")}{" "}
                             <Link
                                 href="/login"
                                 className="font-bold text-[#7587E8] transition hover:text-[#596CCB]"
                             >
-                                Log in
+                                {t("Log in")}
                             </Link>
                         </p>
 
                         <p className="mt-6 text-center text-xs leading-5 text-[#9A9FB3]">
-                            Your details help personalize your experience. Account
-                            creation is currently a frontend demo.
+                            {t(
+                                "Your details help personalize your experience. Account creation is currently a frontend demo."
+                            )}
                         </p>
                     </motion.div>
                 </section>

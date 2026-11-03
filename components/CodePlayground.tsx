@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useLanguage } from "../context/LanguageContext";
 
 const starterCode = `<!DOCTYPE html>
 <html lang="en">
@@ -181,6 +182,21 @@ body {
 </html>`;
 
 export default function CodePlayground() {
+  const { language, direction } = useLanguage();
+  const isArabic = language === "ar";
+
+  const labels = {
+    title: isArabic ? "مساحة تجربة Codo" : "Codo Playground",
+    editor: isArabic ? "محرر الأكواد" : "Code Editor",
+    run: isArabic ? "تشغيل الكود" : "Run Code",
+    runAgain: isArabic ? "تشغيل مرة أخرى" : "Run Again",
+    reset: isArabic ? "إعادة ضبط" : "Reset",
+    preview: isArabic ? "معاينة مباشرة" : "Live Preview",
+    running: isArabic ? "يعمل الآن" : "Running",
+    footer: isArabic
+      ? "تعلم بالتطبيق. وتطور بالتجربة."
+      : "Learn by building. Build by experimenting.",
+  };
   const [code, setCode] = useState(starterCode);
   const [output, setOutput] = useState("");
   const [hasRun, setHasRun] = useState(false);
@@ -197,7 +213,7 @@ export default function CodePlayground() {
   }
 
   return (
-    <section className="w-full px-3 py-8 sm:px-5">
+    <section dir={direction} className="w-full px-3 py-8 sm:px-5">
       <motion.div
         layout
         initial={{ opacity: 0, y: 25 }}
@@ -242,11 +258,13 @@ export default function CodePlayground() {
             </div>
 
             <textarea
-              aria-label="HTML code editor"
+              dir="ltr"
+              aria-label={labels.editor}
               spellCheck={false}
               value={code}
               onChange={(event) => setCode(event.target.value)}
-              className="block h-[300px] w-full resize-y bg-transparent px-4 py-3 font-mono text-xs leading-6 text-[#D9DDF5] outline-none focus:ring-1 focus:ring-inset focus:ring-[#869CFF] sm:h-[340px]" />
+              className="block h-[300px] w-full resize-y bg-transparent px-4 py-3 font-mono text-xs leading-6 text-[#D9DDF5] outline-none focus:ring-1 focus:ring-inset focus:ring-[#869CFF] sm:h-[340px]"
+            />
 
             <div className="flex flex-wrap gap-3 border-t border-white/10 p-4">
               <button

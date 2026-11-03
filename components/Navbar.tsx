@@ -4,17 +4,29 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
+import { useLanguage } from "../context/LanguageContext";
 
 const navLinks = [
-
-    { name: "Tracks", href: "#tracks" },
-    { name: "Interns", href: "#interns" },
-    { name: "About Us", href: "#about" },
-    { name: "Contact", href: "#contact" },
+    { name: { en: "Tracks", ar: "المسارات" }, href: "#tracks" },
+    { name: { en: "Interns", ar: "المتدربون" }, href: "#interns" },
+    { name: { en: "About Us", ar: "من نحن" }, href: "#about" },
+    { name: { en: "Contact", ar: "تواصل معنا" }, href: "#contact" },
 ];
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
+
+    const { language, setLanguage, direction } = useLanguage();
+
+    const isArabic = language === "ar";
+
+    const toggleLanguage = () => {
+        setLanguage(isArabic ? "en" : "ar");
+        setIsOpen(false);
+    };
+
+    const loginText = isArabic ? "تسجيل الدخول" : "Log In";
+    const exploreText = isArabic ? "استكشف حلولنا" : "Explore Solutions";
 
     return (
         <motion.header
@@ -23,7 +35,10 @@ export default function Navbar() {
             transition={{ duration: 0.5, ease: "easeOut" }}
             className="fixed inset-x-0 top-0 z-50 border-b border-[#20243A]/5 bg-white shadow-sm"
         >
-            <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-12">
+            <nav
+                dir={direction}
+                className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-12"
+            >
                 {/* Logo */}
                 <motion.a
                     href="/"
@@ -42,44 +57,71 @@ export default function Navbar() {
                 <div className="hidden items-center gap-7 lg:flex xl:gap-9">
                     {navLinks.map((link) => (
                         <Link
-                            key={link.name}
+                            key={link.href}
                             href={link.href}
                             className="text-sm font-medium text-[#20243A] transition-colors duration-200 hover:text-[#869CFF]"
                         >
-                            {link.name}
+                            {link.name[language]}
                         </Link>
                     ))}
                 </div>
 
                 {/* Desktop Actions */}
                 <div className="hidden items-center gap-3 lg:flex">
+
+                    {/* Language Switcher */}
+                    <button
+                        type="button"
+                        onClick={toggleLanguage}
+                        aria-label={isArabic ? "Switch to English" : "التغيير إلى العربية"}
+                        className="flex items-center gap-2 rounded-xl border border-[#869CFF]/30 px-4 py-2.5 text-sm font-semibold text-[#586FD6] transition-all duration-200 hover:bg-[#869CFF]/10"
+                    >
+                        <span>🌐</span>
+                        {isArabic ? "English" : "العربية"}
+                    </button>
+
                     <Link
                         href="/login"
                         className="rounded-xl px-4 py-2.5 text-sm font-semibold text-[#20243A] transition-colors hover:bg-[#869CFF]/10 hover:text-[#7187F3]"
                     >
-                        Log In
+                        {loginText}
                     </Link>
 
                     <Link
                         href="#solutions"
                         className="rounded-xl bg-gradient-to-r from-[#869CFF] to-[#E2A3FF] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-[#869CFF]/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
                     >
-                        Explore Solutions
+                        {exploreText}
                     </Link>
                 </div>
 
-                {/* Mobile Menu Button */}
-                <button
-                    type="button"
-                    onClick={() => setIsOpen(!isOpen)}
-                    aria-label={isOpen ? "Close menu" : "Open menu"}
-                    aria-expanded={isOpen}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-[#20243A]/10 bg-white text-[#20243A] transition-colors hover:bg-[#F8F8FC] lg:hidden"
-                >
-                    <span className="text-2xl leading-none">
-                        {isOpen ? "×" : "☰"}
-                    </span>
-                </button>
+                {/* Mobile Actions */}
+                <div className="flex items-center gap-2 lg:hidden">
+
+                    {/* Mobile Language Switcher */}
+                    <button
+                        type="button"
+                        onClick={toggleLanguage}
+                        aria-label={isArabic ? "Switch to English" : "التغيير إلى العربية"}
+                        className="flex h-10 items-center gap-1.5 rounded-xl border border-[#869CFF]/30 px-3 text-sm font-semibold text-[#586FD6] transition-colors hover:bg-[#869CFF]/10"
+                    >
+                        <span>🌐</span>
+                        {isArabic ? "EN" : "AR"}
+                    </button>
+
+                    {/* Mobile Menu Button */}
+                    <button
+                        type="button"
+                        onClick={() => setIsOpen(!isOpen)}
+                        aria-label={isOpen ? "Close menu" : "Open menu"}
+                        aria-expanded={isOpen}
+                        className="flex h-11 w-11 items-center justify-center rounded-xl border border-[#20243A]/10 bg-white text-[#20243A] transition-colors hover:bg-[#F8F8FC]"
+                    >
+                        <span className="text-2xl leading-none">
+                            {isOpen ? "×" : "☰"}
+                        </span>
+                    </button>
+                </div>
             </nav>
 
             {/* Mobile Navigation */}
@@ -92,11 +134,14 @@ export default function Navbar() {
                         transition={{ duration: 0.25 }}
                         className="overflow-hidden border-t border-[#20243A]/5 bg-white lg:hidden"
                     >
-                        <div className="mx-auto flex max-w-7xl flex-col gap-1 px-5 py-5 sm:px-8">
+                        <div
+                            dir={direction}
+                            className="mx-auto flex max-w-7xl flex-col gap-1 px-5 py-5 sm:px-8"
+                        >
                             {navLinks.map((link, index) => (
                                 <motion.div
-                                    key={link.name}
-                                    initial={{ opacity: 0, x: -10 }}
+                                    key={link.href}
+                                    initial={{ opacity: 0, x: isArabic ? 10 : -10 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: index * 0.05 }}
                                 >
@@ -105,18 +150,19 @@ export default function Navbar() {
                                         onClick={() => setIsOpen(false)}
                                         className="block rounded-xl px-4 py-3 text-sm font-medium text-[#20243A] transition-colors hover:bg-[#869CFF]/10 hover:text-[#7187F3]"
                                     >
-                                        {link.name}
+                                        {link.name[language]}
                                     </Link>
                                 </motion.div>
                             ))}
 
                             <div className="mt-3 flex flex-col gap-3 border-t border-[#20243A]/5 pt-4">
+
                                 <Link
                                     href="/login"
                                     onClick={() => setIsOpen(false)}
                                     className="rounded-xl border border-[#869CFF]/30 px-4 py-3 text-center text-sm font-semibold text-[#20243A] transition-colors hover:bg-[#869CFF]/10"
                                 >
-                                    Log In
+                                    {loginText}
                                 </Link>
 
                                 <Link
@@ -124,7 +170,7 @@ export default function Navbar() {
                                     onClick={() => setIsOpen(false)}
                                     className="rounded-xl bg-gradient-to-r from-[#869CFF] to-[#E2A3FF] px-4 py-3 text-center text-sm font-semibold text-white shadow-md shadow-[#869CFF]/20 transition-transform hover:scale-[1.01]"
                                 >
-                                    Explore Solutions
+                                    {exploreText}
                                 </Link>
                             </div>
                         </div>

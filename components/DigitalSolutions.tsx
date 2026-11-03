@@ -1,64 +1,96 @@
 
 "use client";
 
+import Link from "next/link";
 import { motion } from "motion/react";
-
-const solutions = [
-    {
-        number: "01",
-        title: "Web Development",
-        description:
-            "Modern, fast, and scalable websites built around your business goals.",
-        tags: ["Websites", "Web Apps", "Next.js"],
-        icon: "</>",
-    },
-    {
-        number: "02",
-        title: "Mobile Applications",
-        description:
-            "Powerful mobile applications designed to deliver seamless digital experiences.",
-        tags: ["iOS", "Android", "Cross Platform"],
-        icon: "⌁",
-    },
-    {
-        number: "03",
-        title: "UI / UX Design",
-        description:
-            "Beautiful and intuitive interfaces that turn complex ideas into simple experiences.",
-        tags: ["UI Design", "UX", "Prototyping"],
-        icon: "✦",
-    },
-    {
-        number: "04",
-        title: "E-Commerce",
-        description:
-            "Complete online stores designed to help your business sell and grow.",
-        tags: ["Stores", "Payments", "Management"],
-        icon: "◈",
-    },
-    {
-        number: "05",
-        title: "Software Solutions",
-        description:
-            "Custom software built to solve your unique business challenges.",
-        tags: ["Custom Software", "APIs", "Systems"],
-        icon: "⚙",
-    },
-    {
-        number: "06",
-        title: "Digital Transformation",
-        description:
-            "Turn traditional processes into smarter, faster, and more efficient digital solutions.",
-        tags: ["Automation", "Cloud", "Integration"],
-        icon: "↗",
-    },
-];
+import { useLanguage } from "../context/LanguageContext";
 
 export default function DigitalSolutions() {
-    return (
-        <section id="solutions" className="bg-white px-6 py-24">
-            <div className="mx-auto max-w-7xl">
+    const { language, direction } = useLanguage();
+    const isArabic = language === "ar";
 
+    const solutions = [
+        {
+            number: "01",
+            slug: "web-development",
+            title: isArabic ? "تطوير الويب" : "Web Development",
+            description: isArabic
+                ? "مواقع إلكترونية حديثة وسريعة وقابلة للتوسع، مصممة لتحقيق أهداف أعمالك."
+                : "Modern, fast, and scalable websites built around your business goals.",
+            tags: isArabic
+                ? ["المواقع", "تطبيقات الويب", "Next.js"]
+                : ["Websites", "Web Apps", "Next.js"],
+            icon: "</>",
+        },
+        {
+            number: "02",
+            slug: "mobile-applications",
+            title: isArabic ? "تطبيقات الموبايل" : "Mobile Applications",
+            description: isArabic
+                ? "تطبيقات موبايل قوية توفر تجارب رقمية سهلة وسلسة للمستخدمين."
+                : "Powerful mobile applications designed to deliver seamless digital experiences.",
+            tags: isArabic
+                ? ["iOS", "Android", "متعدد المنصات"]
+                : ["iOS", "Android", "Cross Platform"],
+            icon: "⌁",
+        },
+        {
+            number: "03",
+            slug: "ui-ux-design",
+            title: isArabic ? "تصميم UI / UX" : "UI / UX Design",
+            description: isArabic
+                ? "واجهات جذابة وسهلة الاستخدام تحول الأفكار المعقدة إلى تجارب بسيطة."
+                : "Beautiful and intuitive interfaces that turn complex ideas into simple experiences.",
+            tags: isArabic
+                ? ["تصميم الواجهات", "تجربة المستخدم", "النماذج الأولية"]
+                : ["UI Design", "UX", "Prototyping"],
+            icon: "✦",
+        },
+        {
+            number: "04",
+            slug: "e-commerce",
+            title: isArabic ? "التجارة الإلكترونية" : "E-Commerce",
+            description: isArabic
+                ? "متاجر إلكترونية متكاملة تساعد أعمالك على البيع والنمو."
+                : "Complete online stores designed to help your business sell and grow.",
+            tags: isArabic
+                ? ["المتاجر", "المدفوعات", "الإدارة"]
+                : ["Stores", "Payments", "Management"],
+            icon: "◈",
+        },
+        {
+            number: "05",
+            slug: "software-solutions",
+            title: isArabic ? "الحلول البرمجية" : "Software Solutions",
+            description: isArabic
+                ? "برمجيات مخصصة مصممة لحل التحديات والاحتياجات الخاصة بأعمالك."
+                : "Custom software built to solve your unique business challenges.",
+            tags: isArabic
+                ? ["برمجيات مخصصة", "واجهات API", "الأنظمة"]
+                : ["Custom Software", "APIs", "Systems"],
+            icon: "⚙",
+        },
+        {
+            number: "06",
+            slug: "digital-transformation",
+            title: isArabic ? "التحول الرقمي" : "Digital Transformation",
+            description: isArabic
+                ? "حوّل العمليات التقليدية إلى حلول رقمية أكثر ذكاءً وسرعة وكفاءة."
+                : "Turn traditional processes into smarter, faster, and more efficient digital solutions.",
+            tags: isArabic
+                ? ["الأتمتة", "الحوسبة السحابية", "التكامل"]
+                : ["Automation", "Cloud", "Integration"],
+            icon: "↗",
+        },
+    ];
+
+    return (
+        <section
+            id="solutions"
+            dir={direction}
+            className="bg-white px-6 py-24"
+        >
+            <div className="mx-auto max-w-7xl">
                 {/* Section Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 40 }}
@@ -69,13 +101,18 @@ export default function DigitalSolutions() {
                 >
                     <div className="max-w-3xl">
                         <p className="mb-4 text-sm font-bold uppercase tracking-[0.25em] text-[#869CFF]">
-                            Digital Solutions
+                            {isArabic ? "الحلول الرقمية" : "Digital Solutions"}
                         </p>
 
-                        <h2 className="text-4xl font-black leading-[1.15] tracking-tight text-[#20243A] sm:text-5xl lg:text-6xl">
-                            We Build Digital Solutions
+                        <h2 className="text-4xl font-black leading-[1.3] tracking-tight text-[#20243A] sm:text-5xl lg:text-6xl">
+                            {isArabic
+                                ? "نبني حلولاً رقمية"
+                                : "We Build Digital Solutions"}
+
                             <span className="mt-2 block bg-gradient-to-r from-[#869CFF] to-[#E2A3FF] bg-clip-text text-transparent">
-                                That Move Your Business Forward.
+                                {isArabic
+                                    ? "تدفع أعمالك نحو المستقبل."
+                                    : "That Move Your Business Forward."}
                             </span>
                         </h2>
                     </div>
@@ -84,8 +121,9 @@ export default function DigitalSolutions() {
                         <div className="mb-4 h-1 w-14 rounded-full bg-gradient-to-r from-[#869CFF] to-[#E2A3FF]" />
 
                         <p className="max-w-md text-base leading-8 text-[#7B829D] sm:text-lg">
-                            From ideas to digital products, we create technology solutions
-                            that help businesses grow, connect with customers, and work smarter.
+                            {isArabic
+                                ? "من الأفكار إلى المنتجات الرقمية، نصنع حلولاً تكنولوجية تساعد الشركات على النمو والتواصل مع العملاء والعمل بذكاء أكبر."
+                                : "From ideas to digital products, we create technology solutions that help businesses grow, connect with customers, and work smarter."}
                         </p>
                     </div>
                 </motion.div>
@@ -109,19 +147,20 @@ export default function DigitalSolutions() {
                         <motion.div
                             key={solution.number}
                             variants={{
-                                hidden: {
-                                    opacity: 0,
-                                    y: 50,
-                                },
-                                visible: {
-                                    opacity: 1,
-                                    y: 0,
-                                },
+                                hidden: { opacity: 0, y: 50 },
+                                visible: { opacity: 1, y: 0 },
                             }}
                             transition={{ duration: 0.6 }}
                             whileHover={{ y: -8 }}
-                            className="group relative overflow-hidden rounded-[30px] border border-[#E8EAF3] bg-[#FAFAFD] p-7 transition-shadow duration-300 hover:shadow-2xl"
+                            className="group relative h-full overflow-hidden rounded-[30px] border border-[#E8EAF3] bg-[#FAFAFD] p-7 transition-shadow duration-300 hover:shadow-2xl"
                         >
+                            {/* Entire Card Link */}
+                            <Link
+                                href={`/digital-solutions/${solution.slug}`}
+                                aria-label={`${isArabic ? "اعرف المزيد عن" : "Learn more about"} ${solution.title}`}
+                                className="absolute inset-0 z-10 rounded-[30px] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#869CFF]"
+                            />
+
                             {/* Background Glow */}
                             <motion.div
                                 className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#E2A3FF]/10 blur-2xl"
@@ -169,14 +208,14 @@ export default function DigitalSolutions() {
                                 {/* Bottom */}
                                 <div className="mt-8 flex items-center justify-between border-t border-[#E8EAF3] pt-5">
                                     <span className="text-sm font-semibold text-[#869CFF]">
-                                        Learn More
+                                        {isArabic ? "اعرف المزيد" : "Learn More"}
                                     </span>
 
                                     <motion.span
-                                        whileHover={{ x: 6 }}
+                                        whileHover={{ x: isArabic ? -6 : 6 }}
                                         className="text-xl text-[#869CFF]"
                                     >
-                                        →
+                                        {isArabic ? "←" : "→"}
                                     </motion.span>
                                 </div>
                             </div>

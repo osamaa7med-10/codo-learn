@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -10,7 +9,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { useRouter } from "next/navigation";
+import { useLanguage } from "../../context/LanguageContext";
 
 type Section =
     | "overview"
@@ -41,32 +40,7 @@ type InstructorNotification = {
     read: boolean;
 };
 
-const defaultNotifications: InstructorNotification[] = [
-    {
-        id: 1001,
-        title: "New student enrolled",
-        description: "Omar Hassan enrolled in Frontend Development.",
-        type: "student",
-        createdAt: "2026-10-18T10:30:00",
-        read: false,
-    },
-    {
-        id: 1002,
-        title: "New assignment submission",
-        description: "A student submitted JavaScript Array Methods.",
-        type: "assignment",
-        createdAt: "2026-10-18T09:15:00",
-        read: false,
-    },
-    {
-        id: 1003,
-        title: "New course review",
-        description: "Sara Ahmed left a 5-star review.",
-        type: "review",
-        createdAt: "2026-10-17T16:00:00",
-        read: true,
-    },
-];
+const NOTIFICATIONS_STORAGE_KEY = "codo-instructor-notifications";
 
 const initialCourses: Course[] = [
     {
@@ -203,65 +177,75 @@ const reviews = [
     },
 ];
 
+const defaultNotifications: InstructorNotification[] = [
+    {
+        id: 1001,
+        title: "New student enrolled",
+        description: "Omar Hassan enrolled in Frontend Development.",
+        type: "student",
+        createdAt: "2026-10-18T10:30:00",
+        read: false,
+    },
+    {
+        id: 1002,
+        title: "New assignment submission",
+        description: "A student submitted JavaScript Array Methods.",
+        type: "assignment",
+        createdAt: "2026-10-18T09:15:00",
+        read: false,
+    },
+    {
+        id: 1003,
+        title: "New course review",
+        description: "Sara Ahmed left a 5-star review.",
+        type: "review",
+        createdAt: "2026-10-17T16:00:00",
+        read: true,
+    },
+];
+
 const navItems: {
     id: Section;
     label: string;
+    arabicLabel: string;
     icon: string;
 }[] = [
-        { id: "overview", label: "Overview", icon: "⌂" },
-        { id: "courses", label: "My Courses", icon: "▤" },
-        { id: "content", label: "Course Content", icon: "▷" },
-        { id: "students", label: "My Students", icon: "♙" },
-        { id: "assignments", label: "Assignments", icon: "✓" },
-        { id: "schedule", label: "Schedule", icon: "▦" },
-        { id: "reviews", label: "Reviews", icon: "☆" },
-        { id: "profile", label: "My Profile", icon: "⚙" },
+        { id: "overview", label: "Overview", arabicLabel: "الرئيسية", icon: "⌂" },
+        { id: "courses", label: "My Courses", arabicLabel: "كورساتي", icon: "▤" },
+        { id: "content", label: "Course Content", arabicLabel: "محتوى الكورسات", icon: "▷" },
+        { id: "students", label: "My Students", arabicLabel: "طلابي", icon: "♙" },
+        { id: "assignments", label: "Assignments", arabicLabel: "التكليفات", icon: "✓" },
+        { id: "schedule", label: "Schedule", arabicLabel: "الجدول", icon: "▦" },
+        { id: "reviews", label: "Reviews", arabicLabel: "التقييمات", icon: "☆" },
+        { id: "profile", label: "My Profile", arabicLabel: "ملفي الشخصي", icon: "⚙" },
     ];
 
-const NOTIFICATIONS_STORAGE_KEY = "codo-instructor-notifications";
+const inputClass =
+    "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#869CFF] focus:ring-2 focus:ring-[#869CFF]/10";
 
 export default function InstructorDashboard() {
+    const { language, setLanguage, direction } = useLanguage();
+    const isArabic = language === "ar";
+
+    const t = (english: string, arabic: string) =>
+        isArabic ? arabic : english;
+
     const [activeSection, setActiveSection] =
         useState<Section>("overview");
+
     const [phone, setPhone] = useState("");
     const [saveMessage, setSaveMessage] = useState("");
     const [passwordMessage, setPasswordMessage] = useState("");
+    const [message, setMessage] = useState("");
 
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
 
-    function saveProfile(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        setMessage("");
-        setSaveMessage("Profile changes saved in this demo.");
-    }
-
-    function changePassword(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-
-        if (newPassword.length < 8) {
-            setPasswordMessage("Password must be at least 8 characters.");
-            return;
-        }
-
-        if (currentPassword === newPassword) {
-            setPasswordMessage(
-                "Your new password must be different from your current password."
-            );
-            return;
-        }
-
-        setPasswordMessage(
-            "Demo only: connect backend authentication to change your real password."
-        );
-
-        setCurrentPassword("");
-        setNewPassword("");
-    }
     const [courses, setCourses] = useState(initialCourses);
     const [students] = useState(initialStudents);
     const [assignments, setAssignments] = useState(initialAssignments);
     const [sessions] = useState(initialSessions);
+
     const [profilePhoto, setProfilePhoto] = useState("");
     const [selectedCourseId, setSelectedCourseId] = useState(1);
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -313,11 +297,20 @@ export default function InstructorDashboard() {
     const [instructorName, setInstructorName] =
         useState("Instructor Name");
     const [email, setEmail] = useState("instructor@example.com");
-    const [bio, setBio] = useState(
-        "Instructor at Codo Learn, passionate about teaching and building projects."
-    );
     const [profileLoaded, setProfileLoaded] = useState(false);
 
+    const [notifications, setNotifications] =
+        useState<InstructorNotification[]>(defaultNotifications);
+    const [notificationsLoaded, setNotificationsLoaded] = useState(false);
+    const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+    const [notificationFilter, setNotificationFilter] = useState<
+        "all" | "unread"
+    >("all");
+
+    const [lessonsLoaded, setLessonsLoaded] = useState(false);
+
+    // Load instructor profile
     useEffect(() => {
         try {
             const saved = localStorage.getItem("codo-instructor-profile");
@@ -348,6 +341,7 @@ export default function InstructorDashboard() {
         }
     }, []);
 
+    // Save instructor profile
     useEffect(() => {
         if (!profileLoaded) return;
 
@@ -363,24 +357,15 @@ export default function InstructorDashboard() {
             );
         } catch {
             setSaveMessage(
-                "Could not save the photo. Try a smaller image."
+                t(
+                    "Could not save the photo. Try a smaller image.",
+                    "تعذر حفظ الصورة. جرّب صورة بحجم أصغر."
+                )
             );
         }
     }, [instructorName, email, phone, profilePhoto, profileLoaded]);
-    const [message, setMessage] = useState("");
 
-    // Notifications
-    const [notifications, setNotifications] =
-        useState<InstructorNotification[]>(defaultNotifications);
-
-    const [notificationsLoaded, setNotificationsLoaded] = useState(false);
-    const [notificationsOpen, setNotificationsOpen] = useState(false);
-
-    const [notificationFilter, setNotificationFilter] = useState<
-        "all" | "unread"
-    >("all");
-
-    // Load notifications from localStorage after mounting.
+    // Load notifications
     useEffect(() => {
         try {
             const saved = localStorage.getItem(
@@ -413,13 +398,13 @@ export default function InstructorDashboard() {
                 }
             }
         } catch {
-            // Keep the default notifications if saved data is invalid.
+            // Keep default notifications.
         } finally {
             setNotificationsLoaded(true);
         }
     }, []);
 
-    // Save only after the initial loading attempt finishes.
+    // Save notifications
     useEffect(() => {
         if (!notificationsLoaded) return;
 
@@ -429,9 +414,51 @@ export default function InstructorDashboard() {
                 JSON.stringify(notifications)
             );
         } catch {
-            // The dashboard can still work if browser storage is unavailable.
+            // Storage is optional.
         }
     }, [notifications, notificationsLoaded]);
+
+    // Load lessons
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem("codo-instructor-lessons");
+
+            if (saved) {
+                const parsed: unknown = JSON.parse(saved);
+
+                if (
+                    Array.isArray(parsed) &&
+                    parsed.every(
+                        (lesson) =>
+                            typeof lesson.id === "number" &&
+                            typeof lesson.courseId === "number" &&
+                            typeof lesson.title === "string" &&
+                            typeof lesson.type === "string"
+                    )
+                ) {
+                    setCourseLessons(parsed);
+                }
+            }
+        } catch {
+            console.error("Could not load saved lessons.");
+        } finally {
+            setLessonsLoaded(true);
+        }
+    }, []);
+
+    // Save lessons
+    useEffect(() => {
+        if (!lessonsLoaded) return;
+
+        try {
+            localStorage.setItem(
+                "codo-instructor-lessons",
+                JSON.stringify(courseLessons)
+            );
+        } catch {
+            console.error("Could not save lessons.");
+        }
+    }, [courseLessons, lessonsLoaded]);
 
     const unreadCount = notifications.filter(
         (notification) => !notification.read
@@ -441,6 +468,44 @@ export default function InstructorDashboard() {
         (notification) =>
             notificationFilter === "all" || !notification.read
     );
+
+    const selectedCourse =
+        courses.find((course) => course.id === selectedCourseId) ??
+        courses[0];
+
+    const totalStudents = courses.reduce(
+        (sum, course) => sum + course.students,
+        0
+    );
+
+    const publishedCourses = courses.filter(
+        (course) => course.status === "Published"
+    ).length;
+
+    const averageRating =
+        reviews.reduce((sum, review) => sum + review.rating, 0) /
+        reviews.length;
+
+    const currentLessons = courseLessons.filter(
+        (lesson) => lesson.courseId === selectedCourseId
+    );
+
+    const pageTitles: Record<Section, string> = {
+        overview: t("Instructor Overview", "لوحة المدرب"),
+        courses: t("My Courses", "كورساتي"),
+        content: t("Course Content", "محتوى الكورسات"),
+        students: t("My Students", "طلابي"),
+        assignments: t("Assignments", "التكليفات"),
+        schedule: t("Schedule", "الجدول"),
+        reviews: t("Student Reviews", "تقييمات الطلاب"),
+        profile: t("My Profile", "ملفي الشخصي"),
+    };
+
+    function openSection(section: Section) {
+        setActiveSection(section);
+        setSidebarOpen(false);
+        setMessage("");
+    }
 
     function addNotification(
         notification: Omit<
@@ -482,38 +547,49 @@ export default function InstructorDashboard() {
         setNotifications([]);
     }
 
-    const selectedCourse =
-        courses.find((course) => course.id === selectedCourseId) ??
-        courses[0];
-
-    const totalStudents = courses.reduce(
-        (sum, course) => sum + course.students,
-        0
-    );
-
-    const publishedCourses = courses.filter(
-        (course) => course.status === "Published"
-    ).length;
-
-    const averageRating =
-        reviews.reduce((sum, review) => sum + review.rating, 0) /
-        reviews.length;
-
-    const pageTitles: Record<Section, string> = {
-        overview: "Instructor Overview",
-        courses: "My Courses",
-        content: "Course Content",
-        students: "My Students",
-        assignments: "Assignments",
-        schedule: "Schedule",
-        reviews: "Student Reviews",
-        profile: "My Profile",
-    };
-
-    function openSection(section: Section) {
-        setActiveSection(section);
-        setSidebarOpen(false);
+    function saveProfile(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
         setMessage("");
+        setSaveMessage(
+            t(
+                "Profile changes saved in this demo.",
+                "تم حفظ تغييرات الملف الشخصي في النسخة التجريبية."
+            )
+        );
+    }
+
+    function changePassword(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+
+        if (newPassword.length < 8) {
+            setPasswordMessage(
+                t(
+                    "Password must be at least 8 characters.",
+                    "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل."
+                )
+            );
+            return;
+        }
+
+        if (currentPassword === newPassword) {
+            setPasswordMessage(
+                t(
+                    "Your new password must be different from your current password.",
+                    "يجب أن تكون كلمة المرور الجديدة مختلفة عن الحالية."
+                )
+            );
+            return;
+        }
+
+        setPasswordMessage(
+            t(
+                "Demo only: connect backend authentication to change your real password.",
+                "هذه نسخة تجريبية فقط: يجب ربط نظام تسجيل الدخول بالـ Backend لتغيير كلمة المرور الحقيقية."
+            )
+        );
+
+        setCurrentPassword("");
+        setNewPassword("");
     }
 
     function addCourse(event: FormEvent<HTMLFormElement>) {
@@ -536,7 +612,13 @@ export default function InstructorDashboard() {
         setCourseTitle("");
         setCourseStatus("Draft");
         setShowCourseForm(false);
-        setMessage("Course added to this demo dashboard.");
+
+        setMessage(
+            t(
+                "Course added to this demo dashboard.",
+                "تمت إضافة الكورس إلى لوحة التحكم التجريبية."
+            )
+        );
 
         addNotification({
             title: "New course created",
@@ -571,7 +653,13 @@ export default function InstructorDashboard() {
         );
 
         setLessonTitle("");
-        setMessage("Lesson added to the local demo.");
+
+        setMessage(
+            t(
+                "Lesson added to the local demo.",
+                "تمت إضافة الدرس إلى النسخة التجريبية."
+            )
+        );
 
         addNotification({
             title: "New lesson added",
@@ -607,7 +695,13 @@ export default function InstructorDashboard() {
 
         setAssignmentTitle("");
         setShowAssignmentForm(false);
-        setMessage("Assignment added to this demo dashboard.");
+
+        setMessage(
+            t(
+                "Assignment added to this demo dashboard.",
+                "تمت إضافة التكليف إلى لوحة التحكم التجريبية."
+            )
+        );
 
         addNotification({
             title: "New assignment created",
@@ -616,170 +710,238 @@ export default function InstructorDashboard() {
         });
     }
 
-    const currentLessons = courseLessons.filter(
-        (lesson) => lesson.courseId === selectedCourseId
-    );
-    const [lessonsLoaded, setLessonsLoaded] = useState(false);
+    function handlePhotoUpload(
+        event: React.ChangeEvent<HTMLInputElement>
+    ) {
+        const file = event.target.files?.[0];
 
-    useEffect(() => {
-        try {
-            const saved = localStorage.getItem("codo-instructor-lessons");
+        if (!file) return;
 
-            if (saved) {
-                const parsed: unknown = JSON.parse(saved);
-
-                if (
-                    Array.isArray(parsed) &&
-                    parsed.every(
-                        (lesson) =>
-                            typeof lesson.id === "number" &&
-                            typeof lesson.courseId === "number" &&
-                            typeof lesson.title === "string" &&
-                            typeof lesson.type === "string"
-                    )
-                ) {
-                    setCourseLessons(parsed);
-                }
-            }
-        } catch {
-            console.error("Could not load saved lessons.");
-        } finally {
-            setLessonsLoaded(true);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (!lessonsLoaded) return;
-
-        try {
-            localStorage.setItem(
-                "codo-instructor-lessons",
-                JSON.stringify(courseLessons)
+        if (!file.type.startsWith("image/")) {
+            alert(
+                t(
+                    "Please select an image file.",
+                    "من فضلك اختر ملف صورة."
+                )
             );
-        } catch {
-            console.error("Could not save lessons.");
+            event.target.value = "";
+            return;
         }
-    }, [courseLessons, lessonsLoaded]);
 
+        if (file.size > 5 * 1024 * 1024) {
+            alert(
+                t(
+                    "Image size must be 5 MB or less.",
+                    "يجب ألا يتجاوز حجم الصورة 5 ميجابايت."
+                )
+            );
+            event.target.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = () => {
+            if (typeof reader.result === "string") {
+                setProfilePhoto(reader.result);
+                setSaveMessage("");
+            }
+        };
+
+        reader.readAsDataURL(file);
+    }
     return (
-        <div className="min-h-screen bg-[#F8F8FC] text-[#20243A]">
+        <div
+            dir={direction}
+            className="min-h-screen bg-[#F8F8FC] text-[#20243A]"
+        >
+            {/* Mobile Overlay */}
             {sidebarOpen && (
                 <button
+                    type="button"
                     aria-label="Close sidebar"
                     onClick={() => setSidebarOpen(false)}
-                    className="fixed inset-0 z-40 bg-[#20243A]/30 lg:hidden"
+                    className="fixed inset-0 z-40 bg-black/40 lg:hidden"
                 />
             )}
 
             {/* Sidebar */}
             <aside
-                className={`fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col border-r border-[#ECECF5] bg-white transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                className={`fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col border-r border-[#ECECF5] bg-white transition-transform duration-300 rtl:left-auto rtl:right-0 rtl:border-r-0 rtl:border-l ${sidebarOpen
+                        ? "translate-x-0"
+                        : isArabic
+                            ? "translate-x-full lg:translate-x-0"
+                            : "-translate-x-full lg:translate-x-0"
                     }`}
             >
-                <div className="flex h-20 items-center justify-between border-b border-[#ECECF5] px-5">
-                    <Link href="/" aria-label="Codo Learn home">
+                {/* Logo */}
+                <div className="flex h-[82px] items-center justify-between border-b border-[#F0F0F5] px-6">
+                    <Link href="/" className="flex items-center">
                         <Image
                             src="/logoooo-removebg-preview.png"
                             alt="Codo Learn"
                             width={145}
-                            height={48}
+                            height={55}
+                            className="h-auto w-[135px] object-contain"
                             priority
-                            className="h-auto w-[145px] object-contain"
                         />
                     </Link>
 
                     <button
+                        type="button"
                         onClick={() => setSidebarOpen(false)}
-                        className="rounded-lg p-2 text-xl lg:hidden"
-                        aria-label="Close menu"
+                        className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 lg:hidden"
                     >
-                        ×
+                        ✕
                     </button>
                 </div>
 
-                <div className="px-5 pb-3 pt-7">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-400">
-                        Instructor Portal
-                    </p>
+                {/* Instructor Info */}
+                <div className="mx-4 mt-6 rounded-2xl bg-[#F8F8FC] p-4">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-[#869CFF]/20">
+                            {profilePhoto ? (
+                                <Image
+                                    src={profilePhoto}
+                                    alt="Instructor"
+                                    width={44}
+                                    height={44}
+                                    unoptimized
+                                    className="h-full w-full object-cover"
+                                />
+                            ) : (
+                                <span className="font-bold text-[#586FD6]">
+                                    {instructorName.charAt(0).toUpperCase()}
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="min-w-0">
+                            <p className="truncate text-sm font-bold">
+                                {instructorName}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                                {t("Instructor Account", "حساب المدرب")}
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-                <nav className="flex-1 space-y-1 overflow-y-auto px-3">
-                    {navItems.map((item) => (
-                        <button
-                            key={item.id}
-                            onClick={() => openSection(item.id)}
-                            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition ${activeSection === item.id
-                                ? "bg-[#869CFF]/15 text-[#586FD6]"
-                                : "text-gray-500 hover:bg-[#F8F8FC] hover:text-[#586FD6]"
-                                }`}
-                        >
-                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-lg">
-                                {item.icon}
-                            </span>
-                            {item.label}
-                        </button>
-                    ))}
+                {/* Navigation */}
+                <nav className="mt-7 flex-1 space-y-1 overflow-y-auto px-4 pb-6">
+                    <p className="mb-3 px-3 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                        {t("Workspace", "مساحة العمل")}
+                    </p>
+
+                    {navItems.map((item) => {
+                        const active = activeSection === item.id;
+
+                        return (
+                            <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => openSection(item.id)}
+                                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition ${active
+                                        ? "bg-[#869CFF]/15 text-[#586FD6]"
+                                        : "text-gray-500 hover:bg-gray-50 hover:text-[#586FD6]"
+                                    }`}
+                            >
+                                <span className="flex h-6 w-6 items-center justify-center text-lg">
+                                    {item.icon}
+                                </span>
+
+                                <span>
+                                    {isArabic
+                                        ? item.arabicLabel
+                                        : item.label}
+                                </span>
+
+                                {active && (
+                                    <span className="ms-auto h-2 w-2 rounded-full bg-[#869CFF]" />
+                                )}
+                            </button>
+                        );
+                    })}
                 </nav>
+
+                {/* Sidebar Footer */}
+                <div className="border-t border-[#F0F0F5] p-4">
+                    <Link
+                        href="/"
+                        className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-[#586FD6]"
+                    >
+                        <span>←</span>
+                        {t("Back to Website", "العودة للموقع")}
+                    </Link>
+
+                    <div className="mt-3 rounded-xl bg-[#F8F8FC] p-3 text-center">
+                        <p className="text-xs text-gray-400">
+                            Codo Learn
+                        </p>
+                        <p className="mt-1 text-[10px] text-gray-400">
+                            {t(
+                                "Instructor Dashboard",
+                                "لوحة تحكم المدرب"
+                            )}
+                        </p>
+                    </div>
+                </div>
             </aside>
 
-            {/* Main */}
-            <main className="min-h-screen lg:ml-[270px]">
-                <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-[#ECECF5] bg-white/90 px-4 backdrop-blur-md sm:px-8">
-                    <div className="flex items-center gap-3">
+            {/* Main Content */}
+            <main className="min-h-screen lg:ml-[270px] rtl:lg:ml-0 rtl:lg:mr-[270px]">
+                {/* Header */}
+                <header className="sticky top-0 z-30 flex h-[82px] items-center justify-between border-b border-[#ECECF5] bg-white/95 px-4 backdrop-blur-md sm:px-7 lg:px-9">
+                    <div className="flex min-w-0 items-center gap-3">
                         <button
+                            type="button"
                             onClick={() => setSidebarOpen(true)}
-                            className="rounded-xl border border-gray-200 px-3 py-2 lg:hidden"
-                            aria-label="Open menu"
+                            className="rounded-xl border border-gray-200 p-2 text-gray-600 lg:hidden"
                         >
                             ☰
                         </button>
 
-                        <div>
-                            <p className="text-xs text-gray-400">
-                                Instructor Portal
-                            </p>
-                            <h1 className="text-lg font-bold sm:text-xl">
+                        <div className="min-w-0">
+                            <h1 className="truncate text-lg font-bold sm:text-xl">
                                 {pageTitles[activeSection]}
                             </h1>
+                            <p className="hidden text-xs text-gray-400 sm:block">
+                                {t(
+                                    "Manage your teaching workspace",
+                                    "إدارة مساحة العمل التعليمية الخاصة بك"
+                                )}
+                            </p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-2 sm:gap-4">
+                        {/* Language Toggle */}
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setLanguage(isArabic ? "en" : "ar")
+                            }
+                            className="rounded-xl border border-[#ECECF5] bg-white px-3 py-2.5 text-xs font-bold text-[#586FD6] transition hover:bg-[#869CFF]/10 sm:px-4 sm:text-sm"
+                        >
+                            {isArabic ? "English" : "العربية"}
+                        </button>
+
                         {/* Notifications */}
                         <div className="relative">
                             <button
                                 type="button"
                                 onClick={() =>
-                                    setNotificationsOpen((open) => !open)
+                                    setNotificationsOpen(
+                                        !notificationsOpen
+                                    )
                                 }
-                                aria-label={`Notifications, ${unreadCount} unread`}
-                                aria-expanded={notificationsOpen}
-                                className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-[#ECECF5] bg-white text-[#586FD6] transition hover:bg-[#869CFF]/10"
+                                className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-[#ECECF5] text-lg text-gray-600 transition hover:bg-gray-50"
                             >
-                                <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="1.8"
-                                    className="h-5 w-5"
-                                    aria-hidden="true"
-                                >
-                                    <path
-                                        d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                    <path
-                                        d="M10 21h4"
-                                        strokeLinecap="round"
-                                    />
-                                </svg>
+                                ♧
 
                                 {unreadCount > 0 && (
-                                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#E2A3FF] px-1 text-[10px] font-extrabold text-[#20243A] ring-2 ring-white">
-                                        {unreadCount > 99
-                                            ? "99+"
-                                            : unreadCount}
+                                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                                        {unreadCount}
                                     </span>
                                 )}
                             </button>
@@ -795,86 +957,50 @@ export default function InstructorDashboard() {
                                         className="fixed inset-0 z-40 cursor-default"
                                     />
 
-                                    <div className="absolute right-0 top-14 z-50 w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-[#ECECF5] bg-white shadow-xl shadow-[#20243A]/10">
-                                        <div className="border-b border-[#ECECF5] p-4">
-                                            <div className="flex items-center justify-between gap-3">
-                                                <div>
-                                                    <h3 className="font-bold text-[#20243A]">
-                                                        Notifications
-                                                    </h3>
-                                                    <p className="mt-1 text-xs text-gray-500">
-                                                        {unreadCount} unread
-                                                        notifications
-                                                    </p>
-                                                </div>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={
-                                                        markAllNotificationsRead
-                                                    }
-                                                    disabled={unreadCount === 0}
-                                                    className="text-xs font-semibold text-[#586FD6] hover:underline disabled:cursor-not-allowed disabled:opacity-40"
-                                                >
-                                                    Mark all read
-                                                </button>
+                                    <div className="absolute right-0 top-14 z-50 w-[min(340px,calc(100vw-32px))] overflow-hidden rounded-2xl border border-[#ECECF5] bg-white shadow-xl rtl:right-auto rtl:left-0">
+                                        <div className="flex items-center justify-between border-b border-gray-100 p-4">
+                                            <div>
+                                                <h3 className="font-bold">
+                                                    {t(
+                                                        "Notifications",
+                                                        "الإشعارات"
+                                                    )}
+                                                </h3>
+                                                <p className="mt-1 text-xs text-gray-400">
+                                                    {unreadCount}{" "}
+                                                    {t(
+                                                        "unread notifications",
+                                                        "إشعارات غير مقروءة"
+                                                    )}
+                                                </p>
                                             </div>
 
-                                            <div className="mt-4 flex gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setNotificationFilter(
-                                                            "all"
-                                                        )
-                                                    }
-                                                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${notificationFilter ===
-                                                        "all"
-                                                        ? "bg-[#869CFF]/20 text-[#455BC1]"
-                                                        : "bg-gray-50 text-gray-500"
-                                                        }`}
-                                                >
-                                                    All
-                                                </button>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setNotificationFilter(
-                                                            "unread"
-                                                        )
-                                                    }
-                                                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${notificationFilter ===
-                                                        "unread"
-                                                        ? "bg-[#869CFF]/20 text-[#455BC1]"
-                                                        : "bg-gray-50 text-gray-500"
-                                                        }`}
-                                                >
-                                                    Unread
-                                                </button>
-                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={
+                                                    markAllNotificationsRead
+                                                }
+                                                className="text-xs font-semibold text-[#586FD6] hover:underline"
+                                            >
+                                                {t(
+                                                    "Mark all read",
+                                                    "تحديد الكل كمقروء"
+                                                )}
+                                            </button>
                                         </div>
 
-                                        <div className="max-h-[380px] overflow-y-auto">
-                                            {visibleNotifications.length ===
-                                                0 ? (
-                                                <div className="px-5 py-10 text-center">
-                                                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#869CFF]/10 text-2xl">
-                                                        ✓
-                                                    </div>
-
-                                                    <p className="mt-3 text-sm font-semibold text-[#20243A]">
-                                                        You&apos;re all caught
-                                                        up!
-                                                    </p>
-
-                                                    <p className="mt-1 text-xs text-gray-500">
-                                                        No notifications to show.
-                                                    </p>
-                                                </div>
+                                        <div className="max-h-[360px] overflow-y-auto">
+                                            {notifications.length === 0 ? (
+                                                <p className="p-6 text-center text-sm text-gray-400">
+                                                    {t(
+                                                        "No notifications yet.",
+                                                        "لا توجد إشعارات حتى الآن."
+                                                    )}
+                                                </p>
                                             ) : (
-                                                visibleNotifications.map(
-                                                    (notification) => (
+                                                notifications
+                                                    .slice(0, 6)
+                                                    .map((notification) => (
                                                         <button
                                                             key={notification.id}
                                                             type="button"
@@ -883,82 +1009,63 @@ export default function InstructorDashboard() {
                                                                     notification.id
                                                                 )
                                                             }
-                                                            className={`flex w-full items-start gap-3 border-b border-gray-100 p-4 text-left transition hover:bg-[#F8F8FC] ${notification.read
-                                                                ? "bg-white"
-                                                                : "bg-[#869CFF]/[0.07]"
+                                                            className={`w-full border-b border-gray-50 p-4 text-start transition hover:bg-gray-50 ${!notification.read
+                                                                    ? "bg-[#869CFF]/5"
+                                                                    : ""
                                                                 }`}
                                                         >
-                                                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#869CFF]/25 to-[#E2A3FF]/35 text-sm font-bold text-[#455BC1]">
-                                                                {notification.type ===
-                                                                    "student" &&
-                                                                    "♙"}
-                                                                {notification.type ===
-                                                                    "assignment" &&
-                                                                    "✓"}
-                                                                {notification.type ===
-                                                                    "review" &&
-                                                                    "★"}
-                                                                {notification.type ===
-                                                                    "course" &&
-                                                                    "▤"}
-                                                                {notification.type ===
-                                                                    "lesson" &&
-                                                                    "▷"}
-                                                            </span>
+                                                            <div className="flex items-start gap-3">
+                                                                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#869CFF]" />
 
-                                                            <span className="min-w-0 flex-1">
-                                                                <span className="flex items-start justify-between gap-2">
-                                                                    <span className="text-sm font-semibold text-[#20243A]">
-                                                                        {
-                                                                            notification.title
-                                                                        }
-                                                                    </span>
-
-                                                                    {!notification.read && (
-                                                                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#869CFF]" />
-                                                                    )}
-                                                                </span>
-
-                                                                <span className="mt-1 block text-xs leading-5 text-gray-500">
-                                                                    {
-                                                                        notification.description
-                                                                    }
-                                                                </span>
-
-                                                                <span className="mt-2 block text-[11px] text-gray-400">
-                                                                    {new Date(
-                                                                        notification.createdAt
-                                                                    ).toLocaleString(
-                                                                        "en-GB",
-                                                                        {
-                                                                            day: "numeric",
-                                                                            month: "short",
-                                                                            hour: "2-digit",
-                                                                            minute: "2-digit",
-                                                                        }
-                                                                    )}
-                                                                </span>
-                                                            </span>
+                                                                <div>
+                                                                    <p className="text-sm font-bold">
+                                                                        {translateNotification(
+                                                                            notification.title,
+                                                                            isArabic
+                                                                        )}
+                                                                    </p>
+                                                                    <p className="mt-1 text-xs leading-5 text-gray-500">
+                                                                        {translateNotification(
+                                                                            notification.description,
+                                                                            isArabic
+                                                                        )}
+                                                                    </p>
+                                                                    <p
+                                                                        dir="ltr"
+                                                                        className="mt-2 text-start text-[10px] text-gray-400"
+                                                                    >
+                                                                        {new Date(
+                                                                            notification.createdAt
+                                                                        ).toLocaleString(
+                                                                            isArabic
+                                                                                ? "ar-EG"
+                                                                                : "en-GB"
+                                                                        )}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
                                                         </button>
-                                                    )
-                                                )
+                                                    ))
                                             )}
                                         </div>
 
-                                        <div className="flex items-center justify-between border-t border-[#ECECF5] p-3">
-                                            <span className="text-[11px] text-gray-400">
-                                                Codo Learn · Demo notifications
-                                            </span>
-
+                                        <div className="border-t border-gray-100 p-3">
                                             <button
                                                 type="button"
-                                                onClick={clearNotifications}
-                                                disabled={
-                                                    notifications.length === 0
-                                                }
-                                                className="text-xs font-semibold text-gray-500 hover:text-red-500 disabled:opacity-40"
+                                                onClick={() => {
+                                                    openSection(
+                                                        "overview"
+                                                    );
+                                                    setNotificationsOpen(
+                                                        false
+                                                    );
+                                                }}
+                                                className="w-full text-center text-xs font-bold text-[#586FD6]"
                                             >
-                                                Clear all
+                                                {t(
+                                                    "View Dashboard",
+                                                    "عرض لوحة التحكم"
+                                                )}
                                             </button>
                                         </div>
                                     </div>
@@ -966,193 +1073,225 @@ export default function InstructorDashboard() {
                             )}
                         </div>
 
-                        {/* Instructor Profile */}
+                        {/* Profile Shortcut */}
                         <button
+                            type="button"
                             onClick={() => openSection("profile")}
-                            className="flex items-center gap-3 rounded-xl p-1.5 hover:bg-gray-50"
-                        ><div className="relative h-10 w-10 shrink-0">
-                                {profilePhoto ? (
-                                    <img
-                                        src={profilePhoto}
-                                        alt="Instructor profile"
-                                        className="h-10 w-10 rounded-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#869CFF] to-[#E2A3FF] text-lg font-bold text-white">
-                                        {instructorName.charAt(0).toUpperCase()}
-                                    </div>
-                                )}
-
-
-
-                                <input
-                                    id="instructor-photo"
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0];
-
-                                        if (!file) return;
-
-                                        if (!file.type.startsWith("image/")) {
-                                            alert("Please select an image file.");
-                                            e.target.value = "";
-                                            return;
-                                        }
-
-                                        if (file.size > 2 * 1024 * 1024) {
-                                            alert("Please choose an image smaller than 2 MB.");
-                                            e.target.value = "";
-                                            return;
-                                        }
-
-                                        const reader = new FileReader();
-
-                                        reader.onload = () => {
-                                            if (typeof reader.result === "string") {
-                                                setProfilePhoto(reader.result);
-                                                setSaveMessage("");
-                                            }
-                                        };
-
-                                        reader.readAsDataURL(file);
-                                    }}
+                            className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-[#869CFF]/30 bg-[#869CFF]/10 font-bold text-[#586FD6]"
+                        >
+                            {profilePhoto ? (
+                                <Image
+                                    src={profilePhoto}
+                                    alt="Profile"
+                                    width={40}
+                                    height={40}
+                                    unoptimized
+                                    className="h-full w-full object-cover"
                                 />
-                            </div>
-
-                            <div className="hidden text-left sm:block">
-                                <p className="max-w-36 truncate text-sm font-semibold">
-                                    {instructorName}
-                                </p>
-                                <p className="text-xs text-gray-400">
-                                    Instructor
-                                </p>
-                            </div>
+                            ) : (
+                                instructorName.charAt(0).toUpperCase()
+                            )}
                         </button>
                     </div>
                 </header>
 
-                <div className="mx-auto max-w-[1500px] p-4 sm:p-8">
+                {/* Page Content */}
+                <div className="mx-auto max-w-[1600px] p-4 sm:p-7 lg:p-9">
+                    {/* General Message */}
+                    {message && (
+                        <div className="mb-6 flex items-center justify-between rounded-xl border border-[#869CFF]/30 bg-[#869CFF]/10 px-4 py-3 text-sm text-[#586FD6]">
+                            <span>{message}</span>
+                            <button
+                                type="button"
+                                onClick={() => setMessage("")}
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    )}
+
                     {/* OVERVIEW */}
                     {activeSection === "overview" && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-7"
-                        >
-                            <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#869CFF]/25 via-[#E2A3FF]/25 to-white p-6 sm:p-9">
+                        <div className="space-y-8">
+                            {/* Welcome */}
+                            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#586FD6] to-[#869CFF] p-6 text-white sm:p-9">
                                 <div className="relative z-10 max-w-2xl">
-                                    <p className="text-sm font-semibold text-[#586FD6]">
-                                        INSTRUCTOR WORKSPACE
+                                    <p className="text-sm font-medium text-white/80">
+                                        {t(
+                                            "Welcome back,",
+                                            "مرحباً بعودتك،"
+                                        )}
                                     </p>
 
-                                    <h2 className="mt-3 text-3xl font-extrabold leading-tight sm:text-4xl">
-                                        Welcome back, {instructorName}!
+                                    <h2 className="mt-2 text-2xl font-bold sm:text-3xl">
+                                        {instructorName}
                                     </h2>
 
-                                    <p className="mt-3 max-w-xl text-sm leading-6 text-gray-600 sm:text-base">
-                                        Manage your courses, support your
-                                        students, and track your teaching
-                                        activity from one place.
+                                    <p className="mt-3 max-w-xl text-sm leading-7 text-white/85">
+                                        {t(
+                                            "Here is what's happening with your courses and students. Keep inspiring learners and sharing your knowledge.",
+                                            "إليك آخر المستجدات المتعلقة بكورساتك وطلابك. استمر في إلهام المتعلمين ومشاركة معرفتك."
+                                        )}
                                     </p>
-                                </div>
-
-                                <div className="pointer-events-none absolute -right-8 -top-12 h-48 w-48 rounded-full bg-[#869CFF]/25 blur-2xl" />
-                                <div className="pointer-events-none absolute -bottom-16 right-28 h-40 w-40 rounded-full bg-[#E2A3FF]/40 blur-2xl" />
-                            </section>
-
-                            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                                <StatCard
-                                    label="Total Courses"
-                                    value={String(courses.length)}
-                                    icon="▤"
-                                />
-                                <StatCard
-                                    label="Published Courses"
-                                    value={String(publishedCourses)}
-                                    icon="✓"
-                                />
-                                <StatCard
-                                    label="Total Students"
-                                    value={String(totalStudents)}
-                                    icon="♙"
-                                />
-                                <StatCard
-                                    label="Average Rating"
-                                    value={`${averageRating.toFixed(1)} / 5`}
-                                    icon="☆"
-                                />
-                            </section>
-
-                            <section>
-                                <div className="mb-4 flex items-center justify-between gap-3">
-                                    <div>
-                                        <h3 className="text-xl font-bold">
-                                            Your Courses
-                                        </h3>
-                                        <p className="mt-1 text-sm text-gray-500">
-                                            A quick overview of your courses.
-                                        </p>
-                                    </div>
 
                                     <button
-                                        onClick={() => openSection("courses")}
-                                        className="text-sm font-bold text-[#586FD6]"
+                                        type="button"
+                                        onClick={() =>
+                                            openSection("courses")
+                                        }
+                                        className="mt-6 rounded-xl bg-white px-5 py-3 text-sm font-bold text-[#586FD6] transition hover:bg-white/90"
                                     >
-                                        View all →
+                                        {t(
+                                            "Manage My Courses",
+                                            "إدارة كورساتي"
+                                        )}
                                     </button>
                                 </div>
 
-                                <div className="grid gap-5 xl:grid-cols-3">
-                                    {courses.slice(0, 3).map((course) => (
-                                        <CourseCard
-                                            key={course.id}
-                                            course={course}
-                                            onManage={() => {
-                                                setSelectedCourseId(course.id);
-                                                openSection("content");
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-                            </section>
+                                <div className="absolute -right-10 -top-20 h-64 w-64 rounded-full border-[35px] border-white/10 rtl:right-auto rtl:left-[-40px]" />
+                                <div className="absolute -bottom-28 right-36 h-64 w-64 rounded-full bg-white/10 rtl:right-auto rtl:left-36" />
+                            </div>
 
-                            <section className="grid gap-5 xl:grid-cols-2">
-                                <div className="rounded-2xl border border-[#ECECF5] bg-white p-6">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="font-bold">
-                                            Upcoming Sessions
-                                        </h3>
+                            {/* Stats */}
+                            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                                <StatCard
+                                    label={t(
+                                        "Total Courses",
+                                        "إجمالي الكورسات"
+                                    )}
+                                    value={courses.length}
+                                    icon="▤"
+                                    color="bg-[#869CFF]/15 text-[#586FD6]"
+                                />
+
+                                <StatCard
+                                    label={t(
+                                        "Published Courses",
+                                        "الكورسات المنشورة"
+                                    )}
+                                    value={publishedCourses}
+                                    icon="✓"
+                                    color="bg-emerald-50 text-emerald-600"
+                                />
+
+                                <StatCard
+                                    label={t(
+                                        "Total Students",
+                                        "إجمالي الطلاب"
+                                    )}
+                                    value={totalStudents}
+                                    icon="♙"
+                                    color="bg-purple-50 text-purple-600"
+                                />
+
+                                <StatCard
+                                    label={t(
+                                        "Average Rating",
+                                        "متوسط التقييم"
+                                    )}
+                                    value={`${averageRating.toFixed(1)}/5`}
+                                    icon="☆"
+                                    color="bg-amber-50 text-amber-600"
+                                />
+                            </div>
+
+                            {/* Courses and Schedule */}
+                            <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+                                <section className="rounded-2xl border border-[#ECECF5] bg-white p-5 sm:p-6 xl:col-span-2">
+                                    <div className="mb-6 flex items-center justify-between gap-3">
+                                        <div>
+                                            <h3 className="font-bold">
+                                                {t(
+                                                    "My Courses",
+                                                    "كورساتي"
+                                                )}
+                                            </h3>
+                                            <p className="mt-1 text-xs text-gray-400">
+                                                {t(
+                                                    "Overview of your courses",
+                                                    "نظرة عامة على كورساتك"
+                                                )}
+                                            </p>
+                                        </div>
 
                                         <button
+                                            type="button"
                                             onClick={() =>
-                                                openSection("schedule")
+                                                openSection("courses")
                                             }
-                                            className="text-sm font-bold text-[#586FD6]"
+                                            className="text-xs font-bold text-[#586FD6] hover:underline"
                                         >
-                                            View schedule →
+                                            {t("View All", "عرض الكل")}
                                         </button>
                                     </div>
 
-                                    <div className="mt-5 space-y-4">
-                                        {sessions.slice(0, 3).map((session) => (
+                                    <div className="space-y-4">
+                                        {courses.slice(0, 4).map((course) => (
+                                            <CourseCard
+                                                key={course.id}
+                                                course={course}
+                                                isArabic={isArabic}
+                                                onManage={() => {
+                                                    setSelectedCourseId(
+                                                        course.id
+                                                    );
+                                                    openSection("content");
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    {courses.length === 0 && (
+                                        <EmptyState
+                                            title={t(
+                                                "No courses yet",
+                                                "لا توجد كورسات حتى الآن"
+                                            )}
+                                            description={t(
+                                                "Create your first course to get started.",
+                                                "أنشئ أول كورس لك للبدء."
+                                            )}
+                                        />
+                                    )}
+                                </section>
+
+                                {/* Upcoming Sessions */}
+                                <section className="rounded-2xl border border-[#ECECF5] bg-white p-5 sm:p-6">
+                                    <h3 className="font-bold">
+                                        {t(
+                                            "Upcoming Sessions",
+                                            "المحاضرات القادمة"
+                                        )}
+                                    </h3>
+
+                                    <p className="mt-1 text-xs text-gray-400">
+                                        {t(
+                                            "Your teaching schedule",
+                                            "جدولك التعليمي"
+                                        )}
+                                    </p>
+
+                                    <div className="mt-6 space-y-5">
+                                        {sessions.map((session) => (
                                             <div
                                                 key={session.id}
-                                                className="flex items-start gap-3"
+                                                className="flex gap-3"
                                             >
-                                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#869CFF]/15 text-lg">
+                                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#869CFF]/10 text-[#586FD6]">
                                                     ▦
                                                 </div>
 
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="text-sm font-semibold">
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-bold">
                                                         {session.title}
                                                     </p>
                                                     <p className="mt-1 text-xs text-gray-500">
                                                         {session.course}
                                                     </p>
-                                                    <p className="mt-1 text-xs text-gray-400">
+                                                    <p
+                                                        dir="ltr"
+                                                        className="mt-1 text-start text-[11px] text-gray-400"
+                                                    >
                                                         {session.date} ·{" "}
                                                         {session.time}
                                                     </p>
@@ -1160,325 +1299,481 @@ export default function InstructorDashboard() {
                                             </div>
                                         ))}
                                     </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            openSection("schedule")
+                                        }
+                                        className="mt-6 w-full rounded-xl border border-[#ECECF5] py-3 text-xs font-bold text-[#586FD6] transition hover:bg-[#869CFF]/10"
+                                    >
+                                        {t(
+                                            "View Schedule",
+                                            "عرض الجدول"
+                                        )}
+                                    </button>
+                                </section>
+                            </div>
+
+                            {/* Recent Assignments */}
+                            <section className="rounded-2xl border border-[#ECECF5] bg-white p-5 sm:p-6">
+                                <div className="mb-5 flex items-center justify-between gap-3">
+                                    <div>
+                                        <h3 className="font-bold">
+                                            {t(
+                                                "Recent Assignments",
+                                                "أحدث التكليفات"
+                                            )}
+                                        </h3>
+                                        <p className="mt-1 text-xs text-gray-400">
+                                            {t(
+                                                "Track your students' submissions",
+                                                "تابع تسليمات الطلاب"
+                                            )}
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            openSection("assignments")
+                                        }
+                                        className="text-xs font-bold text-[#586FD6]"
+                                    >
+                                        {t("View All", "عرض الكل")}
+                                    </button>
                                 </div>
 
-                                <div className="rounded-2xl border border-[#ECECF5] bg-white p-6">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="font-bold">
-                                            Recent Assignments
-                                        </h3>
-
-                                        <button
-                                            onClick={() =>
-                                                openSection("assignments")
-                                            }
-                                            className="text-sm font-bold text-[#586FD6]"
+                                <div className="space-y-3">
+                                    {assignments.slice(0, 3).map((item) => (
+                                        <div
+                                            key={item.id}
+                                            className="flex flex-col justify-between gap-3 rounded-xl bg-[#F8F8FC] p-4 sm:flex-row sm:items-center"
                                         >
-                                            View all →
-                                        </button>
-                                    </div>
+                                            <div>
+                                                <p className="text-sm font-bold">
+                                                    {item.title}
+                                                </p>
+                                                <p className="mt-1 text-xs text-gray-500">
+                                                    {item.course}
+                                                </p>
+                                            </div>
 
-                                    <div className="mt-5 space-y-4">
-                                        {assignments.slice(0, 3).map(
-                                            (assignment) => (
-                                                <div
-                                                    key={assignment.id}
-                                                    className="flex items-start gap-3 rounded-xl bg-[#F8F8FC] p-3"
-                                                >
-                                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#E2A3FF]/30">
-                                                        ✓
-                                                    </span>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-xs text-gray-500">
+                                                    {item.submissions}{" "}
+                                                    {t(
+                                                        "Submissions",
+                                                        "تسليم"
+                                                    )}
+                                                </span>
 
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="text-sm font-semibold">
-                                                            {assignment.title}
-                                                        </p>
-                                                        <p className="mt-1 text-xs text-gray-500">
-                                                            {assignment.course}
-                                                        </p>
-                                                        <p className="mt-1 text-xs text-gray-400">
-                                                            {assignment.submissions}{" "}
-                                                            submissions · Due{" "}
-                                                            {assignment.dueDate}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            )
-                                        )}
-                                    </div>
+                                                <StatusBadge
+                                                    status={item.status}
+                                                    isArabic={isArabic}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </section>
-                        </motion.div>
+                        </div>
                     )}
 
                     {/* MY COURSES */}
                     {activeSection === "courses" && (
-                        <SectionPanel
-                            title="My Courses"
-                            description="Create and manage the courses you teach."
-                        >
-                            {showCourseForm && (
-                                <form
-                                    onSubmit={addCourse}
-                                    className="rounded-2xl border border-[#ECECF5] bg-white p-6"
-                                >
-                                    <h3 className="mb-4 text-lg font-bold">
-                                        Create a Course
-                                    </h3>
+                        <div className="space-y-6">
+                            <SectionPanel
+                                title={t("My Courses", "كورساتي")}
+                                description={t(
+                                    "Create, organize, and manage your learning courses.",
+                                    "أنشئ ونظّم وأدر الكورسات التعليمية الخاصة بك."
+                                )}
+                                action={
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setShowCourseForm(!showCourseForm)
+                                        }
+                                        className="rounded-xl bg-[#586FD6] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#455BC2]"
+                                    >
+                                        {showCourseForm
+                                            ? t("Cancel", "إلغاء")
+                                            : `+ ${t(
+                                                "Create Course",
+                                                "إنشاء كورس"
+                                            )}`}
+                                    </button>
+                                }
+                            >
+                                {showCourseForm && (
+                                    <form
+                                        onSubmit={addCourse}
+                                        className="mb-6 rounded-2xl border border-[#ECECF5] bg-[#F8F8FC] p-5"
+                                    >
+                                        <h3 className="mb-5 font-bold">
+                                            {t(
+                                                "Create New Course",
+                                                "إنشاء كورس جديد"
+                                            )}
+                                        </h3>
 
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        <Field label="Course Title">
-                                            <input
-                                                required
-                                                value={courseTitle}
-                                                onChange={(event) =>
-                                                    setCourseTitle(
-                                                        event.target.value
-                                                    )
-                                                }
-                                                placeholder="Enter course title"
-                                                className={inputClass}
-                                            />
-                                        </Field>
-
-                                        <Field label="Category">
-                                            <select
-                                                value={courseCategory}
-                                                onChange={(event) =>
-                                                    setCourseCategory(
-                                                        event.target.value
-                                                    )
-                                                }
-                                                className={inputClass}
+                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                            <Field
+                                                label={t(
+                                                    "Course Title",
+                                                    "اسم الكورس"
+                                                )}
                                             >
-                                                <option>
-                                                    Web Development
-                                                </option>
-                                                <option>Programming</option>
-                                                <option>UI/UX Design</option>
-                                                <option>Data Science</option>
-                                            </select>
-                                        </Field>
+                                                <input
+                                                    required
+                                                    value={courseTitle}
+                                                    onChange={(event) =>
+                                                        setCourseTitle(
+                                                            event.target.value
+                                                        )
+                                                    }
+                                                    placeholder={t(
+                                                        "Enter course title",
+                                                        "اكتب اسم الكورس"
+                                                    )}
+                                                    className={inputClass}
+                                                />
+                                            </Field>
 
-                                        <Field label="Status">
-                                            <select
-                                                value={courseStatus}
-                                                onChange={(event) =>
-                                                    setCourseStatus(
-                                                        event.target.value as
-                                                        | "Published"
-                                                        | "Draft"
-                                                    )
-                                                }
-                                                className={inputClass}
+                                            <Field
+                                                label={t(
+                                                    "Category",
+                                                    "التصنيف"
+                                                )}
                                             >
-                                                <option value="Draft">
-                                                    Draft
-                                                </option>
-                                                <option value="Published">
-                                                    Published
-                                                </option>
-                                            </select>
-                                        </Field>
-                                    </div>
+                                                <select
+                                                    value={courseCategory}
+                                                    onChange={(event) =>
+                                                        setCourseCategory(
+                                                            event.target.value
+                                                        )
+                                                    }
+                                                    className={inputClass}
+                                                >
+                                                    <option value="Web Development">
+                                                        {t(
+                                                            "Web Development",
+                                                            "تطوير الويب"
+                                                        )}
+                                                    </option>
+                                                    <option value="Programming">
+                                                        {t(
+                                                            "Programming",
+                                                            "البرمجة"
+                                                        )}
+                                                    </option>
+                                                    <option value="UI/UX Design">
+                                                        {t(
+                                                            "UI/UX Design",
+                                                            "تصميم واجهات المستخدم"
+                                                        )}
+                                                    </option>
+                                                    <option value="Data & AI">
+                                                        {t(
+                                                            "Data & AI",
+                                                            "البيانات والذكاء الاصطناعي"
+                                                        )}
+                                                    </option>
+                                                </select>
+                                            </Field>
 
-                                    <div className="mt-4 flex gap-3">
+                                            <Field
+                                                label={t(
+                                                    "Course Status",
+                                                    "حالة الكورس"
+                                                )}
+                                            >
+                                                <select
+                                                    value={courseStatus}
+                                                    onChange={(event) =>
+                                                        setCourseStatus(
+                                                            event.target.value as
+                                                            | "Published"
+                                                            | "Draft"
+                                                        )
+                                                    }
+                                                    className={inputClass}
+                                                >
+                                                    <option value="Draft">
+                                                        {t(
+                                                            "Draft",
+                                                            "مسودة"
+                                                        )}
+                                                    </option>
+                                                    <option value="Published">
+                                                        {t(
+                                                            "Published",
+                                                            "منشور"
+                                                        )}
+                                                    </option>
+                                                </select>
+                                            </Field>
+                                        </div>
+
                                         <button
                                             type="submit"
-                                            className="rounded-xl bg-[#586FD6] px-5 py-3 text-sm font-bold text-white"
+                                            className="mt-5 rounded-xl bg-[#586FD6] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#455BC2]"
                                         >
-                                            Save Course
+                                            {t(
+                                                "Save Course",
+                                                "حفظ الكورس"
+                                            )}
                                         </button>
+                                    </form>
+                                )}
 
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setShowCourseForm(false)
-                                            }
-                                            className="rounded-xl border border-gray-200 px-5 py-3 text-sm font-semibold"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
-                                </form>
-                            )}
+                                <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                                    {courses.map((course) => (
+                                        <CourseCard
+                                            key={course.id}
+                                            course={course}
+                                            isArabic={isArabic}
+                                            onManage={() => {
+                                                setSelectedCourseId(
+                                                    course.id
+                                                );
+                                                openSection("content");
+                                            }}
+                                        />
+                                    ))}
+                                </div>
 
-                            <div className="flex justify-end">
-                                <button
-                                    onClick={() =>
-                                        setShowCourseForm((previous) => !previous)
-                                    }
-                                    className="rounded-xl bg-[#586FD6] px-4 py-3 text-sm font-bold text-white"
-                                >
-                                    {showCourseForm
-                                        ? "Cancel"
-                                        : "+ New Course"}
-                                </button>
-                            </div>
-
-                            {message && <Message>{message}</Message>}
-
-                            <div className="grid gap-5 xl:grid-cols-3">
-                                {courses.map((course) => (
-                                    <CourseCard
-                                        key={course.id}
-                                        course={course}
-                                        onManage={() => {
-                                            setSelectedCourseId(course.id);
-                                            openSection("content");
-                                        }}
+                                {courses.length === 0 && (
+                                    <EmptyState
+                                        title={t(
+                                            "No courses found",
+                                            "لا توجد كورسات"
+                                        )}
+                                        description={t(
+                                            "Create your first course to get started.",
+                                            "أنشئ أول كورس لك للبدء."
+                                        )}
                                     />
-                                ))}
-                            </div>
-                        </SectionPanel>
+                                )}
+                            </SectionPanel>
+                        </div>
                     )}
 
                     {/* COURSE CONTENT */}
                     {activeSection === "content" && (
-                        <SectionPanel
-                            title="Course Content"
-                            description="Choose a course and manage its lesson list."
-                        >
-                            <div className="grid gap-6 xl:grid-cols-[280px_1fr]">
-                                <div className="h-fit rounded-2xl border border-[#ECECF5] bg-white p-4">
-                                    <h3 className="mb-3 font-bold">
-                                        Select a Course
-                                    </h3>
-
-                                    {courses.map((course) => (
-                                        <button
-                                            key={course.id}
-                                            onClick={() => {
-                                                setSelectedCourseId(course.id);
-                                                setMessage("");
-                                            }}
-                                            className={`mb-2 w-full rounded-xl p-3 text-left text-sm font-medium ${selectedCourseId === course.id
-                                                ? "bg-[#869CFF]/15 text-[#586FD6]"
-                                                : "hover:bg-gray-50"
-                                                }`}
+                        <div className="space-y-6">
+                            <SectionPanel
+                                title={t(
+                                    "Course Content",
+                                    "محتوى الكورسات"
+                                )}
+                                description={t(
+                                    "Manage lessons and learning materials for your courses.",
+                                    "أدر الدروس والمواد التعليمية الخاصة بكورساتك."
+                                )}
+                            >
+                                <div className="mb-6">
+                                    <Field
+                                        label={t(
+                                            "Select Course",
+                                            "اختر الكورس"
+                                        )}
+                                    >
+                                        <select
+                                            value={selectedCourseId}
+                                            onChange={(event) =>
+                                                setSelectedCourseId(
+                                                    Number(event.target.value)
+                                                )
+                                            }
+                                            className={inputClass}
                                         >
-                                            {course.title}
-                                            <p className="mt-1 text-xs text-gray-400">
-                                                {course.lessons} lessons
-                                            </p>
-                                        </button>
-                                    ))}
+                                            {courses.map((course) => (
+                                                <option
+                                                    key={course.id}
+                                                    value={course.id}
+                                                >
+                                                    {course.title}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </Field>
                                 </div>
 
-                                <div className="space-y-5">
-                                    <div className="rounded-2xl border border-[#ECECF5] bg-white p-6">
-                                        <p className="text-sm text-gray-500">
-                                            Selected Course
-                                        </p>
+                                {selectedCourse ? (
+                                    <>
+                                        <div className="mb-6 flex flex-col justify-between gap-3 rounded-2xl bg-[#F8F8FC] p-5 sm:flex-row sm:items-center">
+                                            <div>
+                                                <p className="text-xs text-gray-400">
+                                                    {t(
+                                                        "Selected Course",
+                                                        "الكورس المحدد"
+                                                    )}
+                                                </p>
+                                                <h3 className="mt-1 text-lg font-bold">
+                                                    {selectedCourse.title}
+                                                </h3>
+                                                <p className="mt-1 text-xs text-gray-500">
+                                                    {currentLessons.length}{" "}
+                                                    {t(
+                                                        "Lessons",
+                                                        "دروس"
+                                                    )}
+                                                </p>
+                                            </div>
 
-                                        <h3 className="mt-2 text-2xl font-extrabold">
-                                            {selectedCourse.title}
-                                        </h3>
-
-                                        <div className="mt-3 flex flex-wrap gap-3">
                                             <StatusBadge
                                                 status={selectedCourse.status}
+                                                isArabic={isArabic}
                                             />
-                                            <span className="text-sm text-gray-500">
-                                                {selectedCourse.lessons} lessons
-                                            </span>
-                                            <span className="text-sm text-gray-500">
-                                                {selectedCourse.students} students
-                                            </span>
                                         </div>
-                                    </div>
-
-                                    <div className="rounded-2xl border border-[#ECECF5] bg-white p-6">
-                                        <h3 className="text-lg font-bold">
-                                            Lessons
-                                        </h3>
 
                                         <form
                                             onSubmit={addLesson}
-                                            className="mt-4 flex flex-col gap-3 sm:flex-row"
+                                            className="mb-6 rounded-2xl border border-[#ECECF5] p-5"
                                         >
-                                            <input
-                                                required
-                                                value={lessonTitle}
-                                                onChange={(event) =>
-                                                    setLessonTitle(
-                                                        event.target.value
-                                                    )
-                                                }
-                                                placeholder="Enter a new lesson title"
-                                                className={`${inputClass} flex-1`}
-                                            />
+                                            <h3 className="mb-4 font-bold">
+                                                {t(
+                                                    "Add New Lesson",
+                                                    "إضافة درس جديد"
+                                                )}
+                                            </h3>
 
-                                            <button
-                                                type="submit"
-                                                className="rounded-xl bg-[#586FD6] px-5 py-3 text-sm font-bold text-white"
-                                            >
-                                                + Add Lesson
-                                            </button>
+                                            <div className="flex flex-col gap-3 sm:flex-row">
+                                                <input
+                                                    required
+                                                    value={lessonTitle}
+                                                    onChange={(event) =>
+                                                        setLessonTitle(
+                                                            event.target.value
+                                                        )
+                                                    }
+                                                    placeholder={t(
+                                                        "Enter lesson title",
+                                                        "اكتب اسم الدرس"
+                                                    )}
+                                                    className={inputClass}
+                                                />
+
+                                                <button
+                                                    type="submit"
+                                                    className="shrink-0 rounded-xl bg-[#586FD6] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#455BC2]"
+                                                >
+                                                    + {t(
+                                                        "Add Lesson",
+                                                        "إضافة درس"
+                                                    )}
+                                                </button>
+                                            </div>
                                         </form>
 
-                                        {message && <Message>{message}</Message>}
-
-                                        <div className="mt-5 space-y-3">
-                                            {currentLessons.length === 0 ? (
-                                                <EmptyState text="No lessons yet. Add your first lesson above." />
-                                            ) : (
-                                                currentLessons.map((lesson, index) => (
-                                                    <Link
+                                        <div className="space-y-3">
+                                            {currentLessons.map(
+                                                (lesson, index) => (
+                                                    <div
                                                         key={lesson.id}
-                                                        href={`/instructor-dashboard/lessons/${lesson.id}`}
-                                                        className="flex items-center gap-3 rounded-xl border border-gray-100 p-4 transition hover:border-[#869CFF] hover:bg-[#869CFF]/5"
+                                                        className="flex items-center gap-4 rounded-xl border border-[#ECECF5] p-4"
                                                     >
-                                                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#869CFF]/15 text-[#586FD6]">
-                                                            {index + 1}
-                                                        </span>
+                                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#869CFF]/15 font-bold text-[#586FD6]">
+                                                            {String(
+                                                                index + 1
+                                                            ).padStart(2, "0")}
+                                                        </div>
 
                                                         <div className="min-w-0 flex-1">
-                                                            <p className="text-sm font-semibold">
+                                                            <p className="text-sm font-bold">
                                                                 {lesson.title}
                                                             </p>
-
                                                             <p className="mt-1 text-xs text-gray-400">
-                                                                {lesson.type}
+                                                                {translateLessonType(
+                                                                    lesson.type,
+                                                                    isArabic
+                                                                )}
                                                             </p>
                                                         </div>
 
-                                                        <span className="text-sm font-semibold text-[#586FD6]">
-                                                            Open →
+                                                        <span className="text-xs text-gray-400">
+                                                            {t(
+                                                                "Lesson",
+                                                                "درس"
+                                                            )}
                                                         </span>
-                                                    </Link>
-                                                ))
+                                                    </div>
+                                                )
                                             )}
                                         </div>
 
-                                        <p className="mt-5 text-xs leading-5 text-gray-400">
-                                            This demo stores lesson titles in
-                                            local page state. Video uploads, PDF
-                                            uploads, and lesson editing need
-                                            backend and file-storage
-                                            integration.
-                                        </p>
-                                    </div>
+                                        {currentLessons.length === 0 && (
+                                            <EmptyState
+                                                title={t(
+                                                    "No lessons yet",
+                                                    "لا توجد دروس حتى الآن"
+                                                )}
+                                                description={t(
+                                                    "Add your first lesson using the form above.",
+                                                    "أضف أول درس باستخدام النموذج بالأعلى."
+                                                )}
+                                            />
+                                        )}
+                                    </>
+                                ) : (
+                                    <EmptyState
+                                        title={t(
+                                            "No course selected",
+                                            "لم يتم اختيار كورس"
+                                        )}
+                                        description={t(
+                                            "Create a course first to add lessons.",
+                                            "أنشئ كورسًا أولًا حتى تتمكن من إضافة الدروس."
+                                        )}
+                                    />
+                                )}
+
+                                <div className="mt-6 rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-6 text-amber-700">
+                                    {t(
+                                        "Demo mode: Lessons are saved in this browser only. Video uploads and backend storage are not connected yet.",
+                                        "الوضع التجريبي: يتم حفظ الدروس في هذا المتصفح فقط. رفع الفيديوهات والتخزين على الخادم غير متاحين حاليًا."
+                                    )}
                                 </div>
-                            </div>
-                        </SectionPanel>
+                            </SectionPanel>
+                        </div>
                     )}
 
                     {/* STUDENTS */}
                     {activeSection === "students" && (
                         <SectionPanel
-                            title="My Students"
-                            description="View your students and their course progress."
+                            title={t("My Students", "طلابي")}
+                            description={t(
+                                "View your enrolled students and track their learning progress.",
+                                "اعرض الطلاب المسجلين في كورساتك وتابع تقدمهم التعليمي."
+                            )}
                         >
-                            <div className="mb-5 grid gap-4 sm:grid-cols-3">
-                                <StatCard
-                                    label="Sample Students"
-                                    value={String(students.length)}
-                                    icon="♙"
+                            <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                <MiniStat
+                                    label={t(
+                                        "Total Students",
+                                        "إجمالي الطلاب"
+                                    )}
+                                    value={students.length}
                                 />
-
-                                <StatCard
-                                    label="Average Progress"
+                                <MiniStat
+                                    label={t(
+                                        "Active Students",
+                                        "الطلاب النشطون"
+                                    )}
+                                    value={
+                                        students.filter(
+                                            (student) =>
+                                                student.status === "Active"
+                                        ).length
+                                    }
+                                />
+                                <MiniStat
+                                    label={t(
+                                        "Average Progress",
+                                        "متوسط التقدم"
+                                    )}
                                     value={`${Math.round(
                                         students.reduce(
                                             (sum, student) =>
@@ -1486,36 +1781,36 @@ export default function InstructorDashboard() {
                                             0
                                         ) / Math.max(students.length, 1)
                                     )}%`}
-                                    icon="↗"
-                                />
-
-                                <StatCard
-                                    label="Active Students"
-                                    value={String(
-                                        students.filter(
-                                            (student) =>
-                                                student.status === "Active"
-                                        ).length
-                                    )}
-                                    icon="✓"
                                 />
                             </div>
 
-                            <div className="overflow-x-auto rounded-2xl border border-[#ECECF5] bg-white">
-                                <table className="w-full min-w-[750px] text-left text-sm">
-                                    <thead className="bg-[#F8F8FC] text-gray-500">
-                                        <tr>
-                                            <th className="p-4 font-medium">
-                                                Student
+                            <div className="overflow-x-auto">
+                                <table className="w-full min-w-[700px] text-start">
+                                    <thead>
+                                        <tr className="border-b border-gray-100 text-xs text-gray-400">
+                                            <th className="px-4 py-4 text-start font-semibold">
+                                                {t(
+                                                    "Student",
+                                                    "الطالب"
+                                                )}
                                             </th>
-                                            <th className="p-4 font-medium">
-                                                Course
+                                            <th className="px-4 py-4 text-start font-semibold">
+                                                {t(
+                                                    "Course",
+                                                    "الكورس"
+                                                )}
                                             </th>
-                                            <th className="p-4 font-medium">
-                                                Progress
+                                            <th className="px-4 py-4 text-start font-semibold">
+                                                {t(
+                                                    "Progress",
+                                                    "التقدم"
+                                                )}
                                             </th>
-                                            <th className="p-4 font-medium">
-                                                Status
+                                            <th className="px-4 py-4 text-start font-semibold">
+                                                {t(
+                                                    "Status",
+                                                    "الحالة"
+                                                )}
                                             </th>
                                         </tr>
                                     </thead>
@@ -1524,42 +1819,55 @@ export default function InstructorDashboard() {
                                         {students.map((student) => (
                                             <tr
                                                 key={student.id}
-                                                className="border-t border-gray-100"
+                                                className="border-b border-gray-50 last:border-0"
                                             >
-                                                <td className="p-4">
-                                                    <p className="font-semibold">
-                                                        {student.name}
-                                                    </p>
-                                                    <p className="mt-1 text-xs text-gray-400">
-                                                        {student.email}
-                                                    </p>
-                                                </td>
-
-                                                <td className="p-4">
-                                                    {student.course}
-                                                </td>
-
-                                                <td className="p-4">
-                                                    <div className="w-36">
-                                                        <div className="mb-2 flex justify-between text-xs">
-                                                            <span>
-                                                                {
-                                                                    student.progress
-                                                                }
-                                                                %
-                                                            </span>
+                                                <td className="px-4 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#869CFF]/15 text-sm font-bold text-[#586FD6]">
+                                                            {student.name
+                                                                .charAt(0)
+                                                                .toUpperCase()}
                                                         </div>
-                                                        <ProgressBar
-                                                            value={
-                                                                student.progress
-                                                            }
-                                                        />
+
+                                                        <div>
+                                                            <p className="text-sm font-bold">
+                                                                {student.name}
+                                                            </p>
+                                                            <p
+                                                                dir="ltr"
+                                                                className="text-start text-xs text-gray-400"
+                                                            >
+                                                                {student.email}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </td>
 
-                                                <td className="p-4">
+                                                <td className="px-4 py-4 text-sm text-gray-600">
+                                                    {student.course}
+                                                </td>
+
+                                                <td className="px-4 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-2 w-24 overflow-hidden rounded-full bg-gray-100">
+                                                            <div
+                                                                className="h-full rounded-full bg-[#869CFF]"
+                                                                style={{
+                                                                    width: `${student.progress}%`,
+                                                                }}
+                                                            />
+                                                        </div>
+
+                                                        <span className="text-xs font-semibold text-gray-500">
+                                                            {student.progress}%
+                                                        </span>
+                                                    </div>
+                                                </td>
+
+                                                <td className="px-4 py-4">
                                                     <StatusBadge
                                                         status={student.status}
+                                                        isArabic={isArabic}
                                                     />
                                                 </td>
                                             </tr>
@@ -1568,45 +1876,61 @@ export default function InstructorDashboard() {
                                 </table>
                             </div>
 
-                            <p className="mt-4 text-xs text-gray-400">
-                                Student records are examples. Real student data
-                                should come from courses the instructor is
-                                authorized to manage.
-                            </p>
+                            <div className="mt-5 rounded-xl border border-[#ECECF5] bg-[#F8F8FC] p-4 text-xs leading-6 text-gray-500">
+                                {t(
+                                    "Student information is sample data for this frontend demo.",
+                                    "بيانات الطلاب المعروضة بيانات تجريبية خاصة بنسخة الواجهة الأمامية."
+                                )}
+                            </div>
                         </SectionPanel>
                     )}
 
                     {/* ASSIGNMENTS */}
                     {activeSection === "assignments" && (
                         <SectionPanel
-                            title="Assignments"
-                            description="Create assignments and monitor submissions."
+                            title={t("Assignments", "التكليفات")}
+                            description={t(
+                                "Create assignments and follow up on student submissions.",
+                                "أنشئ التكليفات وتابع تسليمات الطلاب."
+                            )}
                             action={
                                 <button
+                                    type="button"
                                     onClick={() =>
                                         setShowAssignmentForm(
-                                            (previous) => !previous
+                                            !showAssignmentForm
                                         )
                                     }
-                                    className="rounded-xl bg-[#586FD6] px-4 py-3 text-sm font-bold text-white"
+                                    className="rounded-xl bg-[#586FD6] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#455BC2]"
                                 >
                                     {showAssignmentForm
-                                        ? "Cancel"
-                                        : "+ New Assignment"}
+                                        ? t("Cancel", "إلغاء")
+                                        : `+ ${t(
+                                            "Create Assignment",
+                                            "إنشاء تكليف"
+                                        )}`}
                                 </button>
                             }
                         >
                             {showAssignmentForm && (
                                 <form
                                     onSubmit={addAssignment}
-                                    className="mb-6 rounded-2xl border border-[#ECECF5] bg-white p-6"
+                                    className="mb-6 rounded-2xl border border-[#ECECF5] bg-[#F8F8FC] p-5"
                                 >
-                                    <h3 className="mb-5 text-lg font-bold">
-                                        Create an Assignment
+                                    <h3 className="mb-5 font-bold">
+                                        {t(
+                                            "New Assignment",
+                                            "تكليف جديد"
+                                        )}
                                     </h3>
 
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        <Field label="Assignment Title">
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <Field
+                                            label={t(
+                                                "Assignment Title",
+                                                "اسم التكليف"
+                                            )}
+                                        >
                                             <input
                                                 required
                                                 value={assignmentTitle}
@@ -1615,12 +1939,20 @@ export default function InstructorDashboard() {
                                                         event.target.value
                                                     )
                                                 }
-                                                placeholder="Enter assignment title"
+                                                placeholder={t(
+                                                    "Enter assignment title",
+                                                    "اكتب اسم التكليف"
+                                                )}
                                                 className={inputClass}
                                             />
                                         </Field>
 
-                                        <Field label="Course">
+                                        <Field
+                                            label={t(
+                                                "Course",
+                                                "الكورس"
+                                            )}
+                                        >
                                             <select
                                                 value={assignmentCourseId}
                                                 onChange={(event) =>
@@ -1641,10 +1973,15 @@ export default function InstructorDashboard() {
                                             </select>
                                         </Field>
 
-                                        <Field label="Due Date">
+                                        <Field
+                                            label={t(
+                                                "Due Date",
+                                                "تاريخ التسليم"
+                                            )}
+                                        >
                                             <input
-                                                required
                                                 type="date"
+                                                required
                                                 value={assignmentDueDate}
                                                 onChange={(event) =>
                                                     setAssignmentDueDate(
@@ -1658,143 +1995,211 @@ export default function InstructorDashboard() {
 
                                     <button
                                         type="submit"
-                                        className="mt-5 rounded-xl bg-[#586FD6] px-5 py-3 text-sm font-bold text-white"
+                                        className="mt-5 rounded-xl bg-[#586FD6] px-6 py-3 text-sm font-bold text-white"
                                     >
-                                        Save Assignment
+                                        {t(
+                                            "Save Assignment",
+                                            "حفظ التكليف"
+                                        )}
                                     </button>
                                 </form>
                             )}
 
-                            {message && <Message>{message}</Message>}
-
                             <div className="space-y-4">
                                 {assignments.map((assignment) => (
-                                    <Link
+                                    <div
                                         key={assignment.id}
-                                        href={`/instructor-dashboard/assignments/${assignment.id}?title=${encodeURIComponent(assignment.title)}`}
-                                        className="flex flex-col justify-between gap-4 rounded-2xl border border-[#ECECF5] bg-white p-5 transition hover:border-[#869CFF] hover:shadow-md sm:flex-row sm:items-center"
+                                        className="rounded-2xl border border-[#ECECF5] p-5"
                                     >
-                                        <div>
-                                            <h3 className="font-bold">{assignment.title}</h3>
-                                            <p className="mt-2 text-sm text-gray-500">
-                                                {assignment.course}
-                                            </p>
-                                            <p className="mt-1 text-xs text-gray-400">
-                                                Due: {assignment.dueDate}
-                                            </p>
+                                        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                                            <div>
+                                                <h3 className="font-bold">
+                                                    {assignment.title}
+                                                </h3>
+                                                <p className="mt-2 text-xs text-gray-500">
+                                                    {assignment.course}
+                                                </p>
+                                            </div>
+
+                                            <StatusBadge
+                                                status={assignment.status}
+                                                isArabic={isArabic}
+                                            />
                                         </div>
 
-                                        <div className="flex items-center gap-4">
-                                            <div className="text-right">
-                                                <p className="text-xl font-extrabold">
-                                                    {assignment.submissions}
-                                                </p>
-                                                <p className="text-xs text-gray-400">Submissions</p>
-                                            </div>
-                                            <StatusBadge status={assignment.status} />
+                                        <div className="mt-5 flex flex-wrap items-center gap-5 border-t border-gray-100 pt-4 text-xs text-gray-500">
+                                            <span>
+                                                ▦{" "}
+                                                {t(
+                                                    "Due:",
+                                                    "موعد التسليم:"
+                                                )}{" "}
+                                                <span dir="ltr">
+                                                    {assignment.dueDate}
+                                                </span>
+                                            </span>
+
+                                            <span>
+                                                ✓ {assignment.submissions}{" "}
+                                                {t(
+                                                    "Submissions",
+                                                    "تسليم"
+                                                )}
+                                            </span>
                                         </div>
-                                    </Link>
+                                    </div>
                                 ))}
                             </div>
 
-                            <p className="mt-4 text-xs text-gray-400">
-                                Assignment creation is local demo
-                                functionality. Submission uploads, grading,
-                                feedback, and deadlines need backend support.
-                            </p>
+                            {assignments.length === 0 && (
+                                <EmptyState
+                                    title={t(
+                                        "No assignments yet",
+                                        "لا توجد تكليفات حتى الآن"
+                                    )}
+                                    description={t(
+                                        "Create your first assignment.",
+                                        "أنشئ أول تكليف لك."
+                                    )}
+                                />
+                            )}
+
+                            <div className="mt-6 rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-6 text-amber-700">
+                                {t(
+                                    "Demo mode: Assignment creation is stored in local React state only. Real submissions and grading are not connected.",
+                                    "الوضع التجريبي: يتم حفظ التكليفات داخل حالة React فقط. لم يتم ربط التسليمات أو التصحيح الفعلي."
+                                )}
+                            </div>
                         </SectionPanel>
                     )}
 
                     {/* SCHEDULE */}
                     {activeSection === "schedule" && (
                         <SectionPanel
-                            title="Teaching Schedule"
-                            description="Review your upcoming live sessions and workshops."
+                            title={t("Schedule", "الجدول")}
+                            description={t(
+                                "Review your upcoming teaching sessions and workshops.",
+                                "راجع المحاضرات وورش العمل القادمة."
+                            )}
                         >
-                            <div className="mb-5 rounded-2xl bg-gradient-to-r from-[#869CFF]/20 to-[#E2A3FF]/20 p-6">
-                                <p className="text-sm text-gray-500">
-                                    Scheduled activities
-                                </p>
-                                <p className="mt-2 text-3xl font-extrabold">
-                                    {sessions.length}
-                                </p>
-                            </div>
-
                             <div className="space-y-4">
                                 {sessions.map((session) => (
                                     <div
                                         key={session.id}
-                                        className="flex flex-col gap-4 rounded-2xl border border-[#ECECF5] bg-white p-5 sm:flex-row sm:items-center"
+                                        className="flex flex-col gap-4 rounded-2xl border border-[#ECECF5] p-5 sm:flex-row sm:items-center"
                                     >
-                                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#869CFF]/15 text-xl text-[#586FD6]">
+                                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#869CFF]/15 text-2xl text-[#586FD6]">
                                             ▦
                                         </div>
 
-                                        <div className="flex-1">
-                                            <span className="text-xs font-semibold text-[#586FD6]">
-                                                {session.type}
-                                            </span>
-                                            <h3 className="mt-1 font-bold">
+                                        <div className="min-w-0 flex-1">
+                                            <h3 className="font-bold">
                                                 {session.title}
                                             </h3>
                                             <p className="mt-1 text-sm text-gray-500">
                                                 {session.course}
                                             </p>
+                                            <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-400">
+                                                <span dir="ltr">
+                                                    {session.date}
+                                                </span>
+                                                <span dir="ltr">
+                                                    {session.time}
+                                                </span>
+                                            </div>
                                         </div>
 
-                                        <div className="sm:text-right">
-                                            <p className="text-sm font-semibold">
-                                                {session.date}
-                                            </p>
-                                            <p className="mt-1 text-xs text-gray-400">
-                                                {session.time}
-                                            </p>
-                                        </div>
+                                        <span className="w-fit rounded-full bg-[#869CFF]/10 px-3 py-2 text-xs font-semibold text-[#586FD6]">
+                                            {session.type === "Workshop"
+                                                ? t(
+                                                    "Workshop",
+                                                    "ورشة عمل"
+                                                )
+                                                : t(
+                                                    "Live Session",
+                                                    "محاضرة مباشرة"
+                                                )}
+                                        </span>
                                     </div>
                                 ))}
                             </div>
 
-                            <p className="mt-4 text-xs text-gray-400">
-                                Session dates are examples. Calendar
-                                integration and creating or editing sessions
-                                have not been connected.
-                            </p>
+                            <div className="mt-6 rounded-xl bg-[#F8F8FC] p-4 text-xs leading-6 text-gray-500">
+                                {t(
+                                    "Your schedule is sample data. Calendar management and live session integration are not connected yet.",
+                                    "الجدول المعروض تجريبي. لم يتم ربط إدارة التقويم أو المحاضرات المباشرة حتى الآن."
+                                )}
+                            </div>
                         </SectionPanel>
                     )}
 
                     {/* REVIEWS */}
                     {activeSection === "reviews" && (
                         <SectionPanel
-                            title="Student Reviews"
-                            description="See what students think about your courses."
+                            title={t(
+                                "Student Reviews",
+                                "تقييمات الطلاب"
+                            )}
+                            description={t(
+                                "See what your students think about your courses.",
+                                "اطلع على آراء الطلاب حول كورساتك."
+                            )}
                         >
-                            <div className="mb-5 grid gap-4 sm:grid-cols-2">
-                                <StatCard
-                                    label="Average Rating"
-                                    value={`${averageRating.toFixed(1)} / 5`}
-                                    icon="☆"
-                                />
-                                <StatCard
-                                    label="Total Reviews"
-                                    value={String(reviews.length)}
-                                    icon="☷"
-                                />
+                            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div className="rounded-2xl bg-[#F8F8FC] p-5">
+                                    <p className="text-sm text-gray-500">
+                                        {t(
+                                            "Average Rating",
+                                            "متوسط التقييم"
+                                        )}
+                                    </p>
+                                    <div className="mt-3 flex items-center gap-3">
+                                        <span className="text-4xl font-bold text-[#586FD6]">
+                                            {averageRating.toFixed(1)}
+                                        </span>
+                                        <div>
+                                            <p className="text-amber-400">
+                                                ★★★★★
+                                            </p>
+                                            <p className="text-xs text-gray-400">
+                                                {t(
+                                                    "Based on sample reviews",
+                                                    "بناءً على التقييمات التجريبية"
+                                                )}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-2xl bg-[#F8F8FC] p-5">
+                                    <p className="text-sm text-gray-500">
+                                        {t(
+                                            "Total Reviews",
+                                            "إجمالي التقييمات"
+                                        )}
+                                    </p>
+                                    <p className="mt-3 text-4xl font-bold text-[#586FD6]">
+                                        {reviews.length}
+                                    </p>
+                                </div>
                             </div>
 
-                            <div className="grid gap-4 xl:grid-cols-2">
+                            <div className="space-y-4">
                                 {reviews.map((review, index) => (
                                     <div
-                                        key={`${review.name}-${index}`}
-                                        className="rounded-2xl border border-[#ECECF5] bg-white p-6"
+                                        key={index}
+                                        className="rounded-2xl border border-[#ECECF5] p-5"
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#869CFF]/40 to-[#E2A3FF]/50 font-bold">
-                                                    {review.name.charAt(0)}
+                                                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#869CFF]/15 font-bold text-[#586FD6]">
+                                                    {review.name
+                                                        .charAt(0)
+                                                        .toUpperCase()}
                                                 </div>
 
                                                 <div>
-                                                    <p className="font-bold">
+                                                    <p className="text-sm font-bold">
                                                         {review.name}
                                                     </p>
                                                     <p className="mt-1 text-xs text-gray-400">
@@ -1803,271 +2208,378 @@ export default function InstructorDashboard() {
                                                 </div>
                                             </div>
 
-                                            <span className="text-sm font-bold text-[#B78636]">
+                                            <span
+                                                dir="ltr"
+                                                className="text-sm text-amber-400"
+                                            >
                                                 {"★".repeat(review.rating)}
-                                                <span className="text-gray-200">
-                                                    {"★".repeat(
-                                                        5 - review.rating
-                                                    )}
-                                                </span>
+                                                {"☆".repeat(
+                                                    5 - review.rating
+                                                )}
                                             </span>
                                         </div>
 
-                                        <p className="mt-5 text-sm leading-6 text-gray-600">
-                                            “{review.message}”
+                                        <p className="mt-4 text-sm leading-7 text-gray-600">
+                                            {review.message}
                                         </p>
                                     </div>
                                 ))}
                             </div>
-
-                            <p className="mt-4 text-xs text-gray-400">
-                                These are example reviews, not real student
-                                feedback.
-                            </p>
                         </SectionPanel>
                     )}
-
 
                     {/* PROFILE */}
                     {activeSection === "profile" && (
-                        <SectionPanel
-                            title="My Profile"
-                            description="Manage your personal information and password."
-                        >
-                            <div className="grid items-start gap-6 xl:grid-cols-[1fr_1fr]">
-                                {/* Personal Information */}
+                        <div className="space-y-6">
+                            <SectionPanel
+                                title={t(
+                                    "My Profile",
+                                    "ملفي الشخصي"
+                                )}
+                                description={t(
+                                    "Manage your personal information and account settings.",
+                                    "أدر معلوماتك الشخصية وإعدادات حسابك."
+                                )}
+                            >
                                 <form
                                     onSubmit={saveProfile}
-                                    className="rounded-2xl border border-[#ECECF5] bg-white p-6"
+                                    className="space-y-6"
                                 >
-
-                                    <div className="mb-6 flex items-center gap-4">
-                                        <div className="relative h-20 w-20 shrink-0">
+                                    {/* Photo */}
+                                    <div className="flex flex-col gap-5 border-b border-gray-100 pb-6 sm:flex-row sm:items-center">
+                                        <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-[#869CFF]/20 bg-[#869CFF]/10 text-3xl font-bold text-[#586FD6]">
                                             {profilePhoto ? (
-                                                <img
+                                                <Image
                                                     src={profilePhoto}
                                                     alt="Instructor profile"
-                                                    className="h-20 w-20 rounded-2xl object-cover"
+                                                    width={96}
+                                                    height={96}
+                                                    unoptimized
+                                                    className="h-full w-full object-cover"
                                                 />
                                             ) : (
-                                                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-r from-[#869CFF] to-[#E2A3FF] text-4xl font-bold text-white">
-                                                    {profilePhoto ? (
-                                                        <img src={profilePhoto} alt="Instructor profile" className="h-full w-full object-cover" />
-                                                    ) : (
-                                                        instructorName.charAt(0).toUpperCase()
-                                                    )}
-                                                </div>
+                                                instructorName
+                                                    .charAt(0)
+                                                    .toUpperCase()
                                             )}
-
-                                            <label
-                                                htmlFor="instructor-photo"
-                                                className="absolute -bottom-2 -right-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-[#586FD6] text-white shadow-md transition hover:bg-[#455BC1]"
-                                                title="Upload profile photo"
-                                            >
-                                                <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    width="16"
-                                                    height="16"
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2"
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                >
-                                                    <path d="M14 5h-4L8 8H4v12h16V8h-4z" />
-                                                    <circle cx="12" cy="14" r="3" />
-                                                </svg>
-                                            </label>
-
-                                            <input
-                                                id="instructor-photo"
-                                                type="file"
-                                                accept="image/*"
-                                                className="hidden"
-                                                onChange={(e) => {
-                                                    const file = e.target.files?.[0];
-
-                                                    if (!file) return;
-
-                                                    if (!file.type.startsWith("image/")) {
-                                                        alert("Please select an image file.");
-                                                        return;
-                                                    }
-
-                                                    if (file.size > 5 * 1024 * 1024) {
-                                                        alert("Image size must be 5 MB or less.");
-                                                        e.target.value = "";
-                                                        return;
-                                                    }
-
-                                                    const reader = new FileReader();
-
-                                                    reader.onload = () => {
-                                                        if (typeof reader.result === "string") {
-                                                            setProfilePhoto(reader.result);
-                                                        }
-                                                    };
-
-                                                    reader.readAsDataURL(file);
-                                                }}
-                                            />
                                         </div>
 
                                         <div>
-                                            <h3 className="text-lg font-bold">Personal Information</h3>
-                                            <p className="text-sm text-gray-500">
-                                                Update your profile details and photo.
+                                            <h3 className="font-bold">
+                                                {t(
+                                                    "Profile Photo",
+                                                    "الصورة الشخصية"
+                                                )}
+                                            </h3>
+                                            <p className="mt-1 text-xs text-gray-400">
+                                                {t(
+                                                    "Upload a profile picture. Maximum size 5 MB.",
+                                                    "ارفع صورة شخصية. الحد الأقصى للحجم 5 ميجابايت."
+                                                )}
                                             </p>
 
-                                            <label
-                                                htmlFor="instructor-photo"
-                                                className="mt-2 inline-block cursor-pointer text-sm font-semibold text-[#586FD6] hover:underline"
-                                            >
-                                                Upload Photo
-                                            </label>
-
-                                            {profilePhoto && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setProfilePhoto("")}
-                                                    className="ml-3 text-sm font-semibold text-red-500 hover:underline"
+                                            <div className="mt-3 flex flex-wrap gap-3">
+                                                <label
+                                                    htmlFor="instructor-profile-photo"
+                                                    className="cursor-pointer rounded-xl bg-[#586FD6] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[#455BC2]"
                                                 >
-                                                    Remove
-                                                </button>
-                                            )}
+                                                    {t(
+                                                        "Upload Photo",
+                                                        "رفع صورة"
+                                                    )}
+                                                </label>
+
+                                                <input
+                                                    id="instructor-profile-photo"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handlePhotoUpload}
+                                                    className="hidden"
+                                                />
+
+                                                {profilePhoto && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setProfilePhoto("")
+                                                        }
+                                                        className="rounded-xl border border-red-100 px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50"
+                                                    >
+                                                        {t(
+                                                            "Remove Photo",
+                                                            "إزالة الصورة"
+                                                        )}
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <label className="mb-2 block text-sm font-semibold">
-                                        Full Name
-                                    </label>
-                                    <input
-                                        value={instructorName}
-                                        onChange={(e) => setInstructorName(e.target.value)}
-                                        required
-                                        className="mb-4 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#869CFF]"
-                                        placeholder="Enter your full name"
-                                    />
+                                    {/* Personal Information */}
+                                    <div>
+                                        <h3 className="mb-5 font-bold">
+                                            {t(
+                                                "Personal Information",
+                                                "المعلومات الشخصية"
+                                            )}
+                                        </h3>
 
-                                    <label className="mb-2 block text-sm font-semibold">
-                                        Email Address
-                                    </label>
-                                    <input
-                                        type="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required
-                                        className="mb-4 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#869CFF]"
-                                        placeholder="Enter your email"
-                                    />
+                                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                            <Field
+                                                label={t(
+                                                    "Full Name",
+                                                    "الاسم بالكامل"
+                                                )}
+                                            >
+                                                <input
+                                                    required
+                                                    value={instructorName}
+                                                    onChange={(event) =>
+                                                        setInstructorName(
+                                                            event.target.value
+                                                        )
+                                                    }
+                                                    className={inputClass}
+                                                    placeholder={t(
+                                                        "Enter your full name",
+                                                        "اكتب اسمك بالكامل"
+                                                    )}
+                                                />
+                                            </Field>
 
-                                    <label className="mb-2 block text-sm font-semibold">
-                                        Phone Number
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
-                                        className="mb-4 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#869CFF]"
-                                        placeholder="Enter your phone number"
-                                    />
+                                            <Field
+                                                label={t(
+                                                    "Email Address",
+                                                    "البريد الإلكتروني"
+                                                )}
+                                            >
+                                                <input
+                                                    dir="ltr"
+                                                    type="email"
+                                                    required
+                                                    value={email}
+                                                    onChange={(event) =>
+                                                        setEmail(
+                                                            event.target.value
+                                                        )
+                                                    }
+                                                    className={`${inputClass} text-left`}
+                                                    placeholder="example@email.com"
+                                                />
+                                            </Field>
+
+                                            <Field
+                                                label={t(
+                                                    "Phone Number",
+                                                    "رقم الهاتف"
+                                                )}
+                                            >
+                                                <input
+                                                    dir="ltr"
+                                                    type="tel"
+                                                    value={phone}
+                                                    onChange={(event) =>
+                                                        setPhone(
+                                                            event.target.value
+                                                        )
+                                                    }
+                                                    className={`${inputClass} text-left`}
+                                                    placeholder="+20 100 000 0000"
+                                                />
+                                            </Field>
+                                        </div>
+                                    </div>
 
                                     {saveMessage && (
-                                        <p className="mb-4 rounded-xl bg-[#869CFF]/10 p-3 text-sm text-[#455BC1]">
+                                        <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                                             {saveMessage}
-                                        </p>
+                                        </div>
                                     )}
 
                                     <button
                                         type="submit"
-                                        className="rounded-xl bg-[#586FD6] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#455BC1]"
+                                        className="rounded-xl bg-[#586FD6] px-7 py-3 text-sm font-bold text-white transition hover:bg-[#455BC2]"
                                     >
-                                        Save Changes
+                                        {t(
+                                            "Save Changes",
+                                            "حفظ التغييرات"
+                                        )}
                                     </button>
                                 </form>
+                            </SectionPanel>
 
-                                {/* Change Password */}
+                            {/* Password */}
+                            <SectionPanel
+                                title={t(
+                                    "Change Password",
+                                    "تغيير كلمة المرور"
+                                )}
+                                description={t(
+                                    "Update your account password.",
+                                    "قم بتحديث كلمة مرور حسابك."
+                                )}
+                            >
                                 <form
                                     onSubmit={changePassword}
-                                    className="rounded-2xl border border-[#ECECF5] bg-white p-6"
+                                    className="max-w-2xl space-y-5"
                                 >
-                                    <h3 className="text-lg font-bold">
-                                        Change Password
-                                    </h3>
+                                    <Field
+                                        label={t(
+                                            "Current Password",
+                                            "كلمة المرور الحالية"
+                                        )}
+                                    >
+                                        <input
+                                            type="password"
+                                            required
+                                            value={currentPassword}
+                                            onChange={(event) =>
+                                                setCurrentPassword(
+                                                    event.target.value
+                                                )
+                                            }
+                                            className={inputClass}
+                                            placeholder={t(
+                                                "Enter current password",
+                                                "أدخل كلمة المرور الحالية"
+                                            )}
+                                        />
+                                    </Field>
 
-                                    <p className="mb-6 mt-1 text-sm text-gray-500">
-                                        Choose a strong password for your account.
-                                    </p>
-
-                                    <label className="mb-2 block text-sm font-semibold">
-                                        Current Password
-                                    </label>
-                                    <input
-                                        type="password"
-                                        value={currentPassword}
-                                        onChange={(e) => {
-                                            setCurrentPassword(e.target.value);
-                                            setPasswordMessage("");
-                                        }}
-                                        required
-                                        autoComplete="current-password"
-                                        className="mb-4 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#869CFF]"
-                                        placeholder="Enter current password"
-                                    />
-
-                                    <label className="mb-2 block text-sm font-semibold">
-                                        New Password
-                                    </label>
-                                    <input
-                                        type="password"
-                                        value={newPassword}
-                                        onChange={(e) => {
-                                            setNewPassword(e.target.value);
-                                            setPasswordMessage("");
-                                        }}
-                                        required
-                                        minLength={8}
-                                        autoComplete="new-password"
-                                        className="mb-4 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#869CFF]"
-                                        placeholder="At least 8 characters"
-                                    />
+                                    <Field
+                                        label={t(
+                                            "New Password",
+                                            "كلمة المرور الجديدة"
+                                        )}
+                                    >
+                                        <input
+                                            type="password"
+                                            required
+                                            minLength={8}
+                                            value={newPassword}
+                                            onChange={(event) =>
+                                                setNewPassword(
+                                                    event.target.value
+                                                )
+                                            }
+                                            className={inputClass}
+                                            placeholder={t(
+                                                "Enter new password",
+                                                "أدخل كلمة المرور الجديدة"
+                                            )}
+                                        />
+                                    </Field>
 
                                     {passwordMessage && (
-                                        <p className="mb-4 rounded-xl bg-[#E2A3FF]/20 p-3 text-sm text-[#45405A]">
+                                        <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-700">
                                             {passwordMessage}
-                                        </p>
+                                        </div>
                                     )}
 
                                     <button
                                         type="submit"
-                                        className="rounded-xl border border-[#869CFF]/50 px-5 py-3 text-sm font-bold text-[#586FD6] transition hover:bg-[#869CFF]/10"
+                                        className="rounded-xl bg-[#586FD6] px-7 py-3 text-sm font-bold text-white transition hover:bg-[#455BC2]"
                                     >
-                                        Update Password
+                                        {t(
+                                            "Update Password",
+                                            "تحديث كلمة المرور"
+                                        )}
                                     </button>
 
-                                    <p className="mt-4 text-xs leading-5 text-gray-400">
-                                        Password changes require backend authentication
-                                        before they can update a real account.
+                                    <p className="text-xs leading-6 text-gray-400">
+                                        {t(
+                                            "Demo only: password changes are not connected to a real authentication system.",
+                                            "نسخة تجريبية فقط: تغيير كلمة المرور غير مرتبط بنظام تسجيل دخول حقيقي."
+                                        )}
                                     </p>
                                 </form>
-                            </div>
-                        </SectionPanel>
+                            </SectionPanel>
+                        </div>
                     )}
 
-
-                    <footer className="mt-10 border-t border-[#ECECF5] py-6 text-center text-xs text-gray-400">
-                        © {new Date().getFullYear()} Codo Learn. Empowering
-                        instructors.
+                    {/* Footer */}
+                    <footer className="mt-10 border-t border-[#ECECF5] py-6 text-center">
+                        <p className="text-xs text-gray-400">
+                            © {new Date().getFullYear()} Codo Learn.{" "}
+                            {t(
+                                "All rights reserved.",
+                                "جميع الحقوق محفوظة."
+                            )}
+                        </p>
                     </footer>
                 </div>
-            </main >
-        </div >
+            </main>
+        </div>
     );
 }
 
-const inputClass =
-    "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#869CFF] focus:ring-2 focus:ring-[#869CFF]/10";
+/* =========================================
+   HELPER COMPONENTS
+========================================= */
+
+function translateNotification(
+    value: string,
+    isArabic: boolean
+): string {
+    if (!isArabic) return value;
+
+    const translations: Record<string, string> = {
+        "New student enrolled": "طالب جديد انضم",
+        "New assignment submission": "تسليم تكليف جديد",
+        "New course review": "تقييم جديد للكورس",
+        "New course created": "تم إنشاء كورس جديد",
+        "New lesson added": "تمت إضافة درس جديد",
+    };
+
+    const exactTranslation = translations[value];
+
+    if (exactTranslation) return exactTranslation;
+
+    return value
+        .replace(
+            " enrolled in ",
+            " انضم إلى كورس "
+        )
+        .replace(
+            "A student submitted ",
+            "قام أحد الطلاب بتسليم "
+        )
+        .replace(
+            " left a 5-star review.",
+            " أضاف تقييمًا بخمس نجوم."
+        )
+        .replace(
+            " was added to your courses.",
+            " تمت إضافته إلى كورساتك."
+        )
+        .replace(
+            " was created for ",
+            " تم إنشاؤه لكورس "
+        )
+        .replace(
+            "A new lesson ",
+            "درس جديد "
+        )
+        .replace(
+            " was added to ",
+            " تمت إضافته إلى "
+        );
+}
+
+function translateLessonType(
+    type: string,
+    isArabic: boolean
+): string {
+    if (!isArabic) return type;
+
+    const translations: Record<string, string> = {
+        Video: "فيديو",
+        Material: "مادة تعليمية",
+        Lesson: "درس",
+    };
+
+    return translations[type] ?? type;
+}
 
 function SectionPanel({
     title,
@@ -2081,22 +2593,22 @@ function SectionPanel({
     children: ReactNode;
 }) {
     return (
-        <motion.section
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-        >
-            <div className="flex flex-wrap items-center justify-between gap-4">
+        <section className="rounded-2xl border border-[#ECECF5] bg-white p-5 sm:p-7">
+            <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
-                    <h2 className="text-2xl font-extrabold">{title}</h2>
-                    <p className="mt-2 text-sm text-gray-500">
+                    <h2 className="text-lg font-bold sm:text-xl">
+                        {title}
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-gray-400">
                         {description}
                     </p>
                 </div>
+
                 {action}
             </div>
+
             {children}
-        </motion.section>
+        </section>
     );
 }
 
@@ -2104,113 +2616,168 @@ function StatCard({
     label,
     value,
     icon,
+    color,
 }: {
     label: string;
-    value: string;
+    value: string | number;
     icon: string;
+    color: string;
 }) {
     return (
-        <div className="rounded-2xl border border-[#ECECF5] bg-white p-5">
+        <div className="rounded-2xl border border-[#ECECF5] bg-white p-5 transition hover:-translate-y-1 hover:shadow-md">
             <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">{label}</p>
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#869CFF]/25 to-[#E2A3FF]/35 text-lg">
+                <p className="text-sm font-medium text-gray-500">
+                    {label}
+                </p>
+
+                <div
+                    className={`flex h-11 w-11 items-center justify-center rounded-xl text-xl ${color}`}
+                >
                     {icon}
-                </span>
+                </div>
             </div>
-            <p className="mt-4 text-3xl font-extrabold">{value}</p>
+
+            <p className="mt-5 text-3xl font-bold text-[#20243A]">
+                {value}
+            </p>
         </div>
+    );
+}
+
+function MiniStat({
+    label,
+    value,
+}: {
+    label: string;
+    value: string | number;
+}) {
+    return (
+        <div className="rounded-xl bg-[#F8F8FC] p-4">
+            <p className="text-xs text-gray-500">
+                {label}
+            </p>
+            <p className="mt-2 text-2xl font-bold text-[#586FD6]">
+                {value}
+            </p>
+        </div>
+    );
+}
+
+function StatusBadge({
+    status,
+    isArabic = false,
+}: {
+    status: string;
+    isArabic?: boolean;
+}) {
+    const styles: Record<string, string> = {
+        Published: "bg-emerald-50 text-emerald-700",
+        Active: "bg-emerald-50 text-emerald-700",
+        Open: "bg-emerald-50 text-emerald-700",
+        Draft: "bg-amber-50 text-amber-700",
+        Pending: "bg-amber-50 text-amber-700",
+        Completed: "bg-blue-50 text-blue-700",
+        Closed: "bg-gray-100 text-gray-600",
+    };
+
+    const translations: Record<string, string> = {
+        Published: "منشور",
+        Active: "نشط",
+        Open: "مفتوح",
+        Draft: "مسودة",
+        Pending: "قيد الانتظار",
+        Completed: "مكتمل",
+        Closed: "مغلق",
+    };
+
+    return (
+        <span
+            className={`inline-flex whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-bold ${styles[status] ?? "bg-gray-100 text-gray-600"
+                }`}
+        >
+            {isArabic
+                ? translations[status] ?? status
+                : status}
+        </span>
     );
 }
 
 function CourseCard({
     course,
     onManage,
+    isArabic = false,
 }: {
     course: Course;
     onManage: () => void;
+    isArabic?: boolean;
 }) {
+    const t = (english: string, arabic: string) =>
+        isArabic ? arabic : english;
+
+    const categoryTranslations: Record<string, string> = {
+        "Web Development": "تطوير الويب",
+        Programming: "البرمجة",
+        "UI/UX Design": "تصميم واجهات المستخدم",
+        "Data & AI": "البيانات والذكاء الاصطناعي",
+    };
+
     return (
-        <div className="overflow-hidden rounded-2xl border border-[#ECECF5] bg-white transition hover:-translate-y-1 hover:shadow-lg hover:shadow-[#869CFF]/10">
+        <div className="overflow-hidden rounded-2xl border border-[#ECECF5] bg-white transition hover:shadow-md">
             <div
-                className="h-2"
-                style={{
-                    background: `linear-gradient(to right, ${course.color}, #E2A3FF)`,
-                }}
+                className="h-2 w-full"
+                style={{ backgroundColor: course.color }}
             />
 
             <div className="p-5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="rounded-lg bg-[#869CFF]/10 px-3 py-1.5 text-xs font-semibold text-[#586FD6]">
-                        {course.category}
-                    </span>
-                    <StatusBadge status={course.status} />
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <p className="text-[11px] font-semibold text-[#586FD6]">
+                            {isArabic
+                                ? categoryTranslations[course.category] ??
+                                course.category
+                                : course.category}
+                        </p>
+
+                        <h3 className="mt-2 text-base font-bold">
+                            {course.title}
+                        </h3>
+                    </div>
+
+                    <StatusBadge
+                        status={course.status}
+                        isArabic={isArabic}
+                    />
                 </div>
 
-                <h3 className="mt-5 text-lg font-bold">{course.title}</h3>
-
-                <div className="mt-5 grid grid-cols-2 gap-3">
-                    <div className="rounded-xl bg-[#F8F8FC] p-3">
-                        <p className="text-xs text-gray-500">Students</p>
-                        <p className="mt-1 text-xl font-extrabold">
+                <div className="mt-6 flex flex-wrap gap-5 border-t border-gray-100 pt-4">
+                    <div>
+                        <p className="text-lg font-bold">
                             {course.students}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-400">
+                            {t("Students", "الطلاب")}
                         </p>
                     </div>
 
-                    <div className="rounded-xl bg-[#F8F8FC] p-3">
-                        <p className="text-xs text-gray-500">Lessons</p>
-                        <p className="mt-1 text-xl font-extrabold">
+                    <div>
+                        <p className="text-lg font-bold">
                             {course.lessons}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-400">
+                            {t("Lessons", "الدروس")}
                         </p>
                     </div>
                 </div>
 
                 <button
+                    type="button"
                     onClick={onManage}
-                    className="mt-5 w-full rounded-xl bg-[#869CFF]/15 px-4 py-3 text-sm font-bold text-[#586FD6] transition hover:bg-[#869CFF]/25"
+                    className="mt-5 w-full rounded-xl border border-[#869CFF]/40 py-3 text-xs font-bold text-[#586FD6] transition hover:bg-[#869CFF]/10"
                 >
-                    Manage Content →
+                    {t("Manage Content", "إدارة المحتوى")}
                 </button>
             </div>
         </div>
-    );
-}
-
-function ProgressBar({ value }: { value: number }) {
-    return (
-        <div
-            className="h-2.5 overflow-hidden rounded-full bg-gray-100"
-            role="progressbar"
-            aria-valuenow={value}
-            aria-valuemin={0}
-            aria-valuemax={100}
-        >
-            <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                    width: `${value}%`,
-                    background:
-                        "linear-gradient(to right, #869CFF, #E2A3FF)",
-                }}
-            />
-        </div>
-    );
-}
-
-function StatusBadge({ status }: { status: string }) {
-    const styles: Record<string, string> = {
-        Published: "bg-emerald-50 text-emerald-700",
-        Active: "bg-emerald-50 text-emerald-700",
-        Open: "bg-emerald-50 text-emerald-700",
-        Draft: "bg-amber-50 text-amber-700",
-    };
-
-    return (
-        <span
-            className={`inline-flex rounded-full px-3 py-1.5 text-xs font-semibold ${styles[status] ?? "bg-gray-100 text-gray-600"
-                }`}
-        >
-            {status}
-        </span>
     );
 }
 
@@ -2222,8 +2789,8 @@ function Field({
     children: ReactNode;
 }) {
     return (
-        <label className="mb-4 block">
-            <span className="mb-2 block text-sm font-semibold">
+        <label className="block space-y-2">
+            <span className="block text-sm font-semibold text-[#20243A]">
                 {label}
             </span>
             {children}
@@ -2231,18 +2798,26 @@ function Field({
     );
 }
 
-function Message({ children }: { children: ReactNode }) {
+function EmptyState({
+    title,
+    description,
+}: {
+    title: string;
+    description: string;
+}) {
     return (
-        <p className="mt-4 rounded-xl bg-[#869CFF]/10 p-3 text-sm text-[#455BC1]">
-            {children}
-        </p>
-    );
-}
+        <div className="rounded-2xl border border-dashed border-[#DADCEB] px-5 py-12 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#869CFF]/10 text-2xl text-[#586FD6]">
+                ▤
+            </div>
 
-function EmptyState({ text }: { text: string }) {
-    return (
-        <div className="rounded-xl bg-[#F8F8FC] p-6 text-center text-sm text-gray-500">
-            {text}
+            <h3 className="mt-4 font-bold text-[#20243A]">
+                {title}
+            </h3>
+
+            <p className="mt-2 text-sm text-gray-400">
+                {description}
+            </p>
         </div>
     );
 }
