@@ -60,7 +60,10 @@ html.dark body [class*="bg-[#20243A]"] {
 }
 html.dark body [class*="bg-[#F1F3FA]"],
 html.dark body [class*="bg-gray-50"],
-html.dark body [class*="bg-slate-50"] {
+html.dark body [class*="bg-gray-100"],
+html.dark body [class*="bg-slate-50"],
+html.dark body [class*="bg-[#ECECF5]"],
+html.dark body [class*="bg-[#F0F0F5]"] {
   background-color: var(--surface-soft) !important;
 }
 html.dark body [class*="text-[#20243A]"],
@@ -71,11 +74,15 @@ html.dark body [class*="text-[#7B829D]"],
 html.dark body [class*="text-gray-500"],
 html.dark body [class*="text-gray-600"],
 html.dark body [class*="text-slate-500"],
-html.dark body [class*="text-slate-600"] {
+html.dark body [class*="text-slate-600"],
+html.dark body [class*="text-gray-700"],
+html.dark body [class*="text-slate-700"] {
   color: var(--muted) !important;
 }
 html.dark body [class*="border-[#20243A]"],
 html.dark body [class*="border-[#E7E8F0]"],
+html.dark body [class*="border-[#ECECF5]"],
+html.dark body [class*="border-[#F0F0F5]"],
 html.dark body [class*="border-gray-100"],
 html.dark body [class*="border-gray-200"],
 html.dark body [class*="border-slate-100"],
