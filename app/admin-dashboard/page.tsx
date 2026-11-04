@@ -89,6 +89,7 @@ type ClientRequest = {
     companySize: string;
     serviceRequired: string;
     projectDescription: string;
+    adminNotes?: string;
 };
 
 const initialData: Record<string, RecordItem[]> = {
@@ -366,6 +367,7 @@ export default function AdminDashboard() {
     const [notice, setNotice] = useState("");
     const [clientRequests, setClientRequests] = useState<ClientRequest[]>([]);
     const [clientRequestsLoaded, setClientRequestsLoaded] = useState(false);
+    const [expandedRequestId, setExpandedRequestId] = useState<number | null>(null);
 
     useEffect(() => {
         try {
@@ -429,6 +431,12 @@ export default function AdminDashboard() {
             request.id === requestId ? { ...request, status } : request
         ));
         setNotice(t("Client request status updated.", "تم تحديث حالة طلب العميل."));
+    }
+
+    function updateClientRequestNotes(requestId: number, adminNotes: string): void {
+        setClientRequests(previous => previous.map(request =>
+            request.id === requestId ? { ...request, adminNotes } : request
+        ));
     }
 
     const [studentName, setStudentName] = useState("Admin User");
@@ -1353,10 +1361,28 @@ export default function AdminDashboard() {
                                                         <p className="mb-1 text-xs font-bold text-gray-500">{t("Project Description", "وصف المشروع")}</p>
                                                         <p className="whitespace-pre-wrap text-sm leading-6 text-[#343B58]">{request.projectDescription}</p>
                                                     </div>
-                                                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-400">
-                                                        <span>{t("Submitted", "تاريخ الإرسال")}: {new Date(request.submittedAt).toLocaleString(isArabic ? "ar-EG" : "en-US")}</span>
-                                                        {request.companyWebsite && <a href={request.companyWebsite} target="_blank" rel="noreferrer" className="font-semibold text-[#586FD6] hover:underline">{t("Company Website", "موقع الشركة")}</a>}
+                                                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                                                        <span className="text-xs text-gray-400">{t("Submitted", "تاريخ الإرسال")}: {new Date(request.submittedAt).toLocaleString(isArabic ? "ar-EG" : "en-US")}</span>
+                                                        <button type="button" onClick={() => setExpandedRequestId(expandedRequestId === request.id ? null : request.id)} className="rounded-xl border border-[#869CFF]/40 px-4 py-2 text-sm font-bold text-[#586FD6] transition hover:bg-[#869CFF]/10">
+                                                            {expandedRequestId === request.id ? t("Hide Details", "إخفاء التفاصيل") : t("View Full Details", "عرض التفاصيل كاملة")}
+                                                        </button>
                                                     </div>
+                                                    {expandedRequestId === request.id && (
+                                                        <div className="mt-4 space-y-4 border-t border-[#ECECF5] pt-4">
+                                                            <div className="grid gap-3 sm:grid-cols-2">
+                                                                <div className="rounded-xl bg-[#F8F8FC] p-3"><p className="text-xs text-gray-400">{t("Country", "الدولة")}</p><p className="mt-1 text-sm font-semibold text-[#343B58]">{request.country}</p></div>
+                                                                <div className="rounded-xl bg-[#F8F8FC] p-3"><p className="text-xs text-gray-400">{t("City", "المدينة")}</p><p className="mt-1 text-sm font-semibold text-[#343B58]">{request.city}</p></div>
+                                                                <div className="rounded-xl bg-[#F8F8FC] p-3"><p className="text-xs text-gray-400">{t("Industry", "مجال الشركة")}</p><p className="mt-1 text-sm font-semibold text-[#343B58]">{request.industry}</p></div>
+                                                                <div className="rounded-xl bg-[#F8F8FC] p-3"><p className="text-xs text-gray-400">{t("Company Size", "حجم الشركة")}</p><p className="mt-1 text-sm font-semibold text-[#343B58]">{request.companySize}</p></div>
+                                                            </div>
+                                                            {request.companyWebsite && <p className="text-sm"><span className="font-semibold text-gray-500">{t("Website", "الموقع الإلكتروني")}: </span><a href={request.companyWebsite} target="_blank" rel="noreferrer" className="text-[#586FD6] hover:underline">{request.companyWebsite}</a></p>}
+                                                            <div>
+                                                                <label className="mb-2 block text-sm font-bold text-[#343B58]">{t("Internal Admin Notes", "ملاحظات داخلية للأدمن")}</label>
+                                                                <textarea rows={4} value={request.adminNotes ?? ""} onChange={event => updateClientRequestNotes(request.id, event.target.value)} placeholder={t("Add follow-up notes, decisions, or project details...", "أضف ملاحظات المتابعة أو القرارات أو تفاصيل المشروع...")} className={inputClass + " resize-y"} />
+                                                                <p className="mt-1 text-xs text-gray-400">{t("Notes are private to this admin dashboard demo and are saved in this browser.", "الملاحظات داخل لوحة الأدمن التجريبية فقط ويتم حفظها في هذا المتصفح.")}</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </article>
                                             ))}
                                         </div>
