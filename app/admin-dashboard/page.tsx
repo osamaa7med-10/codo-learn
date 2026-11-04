@@ -90,6 +90,7 @@ type ClientRequest = {
     serviceRequired: string;
     projectDescription: string;
     adminNotes?: string;
+    statusHistory?: { status: string; changedAt: string }[];
 };
 
 const initialData: Record<string, RecordItem[]> = {
@@ -427,9 +428,17 @@ export default function AdminDashboard() {
     }, [clientRequests, clientRequestsLoaded]);
 
     function updateClientRequestStatus(requestId: number, status: string): void {
-        setClientRequests(previous => previous.map(request =>
-            request.id === requestId ? { ...request, status } : request
-        ));
+        setClientRequests(previous => previous.map(request => {
+            if (request.id !== requestId || request.status === status) return request;
+            return {
+                ...request,
+                status,
+                statusHistory: [
+                    ...(request.statusHistory ?? [{ status: request.status, changedAt: request.submittedAt }]),
+                    { status, changedAt: new Date().toISOString() },
+                ],
+            };
+        }));
         setNotice(t("Client request status updated.", "تم تحديث حالة طلب العميل."));
     }
 
@@ -1376,6 +1385,33 @@ export default function AdminDashboard() {
                                                                 <div className="rounded-xl bg-[#F8F8FC] p-3"><p className="text-xs text-gray-400">{t("Company Size", "حجم الشركة")}</p><p className="mt-1 text-sm font-semibold text-[#343B58]">{request.companySize}</p></div>
                                                             </div>
                                                             {request.companyWebsite && <p className="text-sm"><span className="font-semibold text-gray-500">{t("Website", "الموقع الإلكتروني")}: </span><a href={request.companyWebsite} target="_blank" rel="noreferrer" className="text-[#586FD6] hover:underline">{request.companyWebsite}</a></p>}
+                                                            <section className="rounded-xl border border-[#ECECF5] p-4">
+                                                                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                                                                    <h5 className="font-bold text-[#20243A]">{t("Project Progress & Status History", "تقدم المشروع وسجل الحالات")}</h5>
+                                                                    <span className="rounded-full bg-[#869CFF]/10 px-3 py-1 text-xs font-bold text-[#586FD6]">{t(request.status, request.status === "New Request" ? "طلب جديد" : request.status === "Under Review" ? "قيد المراجعة" : request.status === "In Progress" ? "قيد التنفيذ" : request.status === "Completed" ? "مكتمل" : "مرفوض")}</span>
+                                                                </div>
+                                                                {request.status !== "Rejected" && (
+                                                                    <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                                                        {["New Request", "Under Review", "In Progress", "Completed"].map((stage, index) => {
+                                                                            const stages = ["New Request", "Under Review", "In Progress", "Completed"];
+                                                                            const currentIndex = stages.indexOf(request.status);
+                                                                            const done = currentIndex >= index;
+                                                                            return <div key={stage} className={`rounded-lg px-2 py-3 text-center text-xs font-semibold ${done ? "bg-[#869CFF]/15 text-[#586FD6]" : "bg-[#F8F8FC] text-gray-400"}`}><span className="mb-1 block">{done ? "✓" : index + 1}</span>{t(stage, stage === "New Request" ? "طلب جديد" : stage === "Under Review" ? "قيد المراجعة" : stage === "In Progress" ? "قيد التنفيذ" : "مكتمل")}</div>;
+                                                                        })}
+                                                                    </div>
+                                                                )}
+                                                                <div className="space-y-3">
+                                                                    {(request.statusHistory?.length ? request.statusHistory : [{ status: request.status, changedAt: request.submittedAt }]).slice().reverse().map((entry, index) => (
+                                                                        <div key={`${entry.changedAt}-${index}`} className="flex gap-3">
+                                                                            <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-[#869CFF]" />
+                                                                            <div className="min-w-0">
+                                                                                <p className="text-sm font-semibold text-[#343B58]">{t(entry.status, entry.status === "New Request" ? "طلب جديد" : entry.status === "Under Review" ? "قيد المراجعة" : entry.status === "In Progress" ? "قيد التنفيذ" : entry.status === "Completed" ? "مكتمل" : "مرفوض")}</p>
+                                                                                <p className="mt-0.5 text-xs text-gray-400">{new Date(entry.changedAt).toLocaleString(isArabic ? "ar-EG" : "en-US")}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </section>
                                                             <div>
                                                                 <label className="mb-2 block text-sm font-bold text-[#343B58]">{t("Internal Admin Notes", "ملاحظات داخلية للأدمن")}</label>
                                                                 <textarea rows={4} value={request.adminNotes ?? ""} onChange={event => updateClientRequestNotes(request.id, event.target.value)} placeholder={t("Add follow-up notes, decisions, or project details...", "أضف ملاحظات المتابعة أو القرارات أو تفاصيل المشروع...")} className={inputClass + " resize-y"} />
