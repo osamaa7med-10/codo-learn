@@ -1,12 +1,21 @@
 
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { useLanguage } from "../../context/LanguageContext";
 
 type AccountRole = "student" | "instructor" | "employee" | "client";
+
+type AvailableService = {
+    id?: string | number;
+    name: string;
+    category?: string;
+    status: string;
+};
+
+const DIGITAL_SOLUTIONS_STORAGE_KEY = "codo-digital-solutions";
 
 const inputClass =
     "w-full rounded-xl border border-[#E5E7F2] bg-white px-4 py-3.5 text-sm text-[#20243A] outline-none transition placeholder:text-[#A3A8BC] focus:border-[#869CFF] focus:ring-4 focus:ring-[#869CFF]/10";
@@ -125,6 +134,7 @@ const translations: Record<string, string> = {
     "500+ employees": "أكثر من 500 موظف",
     "Service Required": "الخدمة المطلوبة",
     "Choose a service": "اختر الخدمة",
+    "No active services available": "لا توجد خدمات متاحة حاليًا",
     "Web Development": "تطوير المواقع",
     "Mobile Applications": "تطبيقات الهاتف",
     "E-Commerce Solutions": "حلول التجارة الإلكترونية",
@@ -230,6 +240,24 @@ export default function SignupPage() {
     const [companySize, setCompanySize] = useState("");
     const [serviceRequired, setServiceRequired] = useState("");
     const [projectDescription, setProjectDescription] = useState("");
+    const [availableServices, setAvailableServices] = useState<AvailableService[]>([]);
+
+    useEffect(() => {
+        try {
+            const savedServices = localStorage.getItem(
+                DIGITAL_SOLUTIONS_STORAGE_KEY
+            );
+
+            if (savedServices) {
+                const parsedServices: AvailableService[] = JSON.parse(savedServices);
+                setAvailableServices(
+                    parsedServices.filter(service => service.status === "Active")
+                );
+            }
+        } catch (error) {
+            console.error("Error loading available services:", error);
+        }
+    }, []);
 
     // Feedback
     const [acceptTerms, setAcceptTerms] = useState(false);
@@ -1033,17 +1061,8 @@ export default function SignupPage() {
                                                 "Service Required",
                                                 serviceRequired,
                                                 setServiceRequired,
-                                                "Choose a service",
-                                                [
-                                                    "Web Development",
-                                                    "Mobile Applications",
-                                                    "UI/UX Design",
-                                                    "E-Commerce Solutions",
-                                                    "Software Solutions",
-                                                    "Digital Transformation",
-                                                    "Multiple Services",
-                                                    "Not Sure Yet",
-                                                ]
+                                                availableServices.length > 0 ? "Choose a service" : "No active services available",
+                                                availableServices.map(service => service.name)
                                             )}
                                         </div>
 
