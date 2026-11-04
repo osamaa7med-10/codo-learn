@@ -11,6 +11,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
+import { useTheme } from "../../context/LanguageContext";
 
 type Section = "overview" | "request" | "projects" | "payments" | "profile";
 
@@ -276,6 +277,7 @@ function formatMoney(amount: number) {
 }
 
 export default function ClientDashboard() {
+    const { theme, toggleTheme } = useTheme();
     const [activeSection, setActiveSection] = useState<Section>("overview");
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -569,6 +571,16 @@ export default function ClientDashboard() {
                             </h1>
                         </div>
                     </div>
+
+<button
+                        type="button"
+                        onClick={toggleTheme}
+                        aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                        title={theme === "dark" ? "Light mode" : "Soft dark mode"}
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#869CFF]/30 bg-[#F8F8FC] text-lg text-[#586FD6] transition hover:bg-[#869CFF]/15 dark:border-slate-600 dark:bg-slate-800 dark:text-amber-300"
+                    >
+                        {theme === "dark" ? "☀️" : "🌙"}
+                    </button>
 
                     <button
                         onClick={() => openSection("profile")}
