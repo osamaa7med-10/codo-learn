@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
-import { useLanguage } from "../../context/LanguageContext";
+import { useLanguage, useTheme } from "../../context/LanguageContext";
 
 type Section =
     | "overview"
@@ -155,6 +155,7 @@ function sanitizeDescription(html: string) {
 }
 
 export default function StudentDashboard() {
+    const { theme, toggleTheme } = useTheme();
     const { language, direction, setLanguage } = useLanguage();
     const isArabic = language === "ar";
 
@@ -598,6 +599,16 @@ export default function StudentDashboard() {
                     </div>
 
                     <div className="flex items-center gap-2 sm:gap-3">
+<button
+                            type="button"
+                            onClick={toggleTheme}
+                            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                            title={theme === "dark" ? "Light mode" : "Soft dark mode"}
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#869CFF]/30 bg-[#F8F8FC] text-lg text-[#586FD6] transition hover:bg-[#869CFF]/15 dark:border-slate-600 dark:bg-slate-800 dark:text-amber-300"
+                        >
+                            {theme === "dark" ? "☀️" : "🌙"}
+                        </button>
+
                         {/* Language Switcher */}
                         <button
                             onClick={() =>
