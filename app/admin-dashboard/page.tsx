@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "../../context/LanguageContext";
 
 type Section =
@@ -70,6 +70,8 @@ const digitalSolutionCategories = [
     { value: "Branding & Graphic Design", label: "Branding & Graphic Design", arLabel: "الهوية البصرية والتصميم" },
     { value: "IT Consulting", label: "IT Consulting", arLabel: "الاستشارات التقنية" },
 ];
+
+const DIGITAL_SOLUTIONS_STORAGE_KEY = "codo-digital-solutions";
 
 const initialData: Record<string, RecordItem[]> = {
     students: [
@@ -342,7 +344,43 @@ export default function AdminDashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [search, setSearch] = useState("");
     const [data, setData] = useState(initialData);
+    const [dataLoaded, setDataLoaded] = useState(false);
     const [notice, setNotice] = useState("");
+
+    useEffect(() => {
+        try {
+            const savedServices = localStorage.getItem(
+                DIGITAL_SOLUTIONS_STORAGE_KEY
+            );
+
+            if (savedServices) {
+                const parsedServices = JSON.parse(savedServices);
+                if (Array.isArray(parsedServices)) {
+                    setData(previous => ({
+                        ...previous,
+                        services: parsedServices,
+                    }));
+                }
+            }
+        } catch (error) {
+            console.error("Error loading services:", error);
+        } finally {
+            setDataLoaded(true);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!dataLoaded) return;
+
+        try {
+            localStorage.setItem(
+                DIGITAL_SOLUTIONS_STORAGE_KEY,
+                JSON.stringify(data.services)
+            );
+        } catch (error) {
+            console.error("Error saving services:", error);
+        }
+    }, [data.services, dataLoaded]);
 
     const [studentName, setStudentName] = useState("Admin User");
     const [email, setEmail] = useState("admin@codolearn.com");
