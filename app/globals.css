@@ -1,8 +1,28 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+  --background: #F8F8FC;
+  --surface: #FFFFFF;
+  --surface-soft: #F1F3FA;
+  --foreground: #20243A;
+  --muted: #7B829D;
+  --border: #E7E8F0;
+  --primary: #869CFF;
+  --accent: #E2A3FF;
+}
+
+html.dark {
+  color-scheme: dark;
+  --background: #171B2B;
+  --surface: #22283B;
+  --surface-soft: #293047;
+  --foreground: #E9ECF6;
+  --muted: #AAB2C8;
+  --border: #394158;
+  --primary: #91A4FF;
+  --accent: #C9A0E8;
 }
 
 @theme inline {
@@ -12,15 +32,67 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  min-height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 220ms ease, color 220ms ease;
+}
+
+/* Soft Dark Mode compatibility for the project's existing Tailwind color classes. */
+html.dark body [class*="bg-[#F8F8FC]"],
+html.dark body [class*="bg-[#F8F8FC]/"] {
+  background-color: var(--background) !important;
+}
+html.dark body [class~="bg-white"],
+html.dark body [class*="bg-white/"] {
+  background-color: var(--surface) !important;
+}
+html.dark body [class*="bg-[#FFFFFF]"] {
+  background-color: var(--surface) !important;
+}
+html.dark body [class*="bg-[#20243A]"] {
+  background-color: var(--surface-soft) !important;
+}
+html.dark body [class*="bg-[#F1F3FA]"],
+html.dark body [class*="bg-gray-50"],
+html.dark body [class*="bg-slate-50"] {
+  background-color: var(--surface-soft) !important;
+}
+html.dark body [class*="text-[#20243A]"],
+html.dark body [class*="text-[#20243A]/"] {
+  color: var(--foreground) !important;
+}
+html.dark body [class*="text-[#7B829D]"],
+html.dark body [class*="text-gray-500"],
+html.dark body [class*="text-gray-600"],
+html.dark body [class*="text-slate-500"],
+html.dark body [class*="text-slate-600"] {
+  color: var(--muted) !important;
+}
+html.dark body [class*="border-[#20243A]"],
+html.dark body [class*="border-[#E7E8F0]"],
+html.dark body [class*="border-gray-100"],
+html.dark body [class*="border-gray-200"],
+html.dark body [class*="border-slate-100"],
+html.dark body [class*="border-slate-200"] {
+  border-color: var(--border) !important;
+}
+html.dark body input:not([type="checkbox"]):not([type="radio"]),
+html.dark body textarea,
+html.dark body select {
+  background-color: var(--surface) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border);
+}
+html.dark body input::placeholder,
+html.dark body textarea::placeholder {
+  color: var(--muted);
+}
+html.dark body [class*="shadow-"] {
+  --tw-shadow-color: rgb(0 0 0 / 18%);
 }
