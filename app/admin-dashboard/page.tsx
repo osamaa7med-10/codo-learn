@@ -72,6 +72,24 @@ const digitalSolutionCategories = [
 ];
 
 const DIGITAL_SOLUTIONS_STORAGE_KEY = "codo-digital-solutions";
+const CLIENT_REQUESTS_STORAGE_KEY = "codo-client-requests";
+
+type ClientRequest = {
+    id: number;
+    submittedAt: string;
+    status: string;
+    name: string;
+    email: string;
+    phone: string;
+    country: string;
+    city: string;
+    companyName: string;
+    companyWebsite?: string;
+    industry: string;
+    companySize: string;
+    serviceRequired: string;
+    projectDescription: string;
+};
 
 const initialData: Record<string, RecordItem[]> = {
     students: [
@@ -346,6 +364,8 @@ export default function AdminDashboard() {
     const [data, setData] = useState(initialData);
     const [dataLoaded, setDataLoaded] = useState(false);
     const [notice, setNotice] = useState("");
+    const [clientRequests, setClientRequests] = useState<ClientRequest[]>([]);
+    const [clientRequestsLoaded, setClientRequestsLoaded] = useState(false);
 
     useEffect(() => {
         try {
@@ -381,6 +401,35 @@ export default function AdminDashboard() {
             console.error("Error saving services:", error);
         }
     }, [data.services, dataLoaded]);
+    useEffect(() => {
+        try {
+            const savedRequests = localStorage.getItem(CLIENT_REQUESTS_STORAGE_KEY);
+            if (savedRequests) {
+                const parsedRequests = JSON.parse(savedRequests);
+                if (Array.isArray(parsedRequests)) setClientRequests(parsedRequests);
+            }
+        } catch (error) {
+            console.error("Error loading client requests:", error);
+        } finally {
+            setClientRequestsLoaded(true);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!clientRequestsLoaded) return;
+        try {
+            localStorage.setItem(CLIENT_REQUESTS_STORAGE_KEY, JSON.stringify(clientRequests));
+        } catch (error) {
+            console.error("Error saving client requests:", error);
+        }
+    }, [clientRequests, clientRequestsLoaded]);
+
+    function updateClientRequestStatus(requestId: number, status: string): void {
+        setClientRequests(previous => previous.map(request =>
+            request.id === requestId ? { ...request, status } : request
+        ));
+        setNotice(t("Client request status updated.", "تم تحديث حالة طلب العميل."));
+    }
 
     const [studentName, setStudentName] = useState("Admin User");
     const [email, setEmail] = useState("admin@codolearn.com");
@@ -1259,6 +1308,61 @@ export default function AdminDashboard() {
                     {/* MANAGEMENT SECTIONS */}
                     {isPeopleSection && (
                         <div className="space-y-6">
+
+                            {/* CLIENT REQUESTS */}
+                            {activeSection === "clients" && (
+                                <Panel>
+                                    <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                                        <div>
+                                            <p className="text-sm font-bold text-[#586FD6]">{t("INCOMING REQUESTS", "الطلبات الواردة")}</p>
+                                            <h3 className="mt-1 text-xl font-extrabold text-[#20243A]">{t("Client Service Requests", "طلبات خدمات العملاء")}</h3>
+                                            <p className="mt-1 text-sm text-gray-500">{t("Review requests submitted through the Client Signup form.", "راجع الطلبات المرسلة من نموذج تسجيل العملاء.")}</p>
+                                        </div>
+                                        <span className="w-fit rounded-full bg-[#869CFF]/10 px-4 py-2 text-sm font-bold text-[#586FD6]">{clientRequests.length} {t("requests", "طلبات")}</span>
+                                    </div>
+                                    {clientRequests.length === 0 ? (
+                                        <div className="rounded-xl border border-dashed border-[#D9DDF0] bg-[#F8F8FC] px-5 py-10 text-center">
+                                            <p className="font-semibold text-[#343B58]">{t("No client requests yet", "لا توجد طلبات عملاء حتى الآن")}</p>
+                                            <p className="mt-1 text-sm text-gray-400">{t("New requests will appear here after a client submits the signup form.", "ستظهر الطلبات الجديدة هنا بعد إرسال العميل لنموذج التسجيل.")}</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {clientRequests.slice().sort((left, right) => right.id - left.id).map(request => (
+                                                <article key={request.id} className="rounded-2xl border border-[#ECECF5] p-5">
+                                                    <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <h4 className="text-lg font-bold text-[#20243A]">{request.companyName}</h4>
+                                                                <span className="rounded-full bg-[#869CFF]/10 px-3 py-1 text-xs font-bold text-[#586FD6]">{request.serviceRequired}</span>
+                                                            </div>
+                                                            <p className="mt-1 text-sm text-gray-500">{request.name} · {request.email} · {request.phone}</p>
+                                                            <p className="mt-1 text-xs text-gray-400">{request.industry} · {request.companySize} · {request.city}, {request.country}</p>
+                                                        </div>
+                                                        <div className="w-full lg:max-w-xs">
+                                                            <label className="mb-2 block text-xs font-bold text-gray-500">{t("Request Status", "حالة الطلب")}</label>
+                                                            <select value={request.status} onChange={event => updateClientRequestStatus(request.id, event.target.value)} className={inputClass}>
+                                                                <option value="New Request">{t("New Request", "طلب جديد")}</option>
+                                                                <option value="Under Review">{t("Under Review", "قيد المراجعة")}</option>
+                                                                <option value="In Progress">{t("In Progress", "قيد التنفيذ")}</option>
+                                                                <option value="Completed">{t("Completed", "مكتمل")}</option>
+                                                                <option value="Rejected">{t("Rejected", "مرفوض")}</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div className="mt-4 rounded-xl bg-[#F8F8FC] p-4">
+                                                        <p className="mb-1 text-xs font-bold text-gray-500">{t("Project Description", "وصف المشروع")}</p>
+                                                        <p className="whitespace-pre-wrap text-sm leading-6 text-[#343B58]">{request.projectDescription}</p>
+                                                    </div>
+                                                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-400">
+                                                        <span>{t("Submitted", "تاريخ الإرسال")}: {new Date(request.submittedAt).toLocaleString(isArabic ? "ar-EG" : "en-US")}</span>
+                                                        {request.companyWebsite && <a href={request.companyWebsite} target="_blank" rel="noreferrer" className="font-semibold text-[#586FD6] hover:underline">{t("Company Website", "موقع الشركة")}</a>}
+                                                    </div>
+                                                </article>
+                                            ))}
+                                        </div>
+                                    )}
+                                </Panel>
+                            )}
 
                             {/* CLIENT FORM */}
                             {activeSection === "clients" && (
