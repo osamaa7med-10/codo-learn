@@ -55,7 +55,21 @@ type RecordItem = {
     companySize?: string;
     serviceRequired?: string;
     projectDescription?: string;
+    price?: string;
+    deliveryTime?: string;
 };
+
+const digitalSolutionCategories = [
+    { value: "Web Development", label: "Web Development", arLabel: "تطوير المواقع" },
+    { value: "Mobile App Development", label: "Mobile App Development", arLabel: "تطوير تطبيقات الموبايل" },
+    { value: "UI/UX Design", label: "UI/UX Design", arLabel: "تصميم UI/UX" },
+    { value: "E-Commerce Solutions", label: "E-Commerce Solutions", arLabel: "حلول التجارة الإلكترونية" },
+    { value: "Custom Software Development", label: "Custom Software Development", arLabel: "تطوير البرمجيات المخصصة" },
+    { value: "AI & Automation", label: "AI & Automation", arLabel: "الذكاء الاصطناعي والأتمتة" },
+    { value: "Digital Marketing", label: "Digital Marketing", arLabel: "التسويق الرقمي" },
+    { value: "Branding & Graphic Design", label: "Branding & Graphic Design", arLabel: "الهوية البصرية والتصميم" },
+    { value: "IT Consulting", label: "IT Consulting", arLabel: "الاستشارات التقنية" },
+];
 
 const initialData: Record<string, RecordItem[]> = {
     students: [
@@ -100,9 +114,33 @@ const initialData: Record<string, RecordItem[]> = {
         { id: 3, name: "Node.js Backend Development", category: "Backend", status: "Published", description: "Build APIs with Node.js." },
     ],
     services: [
-        { id: 1, name: "Web Development", category: "Digital Service", status: "Active" },
-        { id: 2, name: "UI/UX Design", category: "Digital Service", status: "Active" },
-        { id: 3, name: "Technical Consulting", category: "Digital Service", status: "Inactive" },
+        {
+            id: 1,
+            name: "Web Development",
+            category: "Web Development",
+            description: "Modern, responsive websites and web applications tailored to business needs.",
+            price: "Starting from $500",
+            deliveryTime: "2-4 weeks",
+            status: "Active",
+        },
+        {
+            id: 2,
+            name: "UI/UX Design",
+            category: "UI/UX Design",
+            description: "User research, wireframes and polished interface designs.",
+            price: "Starting from $250",
+            deliveryTime: "1-3 weeks",
+            status: "Active",
+        },
+        {
+            id: 3,
+            name: "Technical Consulting",
+            category: "IT Consulting",
+            description: "Technical guidance, architecture reviews and digital strategy.",
+            price: "Custom quote",
+            deliveryTime: " حسب نطاق العمل",
+            status: "Inactive",
+        },
     ],
     projects: [
         { id: 1, name: "E-commerce Website", category: "Portfolio", status: "Published" },
@@ -359,6 +397,14 @@ export default function AdminDashboard() {
     const [newEmployeePhone, setNewEmployeePhone] = useState("");
     const [newEmployeePosition, setNewEmployeePosition] = useState("HR");
     const [newEmployeeStatus, setNewEmployeeStatus] = useState("Active");
+
+    // Digital Solutions form
+    const [serviceName, setServiceName] = useState("");
+    const [serviceCategory, setServiceCategory] = useState("Web Development");
+    const [serviceDescription, setServiceDescription] = useState("");
+    const [servicePrice, setServicePrice] = useState("");
+    const [serviceDeliveryTime, setServiceDeliveryTime] = useState("");
+    const [serviceStatus, setServiceStatus] = useState("Active");
 
     // Course form
     const [courseName, setCourseName] = useState("");
@@ -682,6 +728,50 @@ export default function AdminDashboard() {
         setNotice(t(
             "Employee added successfully!",
             "تمت إضافة الموظف بنجاح!"
+        ));
+    };
+
+    const handleAddService = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        const name = serviceName.trim();
+        const description = serviceDescription.trim();
+
+        if (!name || !description) {
+            setNotice(t(
+                "Please enter a service name and description.",
+                "يرجى إدخال اسم الخدمة والوصف الخاص بها."
+            ));
+            return;
+        }
+
+        if (data.services.some(item => item.name.trim().toLowerCase() === name.toLowerCase())) {
+            setNotice(t(
+                "A service with this name already exists.",
+                "توجد خدمة بهذا الاسم بالفعل."
+            ));
+            return;
+        }
+
+        addRecord("services", {
+            name,
+            category: serviceCategory,
+            description,
+            price: servicePrice.trim() || "Custom quote",
+            deliveryTime: serviceDeliveryTime.trim() || "To be agreed",
+            status: serviceStatus,
+        });
+
+        setServiceName("");
+        setServiceCategory("Web Development");
+        setServiceDescription("");
+        setServicePrice("");
+        setServiceDeliveryTime("");
+        setServiceStatus("Active");
+
+        setNotice(t(
+            "Digital solution added successfully!",
+            "تمت إضافة الحل الرقمي بنجاح!"
         ));
     };
 
@@ -1777,6 +1867,140 @@ export default function AdminDashboard() {
                                 </Panel>
                             )}
 
+                            {/* DIGITAL SOLUTIONS FORM */}
+                            {activeSection === "services" && (
+                                <Panel className="!p-0 overflow-hidden">
+                                    <div className="border-b border-[#ECECF5] bg-gradient-to-r from-[#869CFF]/10 to-[#E2A3FF]/10 p-6 sm:p-8">
+                                        <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#869CFF]/15 px-3 py-1.5 text-xs font-bold text-[#586FD6]">
+                                            <span>✦</span>
+                                            {t("DIGITAL SOLUTIONS", "الحلول الرقمية")}
+                                        </div>
+                                        <h3 className="text-2xl font-extrabold text-[#20243A]">
+                                            {t("Add a Digital Solution", "إضافة حل رقمي جديد")}
+                                        </h3>
+                                        <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500">
+                                            {t(
+                                                "Create and organize the services offered by Codo Learn. Choose a clear category so clients can find the right solution.",
+                                                "أضف ونظّم الخدمات التي تقدمها Codo Learn، واختر تصنيفًا واضحًا ليسهل على العملاء العثور على الحل المناسب."
+                                            )}
+                                        </p>
+                                    </div>
+
+                                    <form onSubmit={handleAddService} className="space-y-6 p-6 sm:p-8">
+                                        <div className="grid gap-5 md:grid-cols-2">
+                                            <div>
+                                                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                                                    {t("Service Name", "اسم الخدمة")} *
+                                                </label>
+                                                <input
+                                                    required
+                                                    value={serviceName}
+                                                    onChange={e => setServiceName(e.target.value)}
+                                                    placeholder={t("e.g. Business Website Development", "مثال: تطوير موقع شركة")}
+                                                    className={inputClass}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                                                    {t("Digital Solution Category", "تصنيف الحل الرقمي")} *
+                                                </label>
+                                                <select
+                                                    required
+                                                    value={serviceCategory}
+                                                    onChange={e => setServiceCategory(e.target.value)}
+                                                    className={inputClass}
+                                                >
+                                                    {digitalSolutionCategories.map(category => (
+                                                        <option key={category.value} value={category.value}>
+                                                            {isArabic ? category.arLabel : category.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                                                    {t("Starting Price / Pricing Note", "السعر المبدئي / ملاحظة التسعير")}
+                                                </label>
+                                                <input
+                                                    value={servicePrice}
+                                                    onChange={e => setServicePrice(e.target.value)}
+                                                    placeholder={t("e.g. Starting from $500 or Custom quote", "مثال: يبدأ من 500 دولار أو حسب الطلب")}
+                                                    className={inputClass}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                                                    {t("Estimated Delivery Time", "مدة التنفيذ المتوقعة")}
+                                                </label>
+                                                <input
+                                                    value={serviceDeliveryTime}
+                                                    onChange={e => setServiceDeliveryTime(e.target.value)}
+                                                    placeholder={t("e.g. 2-4 weeks", "مثال: من أسبوعين إلى 4 أسابيع")}
+                                                    className={inputClass}
+                                                />
+                                            </div>
+
+                                            <div className="md:col-span-2">
+                                                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                                                    {t("Service Description", "وصف الخدمة")} *
+                                                </label>
+                                                <textarea
+                                                    required
+                                                    rows={4}
+                                                    value={serviceDescription}
+                                                    onChange={e => setServiceDescription(e.target.value)}
+                                                    placeholder={t(
+                                                        "Describe what this service includes and the value it provides to clients...",
+                                                        "اكتب تفاصيل الخدمة وما تتضمنه والقيمة التي تقدمها للعميل..."
+                                                    )}
+                                                    className={`${inputClass} resize-y`}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                                                    {t("Service Status", "حالة الخدمة")}
+                                                </label>
+                                                <select
+                                                    value={serviceStatus}
+                                                    onChange={e => setServiceStatus(e.target.value)}
+                                                    className={inputClass}
+                                                >
+                                                    <option value="Active">{t("Active", "نشطة")}</option>
+                                                    <option value="Inactive">{t("Inactive", "غير نشطة")}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-3 border-t border-gray-100 pt-5">
+                                            <button
+                                                type="submit"
+                                                className="rounded-xl bg-gradient-to-r from-[#869CFF] to-[#E2A3FF] px-7 py-3.5 font-semibold text-white shadow-sm transition hover:opacity-90"
+                                            >
+                                                + {t("Add Digital Solution", "إضافة الحل الرقمي")}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setServiceName("");
+                                                    setServiceCategory("Web Development");
+                                                    setServiceDescription("");
+                                                    setServicePrice("");
+                                                    setServiceDeliveryTime("");
+                                                    setServiceStatus("Active");
+                                                }}
+                                                className="rounded-xl border border-gray-200 px-7 py-3.5 font-semibold text-gray-600 transition hover:bg-gray-50"
+                                            >
+                                                {t("Clear Form", "مسح النموذج")}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </Panel>
+                            )}
+
                             {/* COURSE FORM */}
                             {activeSection === "courses" && (
                                 <Panel>
@@ -1944,6 +2168,25 @@ export default function AdminDashboard() {
                                                                 )}
 
                                                             </div>
+                                                        ) : activeSection === "services" ? (
+                                                            <div className="max-w-[320px] space-y-2">
+                                                                <span className="inline-flex rounded-lg bg-[#869CFF]/10 px-3 py-1.5 text-xs font-semibold text-[#586FD6]">
+                                                                    {digitalSolutionCategories.find(category => category.value === item.category)
+                                                                        ? (isArabic
+                                                                            ? digitalSolutionCategories.find(category => category.value === item.category)?.arLabel
+                                                                            : item.category)
+                                                                        : item.category || t("Uncategorized", "غير مصنف")}
+                                                                </span>
+                                                                {item.description && (
+                                                                    <p className="text-xs leading-5 text-gray-500">{item.description}</p>
+                                                                )}
+                                                                {item.deliveryTime && (
+                                                                    <p className="text-xs text-gray-400">
+                                                                        <span className="font-semibold">{t("Delivery:", "مدة التنفيذ:")}</span>{" "}
+                                                                        {item.deliveryTime}
+                                                                    </p>
+                                                                )}
+                                                            </div>
                                                         ) : activeSection === "users" ? (
                                                             <select
                                                                 value={item.role || "Student"}
@@ -1986,9 +2229,11 @@ export default function AdminDashboard() {
                                                         )}
                                                     </td>
                                                     <td className="px-6 py-4 text-gray-500">
-                                                        {activeSection === "clients"
-                                                            ? item.date || "—"
-                                                            : item.amount || item.date || "—"}
+                                                        {activeSection === "services"
+                                                            ? item.price || "—"
+                                                            : activeSection === "clients"
+                                                                ? item.date || "—"
+                                                                : item.amount || item.date || "—"}
                                                     </td>
 
                                                     <td className="px-6 py-4 text-gray-500">{item.amount || item.date || "—"}</td>
@@ -2026,13 +2271,17 @@ export default function AdminDashboard() {
                                                             {(activeSection === "services" || activeSection === "projects") && (
                                                                 <button
                                                                     onClick={() => {
-                                                                        const next = item.status === "Active" || item.status === "Published" ? "Inactive" : "Published";
+                                                                        const next = activeSection === "services"
+                                                                            ? (item.status === "Active" ? "Inactive" : "Active")
+                                                                            : (item.status === "Active" || item.status === "Published" ? "Inactive" : "Published");
                                                                         updateRecord(activeSection, item.id, { status: next });
                                                                         setNotice(t("Record status updated in this demo.", "تم تحديث حالة السجل في النسخة التجريبية."));
                                                                     }}
                                                                     className="rounded-lg border border-[#869CFF]/30 px-3 py-2 text-xs font-semibold text-[#586FD6] hover:bg-[#869CFF]/10"
                                                                 >
-                                                                    {t("Change Status", "تغيير الحالة")}
+                                                                    {activeSection === "services"
+                                                                        ? (item.status === "Active" ? t("Deactivate", "إيقاف") : t("Activate", "تفعيل"))
+                                                                        : t("Change Status", "تغيير الحالة")}
                                                                 </button>
                                                             )}
 
