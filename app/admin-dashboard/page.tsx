@@ -57,6 +57,10 @@ type RecordItem = {
     projectDescription?: string;
     price?: string;
     deliveryTime?: string;
+    department?: string;
+    employmentType?: string;
+    workMode?: string;
+    startDate?: string;
 };
 
 const digitalSolutionCategories = [
@@ -115,12 +119,14 @@ const initialData: Record<string, RecordItem[]> = {
             companySize: "11-50 Employees",
             serviceRequired: "Web Development",
             projectDescription: "Company website development.",
+            country: "Egypt",
+            city: "Cairo",
             status: "Active",
         },
     ],
     employees: [
-        { id: 1, name: "Nour Ahmed", email: "nour@example.com", status: "Active", category: "HR", position: "HR" },
-        { id: 2, name: "Youssef Samir", email: "youssef@example.com", status: "Active", category: "Marketing", position: "Marketing" },
+        { id: 1, name: "Nour Ahmed", email: "nour@example.com", phone: "+201000000001", country: "Egypt", city: "Cairo", status: "Active", category: "HR", position: "HR", department: "Human Resources", employmentType: "Full-time", workMode: "On-site", startDate: "2025-01-15", description: "Recruitment and employee relations." },
+        { id: 2, name: "Youssef Samir", email: "youssef@example.com", phone: "+201000000002", country: "Egypt", city: "Giza", status: "Active", category: "Marketing", position: "Marketing", department: "Marketing", employmentType: "Full-time", workMode: "Hybrid", startDate: "2025-03-01", description: "Campaigns and social media." },
     ],
     users: [
         { id: 1, name: "Ahmed Mohamed", email: "ahmed@example.com", role: "Student", status: "Active" },
@@ -479,6 +485,9 @@ export default function AdminDashboard() {
     const [clientService, setClientService] = useState("Web Development");
     const [clientDescription, setClientDescription] = useState("");
     const [clientStatus, setClientStatus] = useState("Active");
+    const [clientCountry, setClientCountry] = useState("Egypt");
+    const [clientCity, setClientCity] = useState("");
+    const [clientImage, setClientImage] = useState("");
 
     // Instructor profile form
     const [instructorName, setInstructorName] = useState("");
@@ -503,6 +512,15 @@ export default function AdminDashboard() {
     const [newEmployeePhone, setNewEmployeePhone] = useState("");
     const [newEmployeePosition, setNewEmployeePosition] = useState("HR");
     const [newEmployeeStatus, setNewEmployeeStatus] = useState("Active");
+    const [newEmployeeCountry, setNewEmployeeCountry] = useState("Egypt");
+    const [newEmployeeCity, setNewEmployeeCity] = useState("");
+    const [newEmployeeLinkedIn, setNewEmployeeLinkedIn] = useState("");
+    const [newEmployeeDepartment, setNewEmployeeDepartment] = useState("Human Resources");
+    const [newEmployeeType, setNewEmployeeType] = useState("Full-time");
+    const [newEmployeeWorkMode, setNewEmployeeWorkMode] = useState("On-site");
+    const [newEmployeeStartDate, setNewEmployeeStartDate] = useState("");
+    const [newEmployeeResponsibilities, setNewEmployeeResponsibilities] = useState("");
+    const [newEmployeeImage, setNewEmployeeImage] = useState("");
 
     // Digital Solutions form
     const [serviceName, setServiceName] = useState("");
@@ -798,11 +816,31 @@ export default function AdminDashboard() {
         const name = newEmployeeName.trim();
         const normalizedEmail = newEmployeeEmail.trim().toLowerCase();
         const position = newEmployeePosition.trim();
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-        if (!name || !normalizedEmail || !position) {
+        if (!name || !normalizedEmail || !newEmployeePhone.trim() || !newEmployeeCity.trim() || !position) {
             setNotice(t(
-                "Please enter the employee's name, email, and job position.",
-                "يرجى إدخال اسم الموظف والبريد الإلكتروني والمسمى الوظيفي."
+                "Please complete all required employee information.",
+                "يرجى استكمال جميع بيانات الموظف المطلوبة."
+            ));
+            return;
+        }
+
+        if (!emailPattern.test(normalizedEmail)) {
+            setNotice(t(
+                "Please enter a valid employee email address.",
+                "يرجى إدخال بريد إلكتروني صحيح للموظف."
+            ));
+            return;
+        }
+
+        if (
+            newEmployeeLinkedIn.trim() &&
+            !/^https?:\/\//i.test(newEmployeeLinkedIn.trim())
+        ) {
+            setNotice(t(
+                "Please enter a valid LinkedIn URL starting with http:// or https://.",
+                "يرجى إدخال رابط LinkedIn صحيح يبدأ بـ http:// أو https://."
             ));
             return;
         }
@@ -821,22 +859,44 @@ export default function AdminDashboard() {
             name,
             email: normalizedEmail,
             phone: newEmployeePhone.trim(),
+            country: newEmployeeCountry,
+            city: newEmployeeCity.trim(),
+            linkedIn: newEmployeeLinkedIn.trim(),
             category: position,
             position,
+            department: newEmployeeDepartment,
+            employmentType: newEmployeeType,
+            workMode: newEmployeeWorkMode,
+            startDate: newEmployeeStartDate,
+            description: newEmployeeResponsibilities.trim(),
+            image: newEmployeeImage,
             status: newEmployeeStatus,
             role: "Employee",
         });
 
-        setNewEmployeeName("");
-        setNewEmployeeEmail("");
-        setNewEmployeePhone("");
-        setNewEmployeePosition("HR");
-        setNewEmployeeStatus("Active");
+        resetEmployeeForm();
 
         setNotice(t(
             "Employee added successfully!",
             "تمت إضافة الموظف بنجاح!"
         ));
+    };
+
+    const resetEmployeeForm = () => {
+        setNewEmployeeName("");
+        setNewEmployeeEmail("");
+        setNewEmployeePhone("");
+        setNewEmployeeCountry("Egypt");
+        setNewEmployeeCity("");
+        setNewEmployeeLinkedIn("");
+        setNewEmployeePosition("HR");
+        setNewEmployeeDepartment("Human Resources");
+        setNewEmployeeType("Full-time");
+        setNewEmployeeWorkMode("On-site");
+        setNewEmployeeStartDate("");
+        setNewEmployeeResponsibilities("");
+        setNewEmployeeImage("");
+        setNewEmployeeStatus("Active");
     };
 
     const handleAddService = (event: React.FormEvent<HTMLFormElement>) => {
@@ -1036,6 +1096,9 @@ export default function AdminDashboard() {
             companySize: clientCompanySize,
             serviceRequired: clientService,
             projectDescription: clientDescription.trim(),
+            country: clientCountry,
+            city: clientCity.trim(),
+            image: clientImage,
             status: clientStatus,
         });
 
@@ -1049,6 +1112,9 @@ export default function AdminDashboard() {
         setClientService("Web Development");
         setClientDescription("");
         setClientStatus("Active");
+        setClientCountry("Egypt");
+        setClientCity("");
+        setClientImage("");
         setNotice(t("Client added successfully!", "تمت إضافة العميل بنجاح!"));
     }
 
@@ -1539,6 +1605,21 @@ export default function AdminDashboard() {
                                                         dir="ltr"
                                                     />
                                                 </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Country", "الدولة")} *</label>
+                                                    <select value={clientCountry} onChange={e => setClientCountry(e.target.value)} className={inputClass}>
+                                                        <option value="Egypt">{t("Egypt", "مصر")}</option>
+                                                        <option value="Saudi Arabia">{t("Saudi Arabia", "السعودية")}</option>
+                                                        <option value="UAE">{t("United Arab Emirates", "الإمارات العربية المتحدة")}</option>
+                                                        <option value="Kuwait">{t("Kuwait", "الكويت")}</option>
+                                                        <option value="Jordan">{t("Jordan", "الأردن")}</option>
+                                                        <option value="Other">{t("Other", "أخرى")}</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("City", "المدينة")} *</label>
+                                                    <input required value={clientCity} onChange={e => setClientCity(e.target.value)} placeholder={t("Enter city", "أدخل المدينة")} className={inputClass} />
+                                                </div>
 
                                             </div>
                                         </section>
@@ -1761,27 +1842,55 @@ export default function AdminDashboard() {
                                                 </div>
                                             </div>
 
-                                            <div className="max-w-md">
-                                                <label className="mb-2 block text-sm font-semibold text-gray-700">
-                                                    {t("Client Status", "حالة العميل")}
-                                                </label>
-
-                                                <select
-                                                    value={clientStatus}
-                                                    onChange={e => setClientStatus(e.target.value)}
-                                                    className={inputClass}
-                                                >
-                                                    <option value="Active">
-                                                        {t("Active", "نشط")}
-                                                    </option>
-                                                    <option value="Pending">
-                                                        {t("Pending", "قيد الانتظار")}
-                                                    </option>
-                                                    <option value="Inactive">
-                                                        {t("Inactive", "غير نشط")}
-                                                    </option>
-                                                </select>
+                                            <div className="grid gap-5 md:grid-cols-2">
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Profile Image", "الصورة الشخصية")}</label>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={e => {
+                                                            const file = e.target.files?.[0];
+                                                            if (!file) return;
+                                                            if (file.size > 5 * 1024 * 1024) {
+                                                                setNotice(t("Image must be smaller than 5 MB.", "يجب أن يكون حجم الصورة أقل من 5 ميجابايت."));
+                                                                e.target.value = "";
+                                                                return;
+                                                            }
+                                                            const reader = new FileReader();
+                                                            reader.onload = () => {
+                                                                if (typeof reader.result === "string") setClientImage(reader.result);
+                                                            };
+                                                            reader.readAsDataURL(file);
+                                                        }}
+                                                        className="w-full rounded-xl border border-gray-200 bg-[#F8F8FC] px-3 py-3 text-sm"
+                                                    />
+                                                    <p className="mt-2 text-xs text-gray-400">{t("Supported image files up to 5 MB.", "الصور المدعومة حتى 5 ميجابايت.")}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">
+                                                        {t("Client Status", "حالة العميل")}
+                                                    </label>
+                                                    <select
+                                                        value={clientStatus}
+                                                        onChange={e => setClientStatus(e.target.value)}
+                                                        className={inputClass}
+                                                    >
+                                                        <option value="Active">{t("Active", "نشط")}</option>
+                                                        <option value="Pending">{t("Pending", "قيد الانتظار")}</option>
+                                                        <option value="Inactive">{t("Inactive", "غير نشط")}</option>
+                                                    </select>
+                                                </div>
                                             </div>
+                                            {clientImage && (
+                                                <div className="mt-5 flex items-center gap-4 rounded-xl border border-gray-100 bg-[#F8F8FC] p-3">
+                                                    <img src={clientImage} alt="Client profile preview" className="h-16 w-16 rounded-xl border border-gray-200 object-cover" />
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-sm font-semibold text-[#20243A]">{t("Profile image preview", "معاينة الصورة الشخصية")}</p>
+                                                        <p className="text-xs text-gray-400">{t("This image will be included in the client record.", "ستتم إضافة هذه الصورة إلى سجل العميل.")}</p>
+                                                    </div>
+                                                    <button type="button" onClick={() => setClientImage("")} className="text-sm font-semibold text-red-500 hover:text-red-600">{t("Remove", "إزالة")}</button>
+                                                </div>
+                                            )}
                                         </section>
 
                                         {/* Buttons */}
@@ -1807,6 +1916,9 @@ export default function AdminDashboard() {
                                                     setClientService("Web Development");
                                                     setClientDescription("");
                                                     setClientStatus("Active");
+                                                    setClientCountry("Egypt");
+                                                    setClientCity("");
+                                                    setClientImage("");
                                                     setNotice("");
                                                 }}
                                                 className="rounded-xl border border-gray-200 px-7 py-3.5 font-semibold text-gray-600 transition hover:bg-gray-50"
@@ -2222,58 +2334,211 @@ export default function AdminDashboard() {
 
                             {/* EMPLOYEE FORM */}
                             {activeSection === "employees" && (
-                                <Panel>
-                                    <div className="mb-6 flex items-center justify-between gap-4">
-                                        <div>
-                                            <p className="text-sm font-semibold text-[#869CFF]">{t("TEAM MANAGEMENT", "إدارة الفريق")}</p>
-                                            <h3 className="mt-1 text-xl font-bold text-[#20243A]">{t("Add New Employee", "إضافة موظف جديد")}</h3>
-                                            <p className="mt-2 text-sm text-gray-500">{t("Add an employee to your Codo Learn team.", "أضف موظفًا إلى فريق Codo Learn.")}</p>
+                                <Panel className="!p-0 overflow-hidden">
+                                    <div className="relative overflow-hidden border-b border-[#ECECF5] bg-gradient-to-r from-[#869CFF]/10 to-[#E2A3FF]/10 p-6 sm:p-8">
+                                        <div className="relative z-10">
+                                            <p className="text-xs font-bold tracking-[0.2em] text-[#7587E8]">
+                                                {t("EMPLOYEE MANAGEMENT", "إدارة الموظفين")}
+                                            </p>
+                                            <h3 className="mt-2 text-2xl font-extrabold text-[#20243A] sm:text-3xl">
+                                                {t("Add New Employee", "إضافة موظف جديد")}
+                                            </h3>
+                                            <p className="mt-2 max-w-xl text-sm leading-6 text-gray-500">
+                                                {t(
+                                                    "Create a complete employee profile and add a new team member to Codo Learn.",
+                                                    "أنشئ ملفًا متكاملًا وأضف عضوًا جديدًا إلى فريق Codo Learn."
+                                                )}
+                                            </p>
                                         </div>
-                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E2A3FF]/20 text-2xl font-bold text-[#586FD6]">+</div>
+                                        <div className="absolute -right-10 -top-16 h-48 w-48 rounded-full bg-[#E2A3FF]/15 blur-2xl" />
                                     </div>
 
-                                    <form onSubmit={handleAddEmployee} className="space-y-5">
-                                        <div className="grid gap-5 md:grid-cols-2">
-                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">{t("Full Name", "الاسم بالكامل")} *</label><input required value={newEmployeeName} onChange={e => setNewEmployeeName(e.target.value)} placeholder={t("Enter employee's full name", "أدخل اسم الموظف بالكامل")} className={inputClass} /></div>
-                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">{t("Email Address", "البريد الإلكتروني")} *</label><input required type="email" value={newEmployeeEmail} onChange={e => setNewEmployeeEmail(e.target.value)} placeholder="employee@example.com" className={inputClass} /></div>
-                                            <div><label className="mb-2 block text-sm font-semibold text-gray-700">{t("Phone Number", "رقم الهاتف")}</label><input type="tel" value={newEmployeePhone} onChange={e => setNewEmployeePhone(e.target.value)} placeholder={t("Enter phone number", "أدخل رقم الهاتف")} className={inputClass} /></div>
-                                            <div>
-                                                <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Job Position", "المسمى الوظيفي")} *</label>
-                                                <select required value={newEmployeePosition} onChange={e => setNewEmployeePosition(e.target.value)} className={inputClass}>
-                                                    <option value="HR">{t("Human Resources (HR)", "الموارد البشرية")}</option>
-                                                    <option value="Marketing">{t("Marketing", "التسويق")}</option>
-                                                    <option value="Accountant">{t("Accountant", "محاسب")}</option>
-                                                    <option value="Sales">{t("Sales", "المبيعات")}</option>
-                                                    <option value="Customer Support">{t("Customer Support", "خدمة العملاء")}</option>
-                                                    <option value="Content Creator">{t("Content Creator", "صانع محتوى")}</option>
-                                                    <option value="Graphic Designer">{t("Graphic Designer", "مصمم جرافيك")}</option>
-                                                    <option value="Software Developer">{t("Software Developer", "مطور برمجيات")}</option>
-                                                    <option value="Other">{t("Other", "أخرى")}</option>
-                                                </select>
+                                    <form onSubmit={handleAddEmployee} className="space-y-8 p-5 sm:p-8">
+                                        <p className="text-xs text-gray-400">
+                                            {t("Fields marked with", "الحقول التي تحمل علامة")} <span className="text-rose-500">*</span> {t("are required.", "مطلوبة.")}
+                                        </p>
+
+                                        <section>
+                                            <div className="mb-5 flex items-center gap-3">
+                                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#869CFF]/15 text-[#586FD6] font-bold">01</span>
+                                                <div>
+                                                    <h4 className="font-bold text-[#20243A]">{t("Personal Information", "المعلومات الشخصية")}</h4>
+                                                    <p className="text-xs text-gray-400">{t("Employee contact and location details.", "بيانات التواصل والموقع الخاصة بالموظف.")}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Account Status", "حالة الحساب")}</label>
-                                                <select value={newEmployeeStatus} onChange={e => setNewEmployeeStatus(e.target.value)} className={inputClass}>
-                                                    <option value="Active">{t("Active", "نشط")}</option>
-                                                    <option value="Inactive">{t("Inactive", "غير نشط")}</option>
-                                                </select>
+                                            <div className="grid gap-5 md:grid-cols-2">
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Full Name", "الاسم بالكامل")} *</label>
+                                                    <input required value={newEmployeeName} onChange={e => setNewEmployeeName(e.target.value)} placeholder={t("Enter employee's full name", "أدخل اسم الموظف بالكامل")} className={inputClass} />
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Email Address", "البريد الإلكتروني")} *</label>
+                                                    <input required type="email" autoComplete="off" value={newEmployeeEmail} onChange={e => setNewEmployeeEmail(e.target.value)} placeholder="employee@example.com" className={inputClass} dir="ltr" />
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Phone Number", "رقم الهاتف")} *</label>
+                                                    <input required type="tel" value={newEmployeePhone} onChange={e => setNewEmployeePhone(e.target.value)} placeholder="+20 100 000 0000" className={inputClass} dir="ltr" />
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Country", "الدولة")} *</label>
+                                                    <select value={newEmployeeCountry} onChange={e => setNewEmployeeCountry(e.target.value)} className={inputClass}>
+                                                        <option value="Egypt">{t("Egypt", "مصر")}</option>
+                                                        <option value="Saudi Arabia">{t("Saudi Arabia", "السعودية")}</option>
+                                                        <option value="UAE">{t("United Arab Emirates", "الإمارات العربية المتحدة")}</option>
+                                                        <option value="Kuwait">{t("Kuwait", "الكويت")}</option>
+                                                        <option value="Jordan">{t("Jordan", "الأردن")}</option>
+                                                        <option value="Other">{t("Other", "أخرى")}</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("City", "المدينة")} *</label>
+                                                    <input required value={newEmployeeCity} onChange={e => setNewEmployeeCity(e.target.value)} placeholder={t("Enter city", "أدخل المدينة")} className={inputClass} />
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("LinkedIn Profile", "حساب LinkedIn")}</label>
+                                                    <input type="url" value={newEmployeeLinkedIn} onChange={e => setNewEmployeeLinkedIn(e.target.value)} placeholder="https://linkedin.com/in/username" className={inputClass} dir="ltr" />
+                                                </div>
                                             </div>
-                                        </div>
+                                        </section>
+
+                                        <div className="border-t border-gray-100" />
+
+                                        <section>
+                                            <div className="mb-5 flex items-center gap-3">
+                                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E2A3FF]/20 text-[#9864C5] font-bold">02</span>
+                                                <div>
+                                                    <h4 className="font-bold text-[#20243A]">{t("Job Information", "معلومات الوظيفة")}</h4>
+                                                    <p className="text-xs text-gray-400">{t("Position, department and working arrangement.", "المسمى الوظيفي والقسم ونظام العمل.")}</p>
+                                                </div>
+                                            </div>
+                                            <div className="grid gap-5 md:grid-cols-2">
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Job Position", "المسمى الوظيفي")} *</label>
+                                                    <select value={newEmployeePosition} onChange={e => setNewEmployeePosition(e.target.value)} className={inputClass}>
+                                                        <option value="HR">{t("Human Resources (HR)", "الموارد البشرية")}</option>
+                                                        <option value="Marketing">{t("Marketing", "التسويق")}</option>
+                                                        <option value="Accountant">{t("Accountant", "محاسب")}</option>
+                                                        <option value="Sales">{t("Sales", "المبيعات")}</option>
+                                                        <option value="Customer Support">{t("Customer Support", "خدمة العملاء")}</option>
+                                                        <option value="Content Creator">{t("Content Creator", "صانع محتوى")}</option>
+                                                        <option value="Graphic Designer">{t("Graphic Designer", "مصمم جرافيك")}</option>
+                                                        <option value="Software Developer">{t("Software Developer", "مطور برمجيات")}</option>
+                                                        <option value="Other">{t("Other", "أخرى")}</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Department", "القسم")} *</label>
+                                                    <select value={newEmployeeDepartment} onChange={e => setNewEmployeeDepartment(e.target.value)} className={inputClass}>
+                                                        <option value="Human Resources">{t("Human Resources", "الموارد البشرية")}</option>
+                                                        <option value="Marketing">{t("Marketing", "التسويق")}</option>
+                                                        <option value="Finance">{t("Finance", "المالية")}</option>
+                                                        <option value="Sales">{t("Sales", "المبيعات")}</option>
+                                                        <option value="Customer Support">{t("Customer Support", "خدمة العملاء")}</option>
+                                                        <option value="Design">{t("Design", "التصميم")}</option>
+                                                        <option value="Engineering">{t("Engineering", "الهندسة")}</option>
+                                                        <option value="Operations">{t("Operations", "العمليات")}</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Employment Type", "نوع التوظيف")}</label>
+                                                    <select value={newEmployeeType} onChange={e => setNewEmployeeType(e.target.value)} className={inputClass}>
+                                                        <option value="Full-time">{t("Full-time", "دوام كامل")}</option>
+                                                        <option value="Part-time">{t("Part-time", "دوام جزئي")}</option>
+                                                        <option value="Internship">{t("Internship", "تدريب")}</option>
+                                                        <option value="Contract">{t("Contract", "عقد")}</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Work Mode", "نظام العمل")}</label>
+                                                    <select value={newEmployeeWorkMode} onChange={e => setNewEmployeeWorkMode(e.target.value)} className={inputClass}>
+                                                        <option value="On-site">{t("On-site", "من المقر")}</option>
+                                                        <option value="Remote">{t("Remote", "عن بُعد")}</option>
+                                                        <option value="Hybrid">{t("Hybrid", "هجين")}</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Start Date", "تاريخ بداية العمل")}</label>
+                                                    <input type="date" value={newEmployeeStartDate} onChange={e => setNewEmployeeStartDate(e.target.value)} className={inputClass} />
+                                                </div>
+                                            </div>
+                                            <div className="mt-5">
+                                                <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Responsibilities", "المسؤوليات")}</label>
+                                                <textarea
+                                                    rows={4}
+                                                    value={newEmployeeResponsibilities}
+                                                    onChange={e => setNewEmployeeResponsibilities(e.target.value)}
+                                                    placeholder={t("Briefly describe the employee's main responsibilities...", "اكتب نبذة مختصرة عن مسؤوليات الموظف الرئيسية...")}
+                                                    className={`${inputClass} resize-y`}
+                                                />
+                                            </div>
+                                        </section>
+
+                                        <div className="border-t border-gray-100" />
+
+                                        <section>
+                                            <div className="mb-5 flex items-center gap-3">
+                                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#869CFF]/15 text-[#586FD6] font-bold">03</span>
+                                                <div>
+                                                    <h4 className="font-bold text-[#20243A]">{t("Profile & Account Settings", "إعدادات الملف الشخصي والحساب")}</h4>
+                                                    <p className="text-xs text-gray-400">{t("Add a profile image and choose the employee's account status.", "أضف صورة شخصية وحدد حالة حساب الموظف.")}</p>
+                                                </div>
+                                            </div>
+                                            <div className="grid gap-5 md:grid-cols-2">
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Profile Image", "الصورة الشخصية")}</label>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={e => {
+                                                            const file = e.target.files?.[0];
+                                                            if (!file) return;
+                                                            if (file.size > 5 * 1024 * 1024) {
+                                                                setNotice(t("Image must be smaller than 5 MB.", "يجب أن يكون حجم الصورة أقل من 5 ميجابايت."));
+                                                                e.target.value = "";
+                                                                return;
+                                                            }
+                                                            const reader = new FileReader();
+                                                            reader.onload = () => {
+                                                                if (typeof reader.result === "string") setNewEmployeeImage(reader.result);
+                                                            };
+                                                            reader.readAsDataURL(file);
+                                                        }}
+                                                        className="w-full rounded-xl border border-gray-200 bg-[#F8F8FC] px-3 py-3 text-sm"
+                                                    />
+                                                    <p className="mt-2 text-xs text-gray-400">{t("Supported image files up to 5 MB.", "الصور المدعومة حتى 5 ميجابايت.")}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Account Status", "حالة الحساب")}</label>
+                                                    <select value={newEmployeeStatus} onChange={e => setNewEmployeeStatus(e.target.value)} className={inputClass}>
+                                                        <option value="Active">{t("Active", "نشط")}</option>
+                                                        <option value="Pending">{t("Pending", "قيد الانتظار")}</option>
+                                                        <option value="Inactive">{t("Inactive", "غير نشط")}</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            {newEmployeeImage && (
+                                                <div className="mt-5 flex items-center gap-4 rounded-xl border border-gray-100 bg-[#F8F8FC] p-3">
+                                                    <img src={newEmployeeImage} alt="Employee profile preview" className="h-16 w-16 rounded-xl border border-gray-200 object-cover" />
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-sm font-semibold text-[#20243A]">{t("Profile image preview", "معاينة الصورة الشخصية")}</p>
+                                                        <p className="text-xs text-gray-400">{t("This image will be included in the employee record.", "ستتم إضافة هذه الصورة إلى سجل الموظف.")}</p>
+                                                    </div>
+                                                    <button type="button" onClick={() => setNewEmployeeImage("")} className="text-sm font-semibold text-red-500 hover:text-red-600">{t("Remove", "إزالة")}</button>
+                                                </div>
+                                            )}
+                                        </section>
 
                                         <div className="flex flex-wrap gap-3 border-t border-gray-100 pt-5">
-                                            <button type="submit" className="rounded-xl bg-gradient-to-r from-[#869CFF] to-[#E2A3FF] px-6 py-3 font-semibold text-white shadow-sm transition hover:opacity-90">
+                                            <button type="submit" className="rounded-xl bg-gradient-to-r from-[#869CFF] to-[#E2A3FF] px-7 py-3.5 font-semibold text-white shadow-sm transition hover:opacity-90">
                                                 + {t("Add Employee", "إضافة الموظف")}
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => {
-                                                    setNewEmployeeName("");
-                                                    setNewEmployeeEmail("");
-                                                    setNewEmployeePhone("");
-                                                    setNewEmployeePosition("HR");
-                                                    setNewEmployeeStatus("Active");
+                                                    resetEmployeeForm();
+                                                    setNotice("");
                                                 }}
-                                                className="rounded-xl border border-gray-200 px-6 py-3 font-semibold text-gray-600 transition hover:bg-gray-50"
+                                                className="rounded-xl border border-gray-200 px-7 py-3.5 font-semibold text-gray-600 transition hover:bg-gray-50"
                                             >
                                                 {t("Clear Form", "مسح النموذج")}
                                             </button>
@@ -2510,7 +2775,9 @@ export default function AdminDashboard() {
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-3">
                                                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#869CFF]/20 to-[#E2A3FF]/30 font-bold text-[#586FD6]">
-                                                                {item.name.charAt(0).toUpperCase()}
+                                                                {item.image
+                                                                    ? <img src={item.image} alt={item.name} className="h-full w-full rounded-xl object-cover" />
+                                                                    : item.name.charAt(0).toUpperCase()}
                                                             </div>
                                                             <div>
                                                                 <p className="font-bold text-[#25243A]">{item.name}</p>
@@ -2575,6 +2842,12 @@ export default function AdminDashboard() {
                                                                     </a>
                                                                 )}
 
+                                                                {(item.city || item.country) && (
+                                                                    <p className="text-xs text-gray-400">
+                                                                        {[item.city, item.country].filter(Boolean).join(", ")}
+                                                                    </p>
+                                                                )}
+
                                                                 {/* Project Description */}
                                                                 {item.projectDescription && (
                                                                     <p className="max-w-[280px] text-xs leading-5 text-gray-400">
@@ -2582,6 +2855,22 @@ export default function AdminDashboard() {
                                                                     </p>
                                                                 )}
 
+                                                            </div>
+                                                        ) : activeSection === "employees" ? (
+                                                            <div className="space-y-2">
+                                                                <p className="font-semibold text-[#20243A]">
+                                                                    {item.position || item.category || "—"}
+                                                                    {item.department && <span className="font-normal text-gray-400"> · {item.department}</span>}
+                                                                </p>
+                                                                {(item.employmentType || item.workMode) && (
+                                                                    <div className="flex flex-wrap gap-1.5">
+                                                                        {item.employmentType && <span className="inline-flex rounded-lg bg-[#869CFF]/10 px-2.5 py-1 text-xs font-semibold text-[#586FD6]">{item.employmentType}</span>}
+                                                                        {item.workMode && <span className="inline-flex rounded-lg bg-[#E2A3FF]/20 px-2.5 py-1 text-xs font-semibold text-[#9864C5]">{item.workMode}</span>}
+                                                                    </div>
+                                                                )}
+                                                                {item.phone && <p className="text-xs text-gray-400" dir="ltr">{item.phone}</p>}
+                                                                {(item.city || item.country) && <p className="text-xs text-gray-400">{[item.city, item.country].filter(Boolean).join(", ")}</p>}
+                                                                {item.description && <p className="max-w-[280px] truncate text-xs text-gray-400">{item.description}</p>}
                                                             </div>
                                                         ) : activeSection === "services" ? (
                                                             <div className="max-w-[320px] space-y-2">
@@ -2643,15 +2932,27 @@ export default function AdminDashboard() {
                                                             </div>
                                                         )}
                                                     </td>
+                                                    <td className="px-6 py-4">
+                                                        {item.status ? (
+                                                            <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+                                                                ["Active", "Published", "Paid", "Completed", "Approved"].includes(item.status)
+                                                                    ? "bg-emerald-50 text-emerald-700"
+                                                                    : ["Pending", "Draft", "Unpublished"].includes(item.status)
+                                                                        ? "bg-amber-50 text-amber-700"
+                                                                        : "bg-gray-100 text-gray-500"
+                                                            }`}>
+                                                                {item.status}
+                                                            </span>
+                                                        ) : "—"}
+                                                    </td>
+
                                                     <td className="px-6 py-4 text-gray-500">
                                                         {activeSection === "services"
                                                             ? item.price || "—"
-                                                            : activeSection === "clients"
-                                                                ? item.date || "—"
+                                                            : activeSection === "employees"
+                                                                ? item.startDate || item.date || "—"
                                                                 : item.amount || item.date || "—"}
                                                     </td>
-
-                                                    <td className="px-6 py-4 text-gray-500">{item.amount || item.date || "—"}</td>
 
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center justify-end gap-2">
