@@ -43,6 +43,17 @@ body {
   transition: background-color 220ms ease, color 220ms ease;
 }
 
+/* Page-level wrappers use hard-coded light backgrounds in several dashboards. */
+html.dark body [class*="min-h-screen"] {
+  background-color: var(--background) !important;
+  color: var(--foreground);
+}
+html.dark body [class*="bg-[#F8F8FC]"],
+html.dark body [class*="bg-[#FAFAFE]"],
+html.dark body [class*="bg-[#F5F6FB]"] {
+  background-color: var(--background) !important;
+}
+
 /* Ensure each route's top-level page canvas follows the selected theme. */
 html.dark body > div:first-child {
   min-height: 100vh;
