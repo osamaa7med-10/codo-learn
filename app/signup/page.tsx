@@ -4,7 +4,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { useLanguage } from "../../context/LanguageContext";
+import { useLanguage, useTheme } from "../../context/LanguageContext";
 
 type AccountRole = "student" | "instructor" | "employee" | "client";
 
@@ -196,6 +196,7 @@ const translations: Record<string, string> = {
 };
 
 export default function SignupPage() {
+    const { theme, toggleTheme } = useTheme();
     const { language, setLanguage, direction } = useLanguage();
     const isArabic = language === "ar";
 
@@ -545,6 +546,8 @@ export default function SignupPage() {
             dir={direction}
             className="relative min-h-screen overflow-hidden bg-[#F8F8FC] px-4 py-10 sm:px-6 lg:py-14"
         >
+            <button type="button" onClick={toggleTheme} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={theme === "dark" ? "Light mode" : "Soft dark mode"} className="absolute right-5 top-5 z-30 flex h-11 w-11 items-center justify-center rounded-xl border border-[#869CFF]/30 bg-white/90 text-lg text-[#586FD6] shadow-lg backdrop-blur transition hover:bg-[#869CFF]/15 dark:border-slate-600 dark:bg-slate-800/90 dark:text-amber-300">{theme === "dark" ? "☀️" : "🌙"}</button>
+
             {/* Animated Background */}
             <motion.div
                 aria-hidden="true"
