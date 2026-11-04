@@ -4,7 +4,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { useLanguage } from "../context/LanguageContext";
+import { useLanguage, useTheme } from "../context/LanguageContext";
 
 const navLinks = [
     { name: { en: "Tracks", ar: "المسارات" }, href: "#tracks" },
@@ -17,6 +17,8 @@ export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
 
     const { language, setLanguage, direction } = useLanguage();
+    const { theme, toggleTheme } = useTheme();
+    const isDark = theme === "dark";
 
     const isArabic = language === "ar";
 
@@ -68,6 +70,9 @@ export default function Navbar() {
 
                 {/* Desktop Actions */}
                 <div className="hidden items-center gap-3 lg:flex">
+                    <button type="button" onClick={toggleTheme} aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"} title={isDark ? "Light mode" : "Dark mode"} className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#869CFF]/30 bg-[#F8F8FC] text-lg text-[#586FD6] transition-all hover:bg-[#869CFF]/15 dark:border-slate-600 dark:bg-slate-800 dark:text-amber-300">
+                        {isDark ? "☀️" : "🌙"}
+                    </button>
 
                     {/* Language Switcher */}
                     <button
@@ -97,6 +102,9 @@ export default function Navbar() {
 
                 {/* Mobile Actions */}
                 <div className="flex items-center gap-2 lg:hidden">
+                    <button type="button" onClick={toggleTheme} aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"} className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#869CFF]/30 bg-[#F8F8FC] text-lg text-[#586FD6] dark:border-slate-600 dark:bg-slate-800 dark:text-amber-300">
+                        {isDark ? "☀️" : "🌙"}
+                    </button>
 
                     {/* Mobile Language Switcher */}
                     <button
