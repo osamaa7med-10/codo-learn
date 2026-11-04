@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { motion } from "motion/react";
-import { useLanguage } from "../../context/LanguageContext";
+import { useLanguage, useTheme } from "../../context/LanguageContext";
 
 const sections = [
     { id: "acceptance", title: "Acceptance of Terms" },
@@ -121,6 +121,7 @@ const translations: Record<string, string> = {
 };
 
 export default function TermsOfServicePage() {
+    const { theme, toggleTheme } = useTheme();
     const { language, setLanguage, direction } = useLanguage();
     const isArabic = language === "ar";
 
@@ -144,6 +145,15 @@ export default function TermsOfServicePage() {
                     </Link>
 
                     <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={toggleTheme}
+                            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                            title={theme === "dark" ? "Light mode" : "Soft dark mode"}
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#869CFF]/30 bg-white text-lg text-[#586FD6] shadow-sm transition hover:bg-[#869CFF]/15 dark:border-slate-600 dark:bg-slate-800 dark:text-amber-300"
+                        >
+                            {theme === "dark" ? "☀️" : "🌙"}
+                        </button>
                         <button
                             type="button"
                             onClick={() => setLanguage(isArabic ? "en" : "ar")}
