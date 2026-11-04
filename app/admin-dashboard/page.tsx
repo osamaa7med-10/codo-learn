@@ -466,6 +466,7 @@ export default function AdminDashboard() {
     const [newStudentMajor, setNewStudentMajor] = useState("");
     const [newStudentTrack, setNewStudentTrack] = useState("Web Development");
     const [newStudentStatus, setNewStudentStatus] = useState("Active");
+    const [studentImage, setStudentImage] = useState("");
 
     // Client form
     const [clientName, setClientName] = useState("");
@@ -668,6 +669,7 @@ export default function AdminDashboard() {
             major: newStudentMajor.trim(),
             learningTrack: newStudentTrack,
             status: newStudentStatus,
+            image: studentImage,
             role: "Student",
         });
 
@@ -682,6 +684,7 @@ export default function AdminDashboard() {
         setNewStudentMajor("");
         setNewStudentTrack("Web Development");
         setNewStudentStatus("Active");
+        setStudentImage("");
 
         setNotice(t(
             "Student added successfully!",
@@ -1816,6 +1819,203 @@ export default function AdminDashboard() {
                                 </Panel>
                             )}
 
+
+                            {/* STUDENT FORM */}
+                            {activeSection === "students" && (
+                                <Panel className="!p-0 overflow-hidden">
+                                    <div className="relative overflow-hidden border-b border-[#ECECF5] bg-gradient-to-r from-[#869CFF]/10 to-[#E2A3FF]/10 p-6 sm:p-8">
+                                        <div className="relative z-10">
+                                            <p className="text-xs font-bold tracking-[0.2em] text-[#7587E8]">
+                                                {t("STUDENT MANAGEMENT", "إدارة الطلاب")}
+                                            </p>
+                                            <h3 className="mt-2 text-2xl font-extrabold text-[#20243A] sm:text-3xl">
+                                                {t("Add New Student", "إضافة طالب جديد")}
+                                            </h3>
+                                            <p className="mt-2 max-w-xl text-sm leading-6 text-gray-500">
+                                                {t(
+                                                    "Create a complete student profile and add a new learner to Codo Learn.",
+                                                    "أنشئ ملفًا متكاملًا وأضف طالبًا جديدًا إلى Codo Learn."
+                                                )}
+                                            </p>
+                                        </div>
+                                        <div className="absolute -right-10 -top-16 h-48 w-48 rounded-full bg-[#E2A3FF]/15 blur-2xl" />
+                                    </div>
+
+                                    <form onSubmit={handleAddStudent} className="space-y-8 p-5 sm:p-8">
+                                        <p className="text-xs text-gray-400">
+                                            {t("Fields marked with", "الحقول التي تحمل علامة")} <span className="text-rose-500">*</span> {t("are required.", "مطلوبة.")}
+                                        </p>
+
+                                        <section>
+                                            <div className="mb-5 flex items-center gap-3">
+                                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#869CFF]/15 font-bold text-[#586FD6]">01</span>
+                                                <div>
+                                                    <h4 className="font-bold text-[#20243A]">{t("Personal Information", "المعلومات الشخصية")}</h4>
+                                                    <p className="text-xs text-gray-400">{t("Student contact and location details.", "بيانات التواصل والموقع الخاصة بالطالب.")}</p>
+                                                </div>
+                                            </div>
+                                            <div className="grid gap-5 md:grid-cols-2">
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Full Name", "الاسم بالكامل")} *</label>
+                                                    <input required value={newStudentName} onChange={e => setNewStudentName(e.target.value)} placeholder={t("Enter student's full name", "أدخل اسم الطالب بالكامل")} className={inputClass} />
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Email Address", "البريد الإلكتروني")} *</label>
+                                                    <input required type="email" autoComplete="off" value={newStudentEmail} onChange={e => setNewStudentEmail(e.target.value)} placeholder="student@example.com" className={inputClass} />
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Phone Number", "رقم الهاتف")} *</label>
+                                                    <input required type="tel" value={newStudentPhone} onChange={e => setNewStudentPhone(e.target.value)} placeholder="+20 100 000 0000" className={inputClass} />
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Country", "الدولة")} *</label>
+                                                    <select value={newStudentCountry} onChange={e => setNewStudentCountry(e.target.value)} className={inputClass}>
+                                                        <option value="Egypt">{t("Egypt", "مصر")}</option>
+                                                        <option value="Saudi Arabia">{t("Saudi Arabia", "السعودية")}</option>
+                                                        <option value="UAE">{t("United Arab Emirates", "الإمارات العربية المتحدة")}</option>
+                                                        <option value="Kuwait">{t("Kuwait", "الكويت")}</option>
+                                                        <option value="Jordan">{t("Jordan", "الأردن")}</option>
+                                                        <option value="Other">{t("Other", "أخرى")}</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("City", "المدينة")} *</label>
+                                                    <input required value={newStudentCity} onChange={e => setNewStudentCity(e.target.value)} placeholder={t("Enter city", "أدخل المدينة")} className={inputClass} />
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("LinkedIn Profile", "حساب LinkedIn")}</label>
+                                                    <input type="url" value={newStudentLinkedIn} onChange={e => setNewStudentLinkedIn(e.target.value)} placeholder="https://linkedin.com/in/username" className={inputClass} />
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        <div className="border-t border-gray-100" />
+
+                                        <section>
+                                            <div className="mb-5 flex items-center gap-3">
+                                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E2A3FF]/20 font-bold text-[#9864C5]">02</span>
+                                                <div>
+                                                    <h4 className="font-bold text-[#20243A]">{t("Academic Information", "المعلومات الأكاديمية")}</h4>
+                                                    <p className="text-xs text-gray-400">{t("Education background and preferred learning track.", "الخلفية التعليمية والمسار التعليمي المفضل.")}</p>
+                                                </div>
+                                            </div>
+                                            <div className="grid gap-5 md:grid-cols-2">
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("University / Institution", "الجامعة / المؤسسة التعليمية")} *</label>
+                                                    <input required value={newStudentUniversity} onChange={e => setNewStudentUniversity(e.target.value)} placeholder={t("Enter university or institution", "أدخل اسم الجامعة أو المؤسسة")} className={inputClass} />
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Education Level", "المستوى التعليمي")} *</label>
+                                                    <select value={newStudentEducation} onChange={e => setNewStudentEducation(e.target.value)} className={inputClass}>
+                                                        <option value="High School">{t("High School", "الثانوية العامة")}</option>
+                                                        <option value="Undergraduate">{t("Undergraduate", "طالب جامعي")}</option>
+                                                        <option value="Graduate">{t("Graduate", "خريج")}</option>
+                                                        <option value="Postgraduate">{t("Postgraduate", "دراسات عليا")}</option>
+                                                        <option value="Other">{t("Other", "أخرى")}</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Major / Department", "التخصص / القسم")} *</label>
+                                                    <input required value={newStudentMajor} onChange={e => setNewStudentMajor(e.target.value)} placeholder={t("e.g. Computer Science", "مثال: علوم الحاسب")} className={inputClass} />
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Learning Track", "المسار التعليمي")} *</label>
+                                                    <select value={newStudentTrack} onChange={e => setNewStudentTrack(e.target.value)} className={inputClass}>
+                                                        <option value="Web Development">{t("Web Development", "تطوير الويب")}</option>
+                                                        <option value="UI/UX Design">{t("UI/UX Design", "تصميم UI/UX")}</option>
+                                                        <option value="Data & AI">{t("Data & AI", "البيانات والذكاء الاصطناعي")}</option>
+                                                        <option value="Mobile Development">{t("Mobile Development", "تطوير تطبيقات الموبايل")}</option>
+                                                        <option value="Cybersecurity">{t("Cybersecurity", "الأمن السيبراني")}</option>
+                                                        <option value="Other">{t("Other", "أخرى")}</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        <div className="border-t border-gray-100" />
+
+                                        <section>
+                                            <div className="mb-5 flex items-center gap-3">
+                                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#869CFF]/15 font-bold text-[#586FD6]">03</span>
+                                                <div>
+                                                    <h4 className="font-bold text-[#20243A]">{t("Profile & Account Settings", "إعدادات الملف الشخصي والحساب")}</h4>
+                                                    <p className="text-xs text-gray-400">{t("Add a profile image and choose the student's account status.", "أضف صورة شخصية وحدد حالة حساب الطالب.")}</p>
+                                                </div>
+                                            </div>
+                                            <div className="grid gap-5 md:grid-cols-2">
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Profile Image", "الصورة الشخصية")}</label>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={e => {
+                                                            const file = e.target.files?.[0];
+                                                            if (!file) return;
+                                                            if (file.size > 5 * 1024 * 1024) {
+                                                                setNotice(t("Image must be smaller than 5 MB.", "يجب أن يكون حجم الصورة أقل من 5 ميجابايت."));
+                                                                e.target.value = "";
+                                                                return;
+                                                            }
+                                                            const reader = new FileReader();
+                                                            reader.onload = () => {
+                                                                if (typeof reader.result === "string") setStudentImage(reader.result);
+                                                            };
+                                                            reader.readAsDataURL(file);
+                                                        }}
+                                                        className="w-full rounded-xl border border-gray-200 bg-[#F8F8FC] px-3 py-3 text-sm"
+                                                    />
+                                                    <p className="mt-2 text-xs text-gray-400">{t("Supported image files up to 5 MB.", "الصور المدعومة حتى 5 ميجابايت.")}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="mb-2 block text-sm font-semibold text-gray-700">{t("Account Status", "حالة الحساب")}</label>
+                                                    <select value={newStudentStatus} onChange={e => setNewStudentStatus(e.target.value)} className={inputClass}>
+                                                        <option value="Active">{t("Active", "نشط")}</option>
+                                                        <option value="Pending">{t("Pending", "قيد الانتظار")}</option>
+                                                        <option value="Inactive">{t("Inactive", "غير نشط")}</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            {studentImage && (
+                                                <div className="mt-5 flex items-center gap-4 rounded-xl border border-gray-100 bg-[#F8F8FC] p-3">
+                                                    <img src={studentImage} alt="Student profile preview" className="h-16 w-16 rounded-xl border border-gray-200 object-cover" />
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-sm font-semibold text-[#20243A]">{t("Profile image preview", "معاينة الصورة الشخصية")}</p>
+                                                        <p className="text-xs text-gray-400">{t("This image will be included in the student record.", "ستتم إضافة هذه الصورة إلى سجل الطالب.")}</p>
+                                                    </div>
+                                                    <button type="button" onClick={() => setStudentImage("")} className="text-sm font-semibold text-red-500 hover:text-red-600">{t("Remove", "إزالة")}</button>
+                                                </div>
+                                            )}
+                                        </section>
+
+                                        <div className="flex flex-wrap gap-3 border-t border-gray-100 pt-5">
+                                            <button type="submit" className="rounded-xl bg-gradient-to-r from-[#869CFF] to-[#E2A3FF] px-7 py-3.5 font-semibold text-white shadow-sm transition hover:opacity-90">
+                                                + {t("Add Student", "إضافة الطالب")}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setNewStudentName("");
+                                                    setNewStudentEmail("");
+                                                    setNewStudentPhone("");
+                                                    setNewStudentCountry("Egypt");
+                                                    setNewStudentCity("");
+                                                    setNewStudentLinkedIn("");
+                                                    setNewStudentUniversity("");
+                                                    setNewStudentEducation("Undergraduate");
+                                                    setNewStudentMajor("");
+                                                    setNewStudentTrack("Web Development");
+                                                    setNewStudentStatus("Active");
+                                                    setStudentImage("");
+                                                    setNotice("");
+                                                }}
+                                                className="rounded-xl border border-gray-200 px-7 py-3.5 font-semibold text-gray-600 transition hover:bg-gray-50"
+                                            >
+                                                {t("Clear Form", "مسح النموذج")}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </Panel>
+                            )}
 
                             {/* INSTRUCTOR FORM */}
                             {activeSection === "instructors" && (
