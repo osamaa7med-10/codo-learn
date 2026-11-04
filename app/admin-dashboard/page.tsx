@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useLanguage } from "../../context/LanguageContext";
+import { useLanguage, useTheme } from "../../context/LanguageContext";
 
 type Section =
     | "overview"
@@ -354,6 +354,7 @@ const inputClass =
     "w-full rounded-xl border border-gray-200 bg-[#F8F8FC] px-4 py-3 outline-none transition focus:border-[#869CFF]";
 
 export default function AdminDashboard() {
+    const { theme, toggleTheme } = useTheme();
     const { language, setLanguage, direction } = useLanguage();
     const isArabic = language === "ar";
 
@@ -1156,6 +1157,16 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="flex items-center gap-3 sm:gap-5">
+<button
+                            type="button"
+                            onClick={toggleTheme}
+                            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                            title={theme === "dark" ? "Light mode" : "Soft dark mode"}
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#869CFF]/30 bg-[#F8F8FC] text-lg text-[#586FD6] transition hover:bg-[#869CFF]/15 dark:border-slate-600 dark:bg-slate-800 dark:text-amber-300"
+                        >
+                            {theme === "dark" ? "☀️" : "🌙"}
+                        </button>
+
                         <button
                             type="button"
                             onClick={() => setLanguage(isArabic ? "en" : "ar")}
