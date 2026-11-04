@@ -83,7 +83,7 @@ export default function CTA() {
                         whileTap={{
                             scale: 0.97,
                         }}
-                        href="#courses"
+                        href="#tracks"
                         className="mt-9 inline-flex items-center gap-2 rounded-full bg-[#869CFF] px-8 py-4 font-bold text-white shadow-xl shadow-[#869CFF]/20"
                     >
                         {content.button}
