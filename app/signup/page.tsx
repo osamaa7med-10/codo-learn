@@ -16,6 +16,7 @@ type AvailableService = {
 };
 
 const DIGITAL_SOLUTIONS_STORAGE_KEY = "codo-digital-solutions";
+const CLIENT_REQUESTS_STORAGE_KEY = "codo-client-requests";
 
 const inputClass =
     "w-full rounded-xl border border-[#E5E7F2] bg-white px-4 py-3.5 text-sm text-[#20243A] outline-none transition placeholder:text-[#A3A8BC] focus:border-[#869CFF] focus:ring-4 focus:ring-[#869CFF]/10";
@@ -395,6 +396,36 @@ export default function SignupPage() {
 
         if (!acceptTerms) {
             setError("Please agree to the Terms of Service and Privacy Policy.");
+            return;
+        }
+
+        if (role === "client") {
+            try {
+                const savedRequests = localStorage.getItem(CLIENT_REQUESTS_STORAGE_KEY);
+                const parsedRequests = savedRequests ? JSON.parse(savedRequests) : [];
+                const existingRequests = Array.isArray(parsedRequests) ? parsedRequests : [];
+                const newRequest = {
+                    id: Date.now(),
+                    submittedAt: new Date().toISOString(),
+                    status: "New Request",
+                    name: fullName.trim(),
+                    email: email.trim().toLowerCase(),
+                    phone: phone.trim(),
+                    country,
+                    city: city.trim(),
+                    companyName: companyName.trim(),
+                    companyWebsite: companyWebsite.trim(),
+                    industry,
+                    companySize,
+                    serviceRequired,
+                    projectDescription: projectDescription.trim(),
+                };
+                localStorage.setItem(CLIENT_REQUESTS_STORAGE_KEY, JSON.stringify([...existingRequests, newRequest]));
+                setMessage("Your service request has been submitted successfully. Our team will review it soon.");
+            } catch (storageError) {
+                console.error("Error saving client request:", storageError);
+                setError("We could not save your request in this browser. Please try again.");
+            }
             return;
         }
 
@@ -1258,7 +1289,9 @@ export default function SignupPage() {
                                     className="rounded-xl border border-[#869CFF]/30 bg-[#869CFF]/10 px-4 py-3 text-sm leading-6 text-[#454F85]"
                                 >
                                     {isArabic
-                                        ? `بيانات تسجيل ${role === "student" ? "الطالب" : role === "instructor" ? "المدرب" : role === "employee" ? "الموظف" : "العميل"} صحيحة. إنشاء الحساب غير متصل بقاعدة بيانات حاليًا.`
+                                        ? role === "client"
+                                            ? "تم إرسال طلب الخدمة بنجاح. سيقوم فريقنا بمراجعته قريبًا."
+                                            : `بيانات تسجيل ${role === "student" ? "الطالب" : role === "instructor" ? "المدرب" : "الموظف"} صحيحة. إنشاء الحساب غير متصل بقاعدة بيانات حاليًا.`
                                         : message}
                                 </p>
                             )}
