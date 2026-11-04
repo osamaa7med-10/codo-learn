@@ -2,6 +2,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import Link from "next/link";
 import { useLanguage } from "../context/LanguageContext";
 
 export default function Tracks() {
@@ -92,6 +93,7 @@ export default function Tracks() {
                     className="mt-14 grid gap-6 lg:grid-cols-3"
                 >
                     {content.tracks.map((track) => (
+                        <Link href={`/learning-tracks/${track.number === "01" ? "web-development" : track.number === "02" ? "ui-ux-design" : "data-ai"}`} className="block h-full rounded-[32px] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#869CFF]/40">
                         <motion.div
                             key={track.number}
                             variants={{
@@ -161,6 +163,7 @@ export default function Tracks() {
                             </div>
 
                         </motion.div>
+                        </Link>
                     ))}
                 </motion.div>
 
