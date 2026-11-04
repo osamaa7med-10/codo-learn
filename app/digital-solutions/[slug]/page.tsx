@@ -238,9 +238,6 @@ export default function DigitalSolutionDetailsPage() {
                             <a href={"mailto:hello@codolearn.com?subject="+encodeURIComponent((isArabic ? "طلب خدمة: " : "Service Request: ")+solution.title)} className="inline-flex rounded-xl bg-gradient-to-r from-[#869CFF] to-[#E2A3FF] px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#869CFF]/20 transition hover:-translate-y-1">{labels.contactButton}</a>
                             <a href="#service-content" className="inline-flex rounded-xl border border-[#869CFF]/30 bg-white px-7 py-3.5 text-sm font-bold text-[#586FD6] transition hover:bg-[#869CFF]/10">{isArabic ? "استكشف المحتوى" : "Explore Service Content"}</a>
                         </div>
-                        <Link href="/#contact" className="mt-8 inline-flex rounded-xl bg-gradient-to-r from-[#869CFF] to-[#E2A3FF] px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#869CFF]/20 transition hover:-translate-y-1">
-                            {labels.contactButton}
-                        </Link>
                     </motion.div>
                 </div>
             </section>
