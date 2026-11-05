@@ -30,14 +30,6 @@ export default function Navbar() {
         };
     }, []);
 
-    const handleLogout = () => {
-        localStorage.removeItem("codo-user-session");
-        sessionStorage.removeItem("codo-user-session");
-        setUserEmail("");
-        setIsOpen(false);
-        window.dispatchEvent(new Event("codo-auth-change"));
-    };
-
     const accountLabel = userEmail.split("@")[0] || (language === "ar" ? "حسابي" : "My Account");
 
     const { language, setLanguage, direction } = useLanguage();
@@ -110,10 +102,7 @@ export default function Navbar() {
                     </button>
 
                     {userEmail ? (
-                        <div className="flex items-center gap-3">
-                            <span className="max-w-[150px] truncate rounded-xl bg-[#869CFF]/10 px-4 py-2.5 text-sm font-semibold text-[#586FD6]" title={userEmail}>{accountLabel}</span>
-                            <button type="button" onClick={handleLogout} className="rounded-xl px-3 py-2.5 text-sm font-semibold text-[#20243A] hover:bg-red-50 hover:text-red-600">{isArabic ? "تسجيل الخروج" : "Log Out"}</button>
-                        </div>
+                        <span className="max-w-[150px] truncate rounded-xl bg-[#869CFF]/10 px-4 py-2.5 text-sm font-semibold text-[#586FD6]" title={userEmail}>{accountLabel}</span>
                     ) : (
                         <Link href="/login" className="rounded-xl px-4 py-2.5 text-sm font-semibold text-[#20243A] transition-colors hover:bg-[#869CFF]/10 hover:text-[#7187F3]">{loginText}</Link>
                     )}
@@ -192,10 +181,7 @@ export default function Navbar() {
                             <div className="mt-3 flex flex-col gap-3 border-t border-[#20243A]/5 pt-4">
 
                                 {userEmail ? (
-                                    <div className="flex flex-col gap-2">
-                                        <span className="rounded-xl bg-[#869CFF]/10 px-4 py-3 text-center text-sm font-semibold text-[#586FD6]">{accountLabel}</span>
-                                        <button type="button" onClick={handleLogout} className="rounded-xl border border-red-200 px-4 py-3 text-center text-sm font-semibold text-red-600 hover:bg-red-50">{isArabic ? "تسجيل الخروج" : "Log Out"}</button>
-                                    </div>
+                                    <span className="rounded-xl bg-[#869CFF]/10 px-4 py-3 text-center text-sm font-semibold text-[#586FD6]">{accountLabel}</span>
                                 ) : (
                                     <Link href="/login" onClick={() => setIsOpen(false)} className="rounded-xl border border-[#869CFF]/30 px-4 py-3 text-center text-sm font-semibold text-[#20243A] transition-colors hover:bg-[#869CFF]/10">{loginText}</Link>
                                 )}
