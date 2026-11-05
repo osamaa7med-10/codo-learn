@@ -12,8 +12,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { useTheme } from "../../context/LanguageContext";
+import DashboardSettings from "../../components/DashboardSettings";
 
-type Section = "overview" | "request" | "projects" | "payments" | "profile";
+type Section = "overview" | "request" | "projects" | "payments" | "profile" | "settings";
 
 type FormNote = { type: "success" | "error"; text: string };
 
@@ -258,7 +259,8 @@ const navItems: { id: Section; label: string; icon: string }[] = [
     { id: "request", label: "Request a Service", icon: "+" },
     { id: "projects", label: "My Projects", icon: "▤" },
     { id: "payments", label: "Payments", icon: "$" },
-    { id: "profile", label: "My Profile", icon: "⚙" },
+    { id: "profile", label: "My Profile", icon: "♙" },
+    { id: "settings", label: "Settings", icon: "⚙" },
 ];
 
 const pageTitles: Record<Section, string> = {
@@ -267,6 +269,7 @@ const pageTitles: Record<Section, string> = {
     projects: "My Projects",
     payments: "Payments & Invoices",
     profile: "My Profile",
+    settings: "Settings",
 };
 
 const inputClass =
@@ -994,6 +997,8 @@ export default function ClientDashboard() {
                             )}
                         </PageSection>
                     )}
+
+                    {activeSection === "settings" && <DashboardSettings role="client" />}
 
                     {/* PROFILE */}
                     {activeSection === "profile" && (
