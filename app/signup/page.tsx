@@ -97,7 +97,7 @@ function DeskSetupModel({ isArabic }: { isArabic: boolean }) {
             initial={{ opacity: 0, y: 24, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
-            className="relative z-10 mx-auto my-1 h-[280px] w-full max-w-[390px] overflow-hidden rounded-3xl border border-white/20 bg-white/10 shadow-[0_18px_45px_rgba(32,36,58,0.18)] backdrop-blur-sm"
+            className="relative z-10 mx-auto my-1 h-[600px] w-full max-w-[390px] overflow-hidden rounded-3xl border border-white/20 bg-white/10 shadow-[0_18px_45px_rgba(32,36,58,0.18)] backdrop-blur-sm"
             aria-label={isArabic ? "عرض تفاعلي لمكتب المبرمج ثلاثي الأبعاد" : "Interactive 3D programmer desk preview"}
         >
             <div ref={mountRef} className="h-full w-full" />
