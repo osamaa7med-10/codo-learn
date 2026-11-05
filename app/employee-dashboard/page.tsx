@@ -12,6 +12,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { useTheme } from "../../context/LanguageContext";
+import DashboardSettings from "../../components/DashboardSettings";
 
 type Section =
     | "overview"
@@ -19,7 +20,8 @@ type Section =
     | "projects"
     | "tasks"
     | "notifications"
-    | "profile";
+    | "profile"
+    | "settings";
 
 type Priority = "High" | "Medium" | "Low";
 type TaskStatus = "To Do" | "In Progress" | "Done";
@@ -293,7 +295,8 @@ const navItems: { id: Section; label: string; icon: string }[] = [
     { id: "projects", label: "Projects", icon: "▤" },
     { id: "tasks", label: "Tasks", icon: "✓" },
     { id: "notifications", label: "Notifications", icon: "🔔" },
-    { id: "profile", label: "My Profile", icon: "⚙" },
+    { id: "profile", label: "My Profile", icon: "♙" },
+    { id: "settings", label: "Settings", icon: "⚙" },
 ];
 
 const pageTitles: Record<Section, string> = {
@@ -303,6 +306,7 @@ const pageTitles: Record<Section, string> = {
     tasks: "Tasks Management",
     notifications: "Notifications",
     profile: "My Profile",
+    settings: "Settings",
 };
 
 const inputClass =
@@ -1153,6 +1157,8 @@ export default function EmployeeDashboard() {
                             )}
                         </PageSection>
                     )}
+
+                    {activeSection === "settings" && <DashboardSettings role="employee" />}
 
                     {/* PROFILE */}
                     {activeSection === "profile" && (
