@@ -77,7 +77,7 @@ export default function Reviews() {
         <section
             id="reviews"
             dir={direction}
-            className="bg-white px-6 py-24"
+            className="bg-white px-6 py-24 dark:bg-[#171B2B]"
         >
             <div className="mx-auto max-w-7xl">
 
@@ -93,14 +93,14 @@ export default function Reviews() {
                         {content.label}
                     </p>
 
-                    <h2 className="text-4xl font-black leading-tight tracking-tight text-[#20243A] md:text-6xl">
+                    <h2 className="text-4xl font-black leading-tight tracking-tight text-[#20243A] dark:text-[#E9ECF6] md:text-6xl">
                         {content.title}
                         <span className="bg-gradient-to-r from-[#869CFF] to-[#E2A3FF] bg-clip-text text-transparent">
                             {" "}{content.titleHighlight}
                         </span>
                     </h2>
 
-                    <p className="mx-auto mt-5 max-w-2xl leading-7 text-[#7B829D]">
+                    <p className="mx-auto mt-5 max-w-2xl leading-7 text-[#7B829D] dark:text-[#AAB2C8]">
                         {content.description}
                     </p>
                 </motion.div>
@@ -135,7 +135,7 @@ export default function Reviews() {
                             }}
                             transition={{ duration: 0.6 }}
                             whileHover={{ y: -8 }}
-                            className="group rounded-[28px] border border-[#E8EAF3] bg-[#FAFAFD] p-7 transition-shadow duration-300 hover:shadow-xl"
+                            className="group rounded-[28px] border border-[#E8EAF3] bg-[#FAFAFD] p-7 transition-shadow duration-300 hover:shadow-xl dark:border-[#394158] dark:bg-[#22283B]"
                         >
 
                             {/* Top */}
@@ -163,13 +163,13 @@ export default function Reviews() {
                             </div>
 
                             {/* Review */}
-                            <p className={`mt-7 min-h-[120px] text-sm leading-7 text-[#5F6785] ${isArabic ? "text-right" : "text-left"}`}>
+                            <p className={`mt-7 min-h-[120px] text-sm leading-7 text-[#5F6785] dark:text-[#C2C9DC] ${isArabic ? "text-right" : "text-left"}`}>
                                 “{review.review}”
                             </p>
 
                             {/* User */}
-                            <div className={`mt-6 border-t border-[#E8EAF3] pt-5 ${isArabic ? "text-right" : "text-left"}`}>
-                                <h3 className="font-black text-[#20243A]">
+                            <div className={`mt-6 border-t border-[#E8EAF3] pt-5 dark:border-[#394158] ${isArabic ? "text-right" : "text-left"}`}>
+                                <h3 className="font-black text-[#20243A] dark:text-[#E9ECF6]">
                                     {review.name}
                                 </h3>
 
