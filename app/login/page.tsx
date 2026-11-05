@@ -2,7 +2,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { useLanguage, useTheme } from "../../context/LanguageContext";
@@ -44,7 +43,6 @@ const translations: Record<string, string> = {
 };
 
 export default function LoginPage() {
-    const router = useRouter();
     const { theme, toggleTheme } = useTheme();
     const { language, setLanguage, direction } = useLanguage();
     const isArabic = language === "ar";
@@ -87,7 +85,7 @@ export default function LoginPage() {
         targetStorage.setItem("codo-user-session", email.trim());
         (rememberMe ? sessionStorage : localStorage).removeItem("codo-user-session");
         window.dispatchEvent(new Event("codo-auth-change"));
-        router.push("/");
+        setMessage("Your form is valid. Backend authentication is not connected yet.");
     }
 
     return (
