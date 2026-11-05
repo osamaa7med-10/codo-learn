@@ -34,7 +34,7 @@ export default function Navbar() {
             initial={{ y: -70, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="fixed inset-x-0 top-0 z-50 border-b border-[#20243A]/5 bg-white shadow-sm"
+            className={`fixed inset-x-0 top-0 z-50 border-b shadow-sm transition-colors duration-300 ${isDark ? "border-slate-700 bg-slate-950" : "border-[#20243A]/5 bg-white"}`}
         >
             <nav
                 dir={direction}
