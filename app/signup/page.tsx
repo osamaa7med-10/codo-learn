@@ -616,68 +616,29 @@ export default function SignupPage() {
                         />
                     </motion.a>
 
-                    {/* Realistic-inspired falcon flight animation */}
+                    {/* Realistic falcon image flight animation */}
                     <motion.div
                         aria-label={isArabic ? "صقر Codo Learn" : "Codo Learn falcon"}
                         role="img"
-                        initial={{ opacity: 0, x: -190, y: -48, rotate: -18, scale: 0.68 }}
-                        animate={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }}
-                        transition={{ duration: 2.1, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                        className="pointer-events-none relative z-10 mx-auto my-1 flex h-[142px] w-full max-w-[290px] items-center justify-center"
+                        initial={{ opacity: 0, x: -260, y: 55, rotate: -14, scale: 0.72 }}
+                        animate={{
+                            opacity: 1,
+                            x: [ -260, 35, -8, 0 ],
+                            y: [ 55, -24, 8, 0 ],
+                            rotate: [ -14, 7, -3, 0 ],
+                            scale: [ 0.72, 1.08, 0.98, 1 ],
+                        }}
+                        transition={{ duration: 2.8, delay: 0.35, times: [0, 0.62, 0.84, 1], ease: [0.22, 1, 0.36, 1] }}
+                        className="pointer-events-none relative z-10 mx-auto my-1 flex h-[170px] w-full max-w-[340px] items-center justify-center"
                     >
-                        <motion.div
-                            animate={{ y: [0, -5, 0], rotate: [0, -1.2, 0, 1, 0] }}
-                            transition={{ duration: 4.2, delay: 2.7, repeat: Infinity, ease: "easeInOut" }}
-                            className="relative h-full w-full"
-                        >
-                            <svg viewBox="0 0 420 220" className="h-full w-full overflow-visible drop-shadow-[0_14px_12px_rgba(38,37,83,0.28)]" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <defs>
-                                    <linearGradient id="falconBody" x1="115" y1="70" x2="300" y2="190" gradientUnits="userSpaceOnUse">
-                                        <stop stopColor="#F7F5F1"/><stop offset=".42" stopColor="#AEB6C9"/><stop offset="1" stopColor="#343B58"/>
-                                    </linearGradient>
-                                    <linearGradient id="falconWing" x1="90" y1="40" x2="280" y2="150" gradientUnits="userSpaceOnUse">
-                                        <stop stopColor="#F9F7F3"/><stop offset=".38" stopColor="#9DA8C0"/><stop offset="1" stopColor="#303751"/>
-                                    </linearGradient>
-                                    <linearGradient id="falconDark" x1="150" y1="90" x2="300" y2="180" gradientUnits="userSpaceOnUse">
-                                        <stop stopColor="#65708B"/><stop offset="1" stopColor="#20263C"/>
-                                    </linearGradient>
-                                </defs>
-                                <ellipse cx="212" cy="194" rx="104" ry="10" fill="#30345B" opacity=".16"/>
-                                <motion.g
-                                    style={{ transformOrigin: "205px 112px" }}
-                                    animate={{ rotate: [0, -7, 3, 0] }}
-                                    transition={{ duration: 1.15, delay: 2.25, repeat: Infinity, repeatDelay: 3.8, ease: "easeInOut" }}
-                                >
-                                    <path d="M186 112 C143 80 96 44 35 24 C65 62 85 91 119 119 C76 101 40 91 8 91 C49 125 87 146 137 151 C101 151 74 161 49 177 C104 185 151 173 197 145 Z" fill="url(#falconWing)" stroke="#E8EAF1" strokeWidth="2"/>
-                                    <path d="M183 112 C137 81 102 57 62 42 M167 126 C124 106 87 94 39 91 M159 140 C122 136 91 145 57 168" stroke="#59647E" strokeWidth="3" strokeLinecap="round" opacity=".7"/>
-                                    <path d="M191 116 C157 88 129 70 94 55 M179 132 C145 117 112 111 75 108 M169 145 C143 146 119 157 91 171" stroke="#F7F6F2" strokeWidth="5" strokeLinecap="round" opacity=".8"/>
-                                </motion.g>
-                                <motion.g
-                                    style={{ transformOrigin: "218px 112px" }}
-                                    animate={{ rotate: [0, 8, -3, 0] }}
-                                    transition={{ duration: 1.15, delay: 2.25, repeat: Infinity, repeatDelay: 3.8, ease: "easeInOut" }}
-                                >
-                                    <path d="M211 112 C258 75 310 39 382 25 C352 61 330 90 294 119 C337 101 374 91 411 91 C369 126 331 147 281 151 C319 152 349 162 376 179 C316 185 268 172 218 145 Z" fill="url(#falconWing)" stroke="#E8EAF1" strokeWidth="2"/>
-                                    <path d="M220 113 C266 82 311 57 355 42 M237 127 C280 107 324 95 379 91 M246 141 C286 137 322 147 366 169" stroke="#59647E" strokeWidth="3" strokeLinecap="round" opacity=".7"/>
-                                    <path d="M222 117 C257 89 288 70 324 55 M234 132 C268 117 304 111 344 108 M245 145 C272 147 302 158 333 172" stroke="#F7F6F2" strokeWidth="5" strokeLinecap="round" opacity=".8"/>
-                                </motion.g>
-                                <path d="M143 115 C157 88 190 75 229 83 C260 89 280 111 286 139 C267 159 231 177 192 174 C159 171 136 148 143 115Z" fill="url(#falconBody)" stroke="#E6E8EF" strokeWidth="2"/>
-                                <path d="M169 111 C185 129 211 144 252 148 M161 128 C185 148 211 160 238 163 M177 98 C199 119 222 130 257 133" stroke="#59627B" strokeWidth="3" strokeLinecap="round" opacity=".55"/>
-                                <path d="M274 108 C280 78 301 57 326 55 C349 53 363 70 356 89 C351 105 331 114 309 111 L290 130Z" fill="#E7E8E8" stroke="#5D6680" strokeWidth="2"/>
-                                <path d="M302 64 C321 48 344 52 355 67 C340 66 328 73 319 85Z" fill="#424A63"/>
-                                <path d="M345 83 L382 94 L350 103 C341 98 340 90 345 83Z" fill="#E6A33B" stroke="#A76B25" strokeWidth="2"/>
-                                <circle cx="337" cy="77" r="4.8" fill="#E6A33B"/><circle cx="338" cy="77" r="2.2" fill="#20243A"/>
-                                <path d="M188 165 L177 190 M218 170 L213 192" stroke="#D69A43" strokeWidth="6" strokeLinecap="round"/>
-                                <path d="M177 190 L165 194 M177 190 L185 197 M213 192 L202 197 M213 192 L224 198" stroke="#D69A43" strokeWidth="4" strokeLinecap="round"/>
-                                <path d="M128 87 C101 70 80 58 57 49 M288 88 C315 69 340 58 365 48" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" opacity=".5"/>
-                            </svg>
-                            <motion.span
-                                aria-hidden="true"
-                                animate={{ opacity: [0.25, 0.8, 0.25], scale: [0.9, 1.08, 0.9] }}
-                                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-                                className="absolute bottom-1 left-1/2 h-2 w-28 -translate-x-1/2 rounded-full bg-white/50 blur-md"
-                            />
-                        </motion.div>
+                        <motion.img
+                            src="/falcon.png"
+                            alt={isArabic ? "صقر يحلق بجناحيه" : "Falcon in flight"}
+                            draggable={false}
+                            animate={{ y: [0, -7, 0], rotate: [0, -1.5, 0, 1, 0] }}
+                            transition={{ duration: 3.8, delay: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                            className="h-full w-full select-none object-contain mix-blend-screen drop-shadow-[0_16px_18px_rgba(32,36,58,0.28)]"
+                        />
                     </motion.div>
 
                     <motion.div
