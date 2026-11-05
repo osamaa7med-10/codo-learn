@@ -489,7 +489,7 @@ export default function StudentDashboard() {
                 <div className="flex h-20 items-center justify-between border-b border-[#ECECF5] px-6">
                     <Link href="/" className="flex items-center gap-2">
                         <Image
-                            src="/logoooo-removebg-preview.png"
+                            src={theme === "dark" ? "/logo-white.png" : "/logoooo-removebg-preview.png"}
                             alt="Codo Learn"
                             width={145}
                             height={48}
