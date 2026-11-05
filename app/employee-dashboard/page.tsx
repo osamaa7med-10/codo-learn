@@ -346,10 +346,6 @@ export default function EmployeeDashboard() {
     const photoInputRef = useRef<HTMLInputElement>(null);
     const [profileNote, setProfileNote] = useState<FormNote | null>(null);
 
-    const [currentPassword, setCurrentPassword] = useState("");
-    const [newPassword, setNewPassword] = useState("");
-    const [passwordNote, setPasswordNote] = useState<FormNote | null>(null);
-
     // Free the temporary photo preview when it is replaced or the page closes.
     useEffect(() => {
         return () => {
@@ -538,42 +534,6 @@ export default function EmployeeDashboard() {
         setProfileNote({
             type: "success",
             text: "Profile saved in this demo. Backend integration is still needed.",
-        });
-    }
-
-    function updatePassword(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        setPasswordNote(null);
-
-        if (!currentPassword) {
-            setPasswordNote({
-                type: "error",
-                text: "Please enter your current password.",
-            });
-            return;
-        }
-
-        if (newPassword.length < 8) {
-            setPasswordNote({
-                type: "error",
-                text: "The new password must contain at least 8 characters.",
-            });
-            return;
-        }
-
-        if (newPassword === currentPassword) {
-            setPasswordNote({
-                type: "error",
-                text: "The new password must be different from the current one.",
-            });
-            return;
-        }
-
-        setCurrentPassword("");
-        setNewPassword("");
-        setPasswordNote({
-            type: "success",
-            text: "Password form is valid. Backend authentication is needed to change a real password.",
         });
     }
 
@@ -1164,7 +1124,7 @@ export default function EmployeeDashboard() {
                     {activeSection === "profile" && (
                         <PageSection
                             title="My Profile"
-                            description="Manage your personal information and password."
+                            description="Manage your personal information."
                         >
                             <div className="grid items-start gap-6 lg:grid-cols-2">
                                 {/* Personal information */}
@@ -1254,53 +1214,7 @@ export default function EmployeeDashboard() {
                                     <NoteBanner note={profileNote} />
                                 </form>
 
-                                {/* Change password */}
-                                <form
-                                    onSubmit={updatePassword}
-                                    noValidate
-                                    className="rounded-3xl border border-[#ECECF5] bg-white p-6 sm:p-8"
-                                >
-                                    <h3 className="text-xl font-extrabold">Change Password</h3>
-                                    <p className="mb-7 mt-1 text-sm text-gray-500">
-                                        Choose a strong password for your account.
-                                    </p>
-
-                                    <Field label="Current Password">
-                                        <input
-                                            type="password"
-                                            value={currentPassword}
-                                            onChange={(e) => setCurrentPassword(e.target.value)}
-                                            placeholder="Enter current password"
-                                            autoComplete="current-password"
-                                            className={inputClass}
-                                        />
-                                    </Field>
-                                    <Field label="New Password">
-                                        <input
-                                            type="password"
-                                            value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                            placeholder="At least 8 characters"
-                                            autoComplete="new-password"
-                                            className={inputClass}
-                                        />
-                                    </Field>
-
-                                    <button
-                                        type="submit"
-                                        className="rounded-xl border border-[#869CFF]/60 bg-white px-6 py-3.5 text-sm font-bold text-[#586FD6] transition hover:bg-[#869CFF]/10"
-                                    >
-                                        Update Password
-                                    </button>
-
-                                    <NoteBanner note={passwordNote} />
-
-                                    <p className="mt-6 text-sm text-gray-400">
-                                        Password changes require backend authentication before
-                                        they can update a real account.
-                                    </p>
-                                </form>
-                            </div>
+                                                            </div>
                         </PageSection>
                     )}
 
