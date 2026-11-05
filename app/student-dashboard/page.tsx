@@ -179,9 +179,6 @@ export default function StudentDashboard() {
     const [email, setEmail] = useState("student@example.com");
     const [phone, setPhone] = useState("");
     const [saveMessage, setSaveMessage] = useState("");
-    const [currentPassword, setCurrentPassword] = useState("");
-    const [newPassword, setNewPassword] = useState("");
-    const [passwordMessage, setPasswordMessage] = useState("");
     const [profileLoaded, setProfileLoaded] = useState(false);
 
     const translateCourseCategory = (category: string) => {
@@ -402,7 +399,6 @@ export default function StudentDashboard() {
         setActiveSection(section);
         setSidebarOpen(false);
         setSaveMessage("");
-        setPasswordMessage("");
     }
 
     function markAllRead() {
@@ -441,30 +437,6 @@ export default function StudentDashboard() {
                 "تم حفظ تغييرات ملفك الشخصي بنجاح."
             )
         );
-    }
-
-    function changePassword(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-
-        if (newPassword.length < 8) {
-            setPasswordMessage(
-                t(
-                    "Password must be at least 8 characters.",
-                    "يجب ألا تقل كلمة المرور عن 8 أحرف."
-                )
-            );
-            return;
-        }
-
-        setPasswordMessage(
-            t(
-                "Demo only: connect the backend to update your real password.",
-                "هذه نسخة تجريبية فقط: اربط النظام بالـ Backend لتغيير كلمة المرور الحقيقية."
-            )
-        );
-
-        setCurrentPassword("");
-        setNewPassword("");
     }
 
     return (
@@ -1584,8 +1556,8 @@ export default function StudentDashboard() {
                         <SectionPanel
                             title={t("My Profile", "ملفي الشخصي")}
                             description={t(
-                                "Manage your personal information and password.",
-                                "إدارة معلوماتك الشخصية وكلمة المرور."
+                                "Manage your personal information.",
+                                "إدارة معلوماتك الشخصية."
                             )}
                         >
                             <div className="grid items-start gap-6 xl:grid-cols-[1fr_1fr]">
@@ -1776,80 +1748,7 @@ export default function StudentDashboard() {
                                     </button>
                                 </form>
 
-                                {/* Change Password */}
-                                <form
-                                    onSubmit={changePassword}
-                                    className="rounded-2xl border border-[#ECECF5] bg-white p-6"
-                                >
-                                    <h3 className="text-lg font-bold">
-                                        {t("Change Password", "تغيير كلمة المرور")}
-                                    </h3>
-
-                                    <p className="mb-6 mt-1 text-sm text-gray-500">
-                                        {t(
-                                            "Choose a strong password for your account.",
-                                            "اختر كلمة مرور قوية لحسابك."
-                                        )}
-                                    </p>
-
-                                    <label className="mb-2 block text-sm font-semibold">
-                                        {t("Current Password", "كلمة المرور الحالية")}
-                                    </label>
-
-                                    <input
-                                        type="password"
-                                        value={currentPassword}
-                                        onChange={(e) =>
-                                            setCurrentPassword(e.target.value)
-                                        }
-                                        required
-                                        className="mb-4 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#869CFF]"
-                                        placeholder={t(
-                                            "Enter current password",
-                                            "أدخل كلمة المرور الحالية"
-                                        )}
-                                    />
-
-                                    <label className="mb-2 block text-sm font-semibold">
-                                        {t("New Password", "كلمة المرور الجديدة")}
-                                    </label>
-
-                                    <input
-                                        type="password"
-                                        value={newPassword}
-                                        onChange={(e) =>
-                                            setNewPassword(e.target.value)
-                                        }
-                                        required
-                                        minLength={8}
-                                        className="mb-4 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#869CFF]"
-                                        placeholder={t(
-                                            "At least 8 characters",
-                                            "8 أحرف على الأقل"
-                                        )}
-                                    />
-
-                                    {passwordMessage && (
-                                        <p className="mb-4 rounded-xl bg-[#E2A3FF]/20 p-3 text-sm">
-                                            {passwordMessage}
-                                        </p>
-                                    )}
-
-                                    <button
-                                        type="submit"
-                                        className="rounded-xl border border-[#869CFF]/50 px-5 py-3 text-sm font-bold text-[#586FD6] hover:bg-[#869CFF]/10"
-                                    >
-                                        {t("Update Password", "تحديث كلمة المرور")}
-                                    </button>
-
-                                    <p className="mt-4 text-xs leading-5 text-gray-400">
-                                        {t(
-                                            "Password changes require backend authentication before they can update a real account.",
-                                            "تغيير كلمة المرور يحتاج إلى ربط نظام المصادقة بالـ Backend حتى يتم تحديث الحساب الحقيقي."
-                                        )}
-                                    </p>
-                                </form>
-                            </div>
+                                                            </div>
                         </SectionPanel>
                     )}
 
