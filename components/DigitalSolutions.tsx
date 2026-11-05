@@ -88,7 +88,7 @@ export default function DigitalSolutions() {
         <section
             id="solutions"
             dir={direction}
-            className="bg-white px-6 py-24"
+            className="bg-white px-6 py-24 dark:bg-[#171B2B]"
         >
             <div className="mx-auto max-w-7xl">
                 {/* Section Header */}
@@ -104,7 +104,7 @@ export default function DigitalSolutions() {
                             {isArabic ? "الحلول الرقمية" : "Digital Solutions"}
                         </p>
 
-                        <h2 className="text-4xl font-black leading-[1.3] tracking-tight text-[#20243A] sm:text-5xl lg:text-6xl">
+                        <h2 className="text-4xl font-black leading-[1.3] tracking-tight text-[#20243A] dark:text-[#E9ECF6] sm:text-5xl lg:text-6xl">
                             {isArabic
                                 ? "نبني حلولاً رقمية"
                                 : "We Build Digital Solutions"}
@@ -120,7 +120,7 @@ export default function DigitalSolutions() {
                     <div className="md:pb-2">
                         <div className="mb-4 h-1 w-14 rounded-full bg-gradient-to-r from-[#869CFF] to-[#E2A3FF]" />
 
-                        <p className="max-w-md text-base leading-8 text-[#7B829D] sm:text-lg">
+                        <p className="max-w-md text-base leading-8 text-[#7B829D] dark:text-[#AAB2C8] sm:text-lg">
                             {isArabic
                                 ? "من الأفكار إلى المنتجات الرقمية، نصنع حلولاً تكنولوجية تساعد الشركات على النمو والتواصل مع العملاء والعمل بذكاء أكبر."
                                 : "From ideas to digital products, we create technology solutions that help businesses grow, connect with customers, and work smarter."}
@@ -152,7 +152,7 @@ export default function DigitalSolutions() {
                             }}
                             transition={{ duration: 0.6 }}
                             whileHover={{ y: -8 }}
-                            className="group relative h-full overflow-hidden rounded-[30px] border border-[#E8EAF3] bg-[#FAFAFD] p-7 transition-shadow duration-300 hover:shadow-2xl"
+                            className="group relative h-full overflow-hidden rounded-[30px] border border-[#E8EAF3] bg-[#FAFAFD] p-7 transition-shadow duration-300 hover:shadow-2xl dark:border-[#394158] dark:bg-[#22283B]"
                         >
                             {/* Entire Card Link */}
                             <Link
@@ -184,11 +184,11 @@ export default function DigitalSolutions() {
 
                             {/* Content */}
                             <div className="relative">
-                                <h3 className="mt-10 text-2xl font-black text-[#20243A]">
+                                <h3 className="mt-10 text-2xl font-black text-[#20243A] dark:text-[#E9ECF6]">
                                     {solution.title}
                                 </h3>
 
-                                <p className="mt-4 min-h-[72px] text-sm leading-7 text-[#7B829D]">
+                                <p className="mt-4 min-h-[72px] text-sm leading-7 text-[#7B829D] dark:text-[#AAB2C8]">
                                     {solution.description}
                                 </p>
 
@@ -198,7 +198,7 @@ export default function DigitalSolutions() {
                                         <motion.span
                                             key={tag}
                                             whileHover={{ scale: 1.05 }}
-                                            className="rounded-full bg-white px-3 py-2 text-xs font-semibold text-[#5F6785] shadow-sm"
+                                            className="rounded-full bg-white px-3 py-2 text-xs font-semibold text-[#5F6785] shadow-sm dark:bg-[#293047] dark:text-[#D4D9E8]"
                                         >
                                             {tag}
                                         </motion.span>
@@ -206,7 +206,7 @@ export default function DigitalSolutions() {
                                 </div>
 
                                 {/* Bottom */}
-                                <div className="mt-8 flex items-center justify-between border-t border-[#E8EAF3] pt-5">
+                                <div className="mt-8 flex items-center justify-between border-t border-[#E8EAF3] pt-5 dark:border-[#394158]">
                                     <span className="text-sm font-semibold text-[#869CFF]">
                                         {isArabic ? "اعرف المزيد" : "Learn More"}
                                     </span>
