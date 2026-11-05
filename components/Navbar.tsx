@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -49,7 +48,7 @@ export default function Navbar() {
                     aria-label="Codo Learn Home"
                 >
                     <img
-                        src="/logoooo-removebg-preview.png"
+                        src={isDark ? "/logo-white.png" : "/logoooo-removebg-preview.png"}
                         alt="Codo Learn — For Training & Digital Solutions"
                         className="h-auto w-[190px] object-contain sm:w-[220px] lg:w-[200px]"
                     />
