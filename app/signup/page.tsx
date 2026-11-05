@@ -17,55 +17,77 @@ type AvailableService = {
 
 function DeskSetupModel({ isArabic }: { isArabic: boolean }) {
     const mountRef = useRef<HTMLDivElement>(null);
+    const [modelError, setModelError] = useState(false);
 
     useEffect(() => {
         const mount = mountRef.current;
         if (!mount) return;
 
         let cancelled = false;
+        let modelElement: HTMLElement | null = null;
+
+        const showError = () => {
+            if (cancelled || !mount) return;
+            setModelError(true);
+        };
 
         const renderModel = () => {
-            if (cancelled || !mount || mount.childElementCount > 0) return;
+            if (cancelled || !mount || mount.querySelector("model-viewer")) return;
 
             const model = document.createElement("model-viewer");
             model.setAttribute("src", "/models/desk-setup/scene.gltf");
             model.setAttribute("alt", isArabic ? "مجسم ثلاثي الأبعاد لمكتب مبرمج" : "3D programmer desk setup");
             model.setAttribute("camera-controls", "");
             model.setAttribute("auto-rotate", "");
-            model.setAttribute("rotation-per-second", "12deg");
+            model.setAttribute("rotation-per-second", "18deg");
             model.setAttribute("interaction-prompt", "none");
             model.setAttribute("shadow-intensity", "1");
-            model.setAttribute("exposure", "1");
-            model.setAttribute("camera-orbit", "35deg 70deg 3.2m");
+            model.setAttribute("exposure", "1.15");
+            model.setAttribute("camera-orbit", "0deg 75deg 8m");
+            model.setAttribute("field-of-view", "30deg");
+            model.setAttribute("loading", "eager");
             model.style.width = "100%";
             model.style.height = "100%";
+            model.style.display = "block";
             model.style.background = "transparent";
+            model.addEventListener("error", showError);
+            model.addEventListener("load", () => setModelError(false), { once: true });
+            modelElement = model;
             mount.appendChild(model);
         };
 
-        if (customElements.get("model-viewer")) {
-            renderModel();
-        } else {
+        const loadViewer = () => {
+            if (customElements.get("model-viewer")) {
+                renderModel();
+                return;
+            }
+
             const existingScript = document.querySelector<HTMLScriptElement>(
                 'script[data-codo-model-viewer="true"]'
             );
-            const script = existingScript ?? document.createElement("script");
 
-            if (!existingScript) {
-                script.type = "module";
-                script.src = "https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js";
-                script.dataset.codoModelViewer = "true";
-                document.head.appendChild(script);
-            }
-
-            script.addEventListener("load", renderModel, { once: true });
             if (existingScript) {
-                customElements.whenDefined("model-viewer").then(renderModel);
+                customElements.whenDefined("model-viewer").then(renderModel).catch(showError);
+                return;
             }
-        }
+
+            const script = document.createElement("script");
+            script.type = "module";
+            script.src = "https://cdn.jsdelivr.net/npm/@google/model-viewer@4.0.0/dist/model-viewer.min.js";
+            script.dataset.codoModelViewer = "true";
+            script.onload = () => {
+                customElements.whenDefined("model-viewer").then(renderModel).catch(showError);
+            };
+            script.onerror = showError;
+            document.head.appendChild(script);
+        };
+
+        setModelError(false);
+        loadViewer();
 
         return () => {
             cancelled = true;
+            modelElement?.removeEventListener("error", showError);
             mount.replaceChildren();
         };
     }, [isArabic]);
@@ -75,10 +97,17 @@ function DeskSetupModel({ isArabic }: { isArabic: boolean }) {
             initial={{ opacity: 0, y: 24, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
-            className="relative z-10 mx-auto my-1 h-[230px] w-full max-w-[390px] overflow-hidden rounded-3xl border border-white/20 bg-white/10 shadow-[0_18px_45px_rgba(32,36,58,0.18)] backdrop-blur-sm"
+            className="relative z-10 mx-auto my-1 h-[280px] w-full max-w-[390px] overflow-hidden rounded-3xl border border-white/20 bg-white/10 shadow-[0_18px_45px_rgba(32,36,58,0.18)] backdrop-blur-sm"
             aria-label={isArabic ? "عرض تفاعلي لمكتب المبرمج ثلاثي الأبعاد" : "Interactive 3D programmer desk preview"}
         >
             <div ref={mountRef} className="h-full w-full" />
+            {modelError && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/90 px-5 text-center text-sm font-medium text-slate-600">
+                    {isArabic
+                        ? "تعذر تحميل المجسم. تأكد من الاتصال بالإنترنت ثم أعد تحميل الصفحة."
+                        : "The 3D model could not load. Check your internet connection and refresh the page."}
+                </div>
+            )}
             <div className="pointer-events-none absolute bottom-3 left-0 right-0 text-center text-[10px] font-medium tracking-wide text-white/75">
                 {isArabic ? "اسحب للتدوير • استخدم عجلة الماوس للتقريب" : "Drag to rotate • Scroll to zoom"}
             </div>
