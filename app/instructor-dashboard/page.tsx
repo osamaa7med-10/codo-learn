@@ -563,40 +563,6 @@ export default function InstructorDashboard() {
         );
     }
 
-    function changePassword(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-
-        if (newPassword.length < 8) {
-            setPasswordMessage(
-                t(
-                    "Password must be at least 8 characters.",
-                    "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل."
-                )
-            );
-            return;
-        }
-
-        if (currentPassword === newPassword) {
-            setPasswordMessage(
-                t(
-                    "Your new password must be different from your current password.",
-                    "يجب أن تكون كلمة المرور الجديدة مختلفة عن الحالية."
-                )
-            );
-            return;
-        }
-
-        setPasswordMessage(
-            t(
-                "Demo only: connect backend authentication to change your real password.",
-                "هذه نسخة تجريبية فقط: يجب ربط نظام تسجيل الدخول بالـ Backend لتغيير كلمة المرور الحقيقية."
-            )
-        );
-
-        setCurrentPassword("");
-        setNewPassword("");
-    }
-
     function addCourse(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
@@ -2425,93 +2391,7 @@ export default function InstructorDashboard() {
                                 </form>
                             </SectionPanel>
 
-                            {/* Password */}
-                            <SectionPanel
-                                title={t(
-                                    "Change Password",
-                                    "تغيير كلمة المرور"
-                                )}
-                                description={t(
-                                    "Update your account password.",
-                                    "قم بتحديث كلمة مرور حسابك."
-                                )}
-                            >
-                                <form
-                                    onSubmit={changePassword}
-                                    className="max-w-2xl space-y-5"
-                                >
-                                    <Field
-                                        label={t(
-                                            "Current Password",
-                                            "كلمة المرور الحالية"
-                                        )}
-                                    >
-                                        <input
-                                            type="password"
-                                            required
-                                            value={currentPassword}
-                                            onChange={(event) =>
-                                                setCurrentPassword(
-                                                    event.target.value
-                                                )
-                                            }
-                                            className={inputClass}
-                                            placeholder={t(
-                                                "Enter current password",
-                                                "أدخل كلمة المرور الحالية"
-                                            )}
-                                        />
-                                    </Field>
-
-                                    <Field
-                                        label={t(
-                                            "New Password",
-                                            "كلمة المرور الجديدة"
-                                        )}
-                                    >
-                                        <input
-                                            type="password"
-                                            required
-                                            minLength={8}
-                                            value={newPassword}
-                                            onChange={(event) =>
-                                                setNewPassword(
-                                                    event.target.value
-                                                )
-                                            }
-                                            className={inputClass}
-                                            placeholder={t(
-                                                "Enter new password",
-                                                "أدخل كلمة المرور الجديدة"
-                                            )}
-                                        />
-                                    </Field>
-
-                                    {passwordMessage && (
-                                        <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-700">
-                                            {passwordMessage}
-                                        </div>
-                                    )}
-
-                                    <button
-                                        type="submit"
-                                        className="rounded-xl bg-[#586FD6] px-7 py-3 text-sm font-bold text-white transition hover:bg-[#455BC2]"
-                                    >
-                                        {t(
-                                            "Update Password",
-                                            "تحديث كلمة المرور"
-                                        )}
-                                    </button>
-
-                                    <p className="text-xs leading-6 text-gray-400">
-                                        {t(
-                                            "Demo only: password changes are not connected to a real authentication system.",
-                                            "نسخة تجريبية فقط: تغيير كلمة المرور غير مرتبط بنظام تسجيل دخول حقيقي."
-                                        )}
-                                    </p>
-                                </form>
-                            </SectionPanel>
-                        </div>
+                                                    </div>
                     )}
 
                     {/* Footer */}
