@@ -121,7 +121,7 @@ const CLIENT_REQUESTS_STORAGE_KEY = "codo-client-requests";
 const inputClass =
     "w-full rounded-xl border border-[#E5E7F2] bg-white px-4 py-3.5 text-sm text-[#20243A] outline-none transition placeholder:text-[#A3A8BC] focus:border-[#869CFF] focus:ring-4 focus:ring-[#869CFF]/10";
 
-const labelClass = "mb-2 block text-sm font-semibold text-[#343B58]";
+const labelClass = "mb-2 block text-sm font-semibold text-[#737B91]";
 
 const translations: Record<string, string> = {
     "Learn. Build. Grow.": "اتعلم. ابنِ. اتطور.",
