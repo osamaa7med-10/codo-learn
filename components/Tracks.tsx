@@ -48,7 +48,7 @@ export default function Tracks() {
         <section
             id="tracks"
             dir={direction}
-            className="bg-[#F8F8FC] px-6 py-24"
+            className="bg-[#F8F8FC] px-6 py-24 dark:bg-[#171B2B]"
         >
             <div className="mx-auto max-w-7xl">
 
@@ -64,7 +64,7 @@ export default function Tracks() {
                         {content.label}
                     </p>
 
-                    <h2 className="mt-4 text-4xl font-black tracking-tight text-[#20243A] md:text-5xl">
+                    <h2 className="mt-4 text-4xl font-black tracking-tight text-[#20243A] dark:text-[#E9ECF6] md:text-5xl">
                         {content.title}
 
                         <span className="block bg-gradient-to-r from-[#869CFF] to-[#E2A3FF] bg-clip-text text-transparent">
@@ -72,7 +72,7 @@ export default function Tracks() {
                         </span>
                     </h2>
 
-                    <p className="mt-6 leading-7 text-[#7B829D]">
+                    <p className="mt-6 leading-7 text-[#7B829D] dark:text-[#AAB2C8]">
                         {content.description}
                     </p>
                 </motion.div>
@@ -108,7 +108,7 @@ export default function Tracks() {
                             }}
                             transition={{ duration: 0.6 }}
                             whileHover={{ y: -8 }}
-                            className="group relative overflow-hidden rounded-[32px] border border-[#E7E8F0] bg-white p-8 shadow-sm"
+                            className="group relative overflow-hidden rounded-[32px] border border-[#E7E8F0] bg-white p-8 shadow-sm dark:border-[#394158] dark:bg-[#22283B]"
                         >
 
                             {/* Number */}
@@ -129,12 +129,12 @@ export default function Tracks() {
                             </div>
 
                             {/* Title */}
-                            <h3 className="mt-10 text-2xl font-black text-[#20243A]">
+                            <h3 className="mt-10 text-2xl font-black text-[#20243A] dark:text-[#E9ECF6]">
                                 {track.title}
                             </h3>
 
                             {/* Description */}
-                            <p className="mt-4 min-h-[80px] text-sm leading-6 text-[#7B829D]">
+                            <p className="mt-4 min-h-[80px] text-sm leading-6 text-[#7B829D] dark:text-[#AAB2C8]">
                                 {track.description}
                             </p>
 
@@ -144,7 +144,7 @@ export default function Tracks() {
                                     <motion.span
                                         key={skill}
                                         whileHover={{ scale: 1.05 }}
-                                        className="shrink-0 rounded-full bg-[#F3F3F9] px-3 py-2 text-xs font-semibold text-[#5F6785]"
+                                        className="shrink-0 rounded-full bg-[#F3F3F9] px-3 py-2 text-xs font-semibold text-[#5F6785] dark:bg-[#30384F] dark:text-[#D4D9E8]"
                                     >
                                         {skill}
                                     </motion.span>
@@ -152,7 +152,7 @@ export default function Tracks() {
                             </div>
 
                             {/* Bottom Line */}
-                            <div className="mt-8 h-[2px] w-full bg-[#F0F0F6]">
+                            <div className="mt-8 h-[2px] w-full bg-[#F0F0F6] dark:bg-[#394158]">
                                 <motion.div
                                     className="h-full bg-gradient-to-r from-[#869CFF] to-[#E2A3FF]"
                                     initial={{ width: 0 }}
