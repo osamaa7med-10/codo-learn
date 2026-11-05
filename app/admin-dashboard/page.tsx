@@ -1134,7 +1134,7 @@ export default function AdminDashboard() {
                     <div className="min-w-0 flex-1">
                         <Link href="/" aria-label={t("Go to Codo Learn Home Page", "الذهاب إلى الصفحة الرئيسية")} className="block rounded-lg transition-opacity hover:opacity-80">
                             <Image
-                                src="/logoooo-removebg-preview.png"
+                                src={theme === "dark" ? "/logo-white.png" : "/logoooo-removebg-preview.png"}
                                 alt="Codo Learn Logo"
                                 width={145}
                                 height={48}
