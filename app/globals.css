@@ -130,3 +130,10 @@ html.dark body textarea::placeholder {
 html.dark body [class*="shadow-"] {
   --tw-shadow-color: rgb(0 0 0 / 18%);
 }
+
+/* Slightly raise the 3D model on the signup branding panel. */
+[aria-label="Interactive 3D programmer desk preview"],
+[aria-label="عرض تفاعلي لمكتب المبرمج ثلاثي الأبعاد"] {
+  margin-top: -14px !important;
+  margin-bottom: 4px !important;
+}
