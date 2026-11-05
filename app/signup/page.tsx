@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { useLanguage, useTheme } from "../../context/LanguageContext";
@@ -14,6 +14,77 @@ type AvailableService = {
     category?: string;
     status: string;
 };
+
+function DeskSetupModel({ isArabic }: { isArabic: boolean }) {
+    const mountRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const mount = mountRef.current;
+        if (!mount) return;
+
+        let cancelled = false;
+
+        const renderModel = () => {
+            if (cancelled || !mount || mount.childElementCount > 0) return;
+
+            const model = document.createElement("model-viewer");
+            model.setAttribute("src", "/models/desk-setup/scene.gltf");
+            model.setAttribute("alt", isArabic ? "مجسم ثلاثي الأبعاد لمكتب مبرمج" : "3D programmer desk setup");
+            model.setAttribute("camera-controls", "");
+            model.setAttribute("auto-rotate", "");
+            model.setAttribute("rotation-per-second", "12deg");
+            model.setAttribute("interaction-prompt", "none");
+            model.setAttribute("shadow-intensity", "1");
+            model.setAttribute("exposure", "1");
+            model.setAttribute("camera-orbit", "35deg 70deg 3.2m");
+            model.style.width = "100%";
+            model.style.height = "100%";
+            model.style.background = "transparent";
+            mount.appendChild(model);
+        };
+
+        if (customElements.get("model-viewer")) {
+            renderModel();
+        } else {
+            const existingScript = document.querySelector<HTMLScriptElement>(
+                'script[data-codo-model-viewer="true"]'
+            );
+            const script = existingScript ?? document.createElement("script");
+
+            if (!existingScript) {
+                script.type = "module";
+                script.src = "https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js";
+                script.dataset.codoModelViewer = "true";
+                document.head.appendChild(script);
+            }
+
+            script.addEventListener("load", renderModel, { once: true });
+            if (existingScript) {
+                customElements.whenDefined("model-viewer").then(renderModel);
+            }
+        }
+
+        return () => {
+            cancelled = true;
+            mount.replaceChildren();
+        };
+    }, [isArabic]);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
+            className="relative z-10 mx-auto my-1 h-[230px] w-full max-w-[390px] overflow-hidden rounded-3xl border border-white/20 bg-white/10 shadow-[0_18px_45px_rgba(32,36,58,0.18)] backdrop-blur-sm"
+            aria-label={isArabic ? "عرض تفاعلي لمكتب المبرمج ثلاثي الأبعاد" : "Interactive 3D programmer desk preview"}
+        >
+            <div ref={mountRef} className="h-full w-full" />
+            <div className="pointer-events-none absolute bottom-3 left-0 right-0 text-center text-[10px] font-medium tracking-wide text-white/75">
+                {isArabic ? "اسحب للتدوير • استخدم عجلة الماوس للتقريب" : "Drag to rotate • Scroll to zoom"}
+            </div>
+        </motion.div>
+    );
+}
 
 const DIGITAL_SOLUTIONS_STORAGE_KEY = "codo-digital-solutions";
 const CLIENT_REQUESTS_STORAGE_KEY = "codo-client-requests";
@@ -616,30 +687,8 @@ export default function SignupPage() {
                         />
                     </motion.a>
 
-                    {/* Realistic falcon image flight animation */}
-                    <motion.div
-                        aria-label={isArabic ? "صقر Codo Learn" : "Codo Learn falcon"}
-                        role="img"
-                        initial={{ opacity: 0, x: -260, y: 55, rotate: -14, scale: 0.72 }}
-                        animate={{
-                            opacity: 1,
-                            x: [ -260, 35, -8, 0 ],
-                            y: [ 55, -24, 8, 0 ],
-                            rotate: [ -14, 7, -3, 0 ],
-                            scale: [ 0.72, 1.08, 0.98, 1 ],
-                        }}
-                        transition={{ duration: 2.8, delay: 0.35, times: [0, 0.62, 0.84, 1], ease: [0.22, 1, 0.36, 1] }}
-                        className="pointer-events-none relative z-10 mx-auto my-1 flex h-[170px] w-full max-w-[340px] items-center justify-center"
-                    >
-                        <motion.img
-                            src="/falcon.png"
-                            alt={isArabic ? "صقر يحلق بجناحيه" : "Falcon in flight"}
-                            draggable={false}
-                            animate={{ y: [0, -7, 0], rotate: [0, -1.5, 0, 1, 0] }}
-                            transition={{ duration: 3.8, delay: 3.2, repeat: Infinity, ease: "easeInOut" }}
-                            className="h-full w-full select-none object-contain mix-blend-screen drop-shadow-[0_16px_18px_rgba(32,36,58,0.28)]"
-                        />
-                    </motion.div>
+                    {/* Interactive 3D programmer desk setup */}
+                    <DeskSetupModel isArabic={isArabic} />
 
                     <motion.div
                         initial={{ opacity: 0, y: 25 }}
