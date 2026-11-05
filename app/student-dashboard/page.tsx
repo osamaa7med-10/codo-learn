@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
 import { useLanguage, useTheme } from "../../context/LanguageContext";
+import DashboardSettings from "../../components/DashboardSettings";
 
 type Section =
     | "overview"
@@ -15,7 +16,8 @@ type Section =
     | "enrollments"
     | "payments"
     | "notifications"
-    | "profile";
+    | "profile"
+    | "settings";
 
 const initialCourses = [
     {
@@ -83,6 +85,7 @@ const navItems: { id: Section; label: string; icon: string }[] = [
     { id: "payments", label: "My Payments", icon: "$" },
     { id: "notifications", label: "Notifications", icon: "♧" },
     { id: "profile", label: "My Profile", icon: "♙" },
+    { id: "settings", label: "Settings", icon: "⚙" },
 ];
 
 const payments = [
@@ -235,6 +238,7 @@ export default function StudentDashboard() {
         payments: t("My Payments", "مدفوعاتي"),
         notifications: t("Notifications", "الإشعارات"),
         profile: t("My Profile", "ملفي الشخصي"),
+        settings: t("Settings", "الإعدادات"),
     };
 
     useEffect(() => {
@@ -1572,6 +1576,8 @@ export default function StudentDashboard() {
                             </div>
                         </SectionPanel>
                     )}
+
+                    {activeSection === "settings" && <DashboardSettings role="student" />}
 
                     {/* PROFILE */}
                     {activeSection === "profile" && (
