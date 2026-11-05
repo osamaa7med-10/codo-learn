@@ -53,7 +53,6 @@ export default function LoginPage() {
         isArabic ? translations[value] ?? value : value;
 
     const [email, setEmail] = useState("");
-    const [accountRole, setAccountRole] = useState<"student" | "instructor" | "employee" | "client" | "admin">("student");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(true);
@@ -86,20 +85,13 @@ export default function LoginPage() {
         // Demo session only; connect this to backend authentication later.
         const targetStorage = rememberMe ? localStorage : sessionStorage;
         targetStorage.setItem("codo-user-session", email.trim());
-        targetStorage.setItem("codo-user-role", accountRole);
         const otherStorage = rememberMe ? sessionStorage : localStorage;
         otherStorage.removeItem("codo-user-session");
-        otherStorage.removeItem("codo-user-role");
         window.dispatchEvent(new Event("codo-auth-change"));
 
-        const dashboardRoutes = {
-            student: "/student-dashboard",
-            instructor: "/instructor-dashboard",
-            employee: "/employee-dashboard",
-            client: "/client-dashboard",
-            admin: "/admin-dashboard",
-        } as const;
-        router.push(dashboardRoutes[accountRole]);
+        // The standard login page opens the student dashboard.
+        // Admins use the separate Admin Login page.
+        router.push("/student-dashboard");
     }
 
     return (
@@ -295,20 +287,6 @@ export default function LoginPage() {
                                         className="min-w-0 flex-1 bg-transparent py-4 text-left text-sm text-[#20243A] outline-none placeholder:text-[#A3A8BC]"
                                     />
                                 </div>
-                            </div>
-
-                            {/* Account Role */}
-                            <div className="mb-5">
-                                <label htmlFor="accountRole" className="mb-2 block text-sm font-semibold text-[#343B58]">
-                                    {isArabic ? "نوع الحساب" : "Account type"}
-                                </label>
-                                <select id="accountRole" value={accountRole} onChange={(event) => setAccountRole(event.target.value as typeof accountRole)} className="w-full rounded-xl border border-[#E5E7F2] bg-white px-4 py-4 text-sm text-[#20243A] outline-none transition focus:border-[#869CFF] focus:ring-4 focus:ring-[#869CFF]/10">
-                                    <option value="student">{isArabic ? "طالب" : "Student"}</option>
-                                    <option value="instructor">{isArabic ? "مدرب" : "Instructor"}</option>
-                                    <option value="employee">{isArabic ? "موظف" : "Employee"}</option>
-                                    <option value="client">{isArabic ? "عميل" : "Client"}</option>
-                                    <option value="admin">{isArabic ? "مسؤول النظام" : "Admin"}</option>
-                                </select>
                             </div>
 
                             {/* Password */}
