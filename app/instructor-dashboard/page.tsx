@@ -779,7 +779,7 @@ export default function InstructorDashboard() {
                 <div className="flex h-[82px] items-center justify-between border-b border-[#F0F0F5] px-6">
                     <Link href="/" className="flex items-center">
                         <Image
-                            src="/logoooo-removebg-preview.png"
+                            src={theme === "dark" ? "/logo-white.png" : "/logoooo-removebg-preview.png"}
                             alt="Codo Learn"
                             width={145}
                             height={55}
