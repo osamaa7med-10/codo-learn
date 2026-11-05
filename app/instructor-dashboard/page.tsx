@@ -10,6 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { useLanguage, useTheme } from "../../context/LanguageContext";
+import DashboardSettings from "../../components/DashboardSettings";
 
 type Section =
     | "overview"
@@ -19,7 +20,8 @@ type Section =
     | "assignments"
     | "schedule"
     | "reviews"
-    | "profile";
+    | "profile"
+    | "settings";
 
 type Course = {
     id: number;
@@ -217,7 +219,8 @@ const navItems: {
         { id: "assignments", label: "Assignments", arabicLabel: "التكليفات", icon: "✓" },
         { id: "schedule", label: "Schedule", arabicLabel: "الجدول", icon: "▦" },
         { id: "reviews", label: "Reviews", arabicLabel: "التقييمات", icon: "☆" },
-        { id: "profile", label: "My Profile", arabicLabel: "ملفي الشخصي", icon: "⚙" },
+        { id: "profile", label: "My Profile", arabicLabel: "ملفي الشخصي", icon: "♙" },
+        { id: "settings", label: "Settings", arabicLabel: "الإعدادات", icon: "⚙" },
     ];
 
 const inputClass =
@@ -500,6 +503,7 @@ export default function InstructorDashboard() {
         schedule: t("Schedule", "الجدول"),
         reviews: t("Student Reviews", "تقييمات الطلاب"),
         profile: t("My Profile", "ملفي الشخصي"),
+        settings: t("Settings", "الإعدادات"),
     };
 
     function openSection(section: Section) {
@@ -2238,6 +2242,8 @@ export default function InstructorDashboard() {
                             </div>
                         </SectionPanel>
                     )}
+
+                    {activeSection === "settings" && <DashboardSettings role="instructor" />}
 
                     {/* PROFILE */}
                     {activeSection === "profile" && (
