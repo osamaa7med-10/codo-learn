@@ -35,7 +35,7 @@ function DeskSetupModel({ isArabic }: { isArabic: boolean }) {
             if (cancelled || !mount || mount.querySelector("model-viewer")) return;
 
             const model = document.createElement("model-viewer");
-            model.setAttribute("src", "/models/desk-setup/scene.gltf");
+            model.setAttribute("src", "/models/low_poly_man_working_at_a_table_with_a_laptop.glb");
             model.setAttribute("alt", isArabic ? "مجسم ثلاثي الأبعاد لمكتب مبرمج" : "3D programmer desk setup");
             model.setAttribute("camera-controls", "");
             model.setAttribute("auto-rotate", "");
@@ -526,7 +526,7 @@ export default function SignupPage() {
             } catch (storageError) {
                 console.error("Error saving client request:", storageError);
                 setError("We could not save your request in this browser. Please try again.");
-            }            return;
+            } return;
         }
 
         setMessage(
@@ -616,8 +616,8 @@ export default function SignupPage() {
         <div className="mb-4 flex items-center gap-3">
             <span
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-bold ${purple
-                        ? "bg-[#E2A3FF]/20 text-[#9B65C5]"
-                        : "bg-[#869CFF]/12 text-[#687CE0]"
+                    ? "bg-[#E2A3FF]/20 text-[#9B65C5]"
+                    : "bg-[#869CFF]/12 text-[#687CE0]"
                     }`}
             >
                 {number}
@@ -830,8 +830,8 @@ export default function SignupPage() {
                                             onClick={() => handleRoleChange(item.value)}
                                             aria-pressed={role === item.value}
                                             className={`rounded-xl px-2 py-3 transition-all ${role === item.value
-                                                    ? "bg-white text-[#687CE0] shadow-sm ring-1 ring-[#869CFF]/25 dark:bg-[#394158] dark:text-[#C7D0FF] dark:ring-[#869CFF]/40"
-                                                    : "text-[#7B829D] hover:bg-white/60 dark:text-[#AAB2C8] dark:hover:bg-[#394158]/70"
+                                                ? "bg-white text-[#687CE0] shadow-sm ring-1 ring-[#869CFF]/25 dark:bg-[#394158] dark:text-[#C7D0FF] dark:ring-[#869CFF]/40"
+                                                : "text-[#7B829D] hover:bg-white/60 dark:text-[#AAB2C8] dark:hover:bg-[#394158]/70"
                                                 } ${isArabic ? "text-right" : "text-left"}`}
                                         >
                                             <span className="block text-sm font-bold">
@@ -858,7 +858,7 @@ export default function SignupPage() {
                                         {renderInput(
                                             "fullName",
                                             "Full name",
-                                            fullName,                                            setFullName,
+                                            fullName, setFullName,
                                             {
                                                 placeholder: "e.g. Alex Morgan",
                                                 autoComplete: "name",
@@ -1197,7 +1197,7 @@ export default function SignupPage() {
                                                 serviceRequired,
                                                 setServiceRequired,
                                                 availableServices.length > 0 ? "Choose a service" : "No active services available",
-                                                availableServices.map(service => service.name)                                            )}
+                                                availableServices.map(service => service.name))}
                                         </div>
 
                                         <div className="sm:col-span-2">
