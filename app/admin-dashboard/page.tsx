@@ -3795,6 +3795,14 @@ export default function AdminDashboard() {
                                         </Panel>
                                     )}
 
+                                    <div className="mb-4 flex flex-col justify-between gap-4 rounded-2xl border border-red-200 bg-red-50/60 p-5 sm:flex-row sm:items-center">
+                                        <div>
+                                            <p className="font-bold text-red-700">{t("Sign out", "تسجيل الخروج")}</p>
+                                            <p className="mt-1 text-sm text-red-600/80">{t("Return to the login page.", "العودة إلى صفحة تسجيل الدخول.")}</p>
+                                        </div>
+                                        <Link href="/login" className="rounded-xl bg-red-600 px-5 py-3 text-center text-sm font-bold text-white hover:bg-red-700">{t("Log out", "تسجيل الخروج")} ↗</Link>
+                                    </div>
+
                                     <div className="flex items-start gap-3 rounded-2xl border border-[#869CFF]/20 bg-[#869CFF]/5 p-4">
                                         <span className="text-lg text-[#586FD6]">ⓘ</span>
                                         <p className="text-xs leading-5 text-gray-500">
